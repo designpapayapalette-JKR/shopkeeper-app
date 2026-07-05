@@ -60,6 +60,14 @@ export default function InventoryScreen() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
+  // Sort + quick filter — client-side, since the full catalog is already
+  // fetched. "Low Stock Only" reuses the same isLow calculation each row
+  // already does, just as a filter instead of a per-row badge.
+  type SortKey = "name-asc" | "name-desc" | "price-asc" | "price-desc" | "stock-asc" | "stock-desc";
+  const [sortKey, setSortKey] = useState<SortKey>("name-asc");
+  const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+
   // Two independent disclosure states, both collapsed by default, so a
   // product list with many SKUs/variants reads as a clean single line per
   // product instead of every detail being visible at once:
@@ -446,16 +454,55 @@ export default function InventoryScreen() {
   // instead of every variant always being visible. A variant whose parent
   // got filtered out by search (an edge case) falls back to showing as its
   // own root-level row instead of vanishing.
-  const byName = (a: Product, b: Product) => a.name.localeCompare(b.name);
-  const rootProducts = products.filter((p) => !p.parent_product_id).sort(byName);
-  const orphanVariants = products
-    .filter((p) => p.parent_product_id && !products.some((root) => root.id === p.parent_product_id))
-    .sort(byName);
+  const isProductLow = (p: Product) => {
+    if (p.reorder_level === null) return false;
+    return parseFloat(p.stock_quantity ?? "0") <= parseFloat(p.reorder_level);
+  };
+
+  const sortFn = (a: Product, b: Product): number => {
+    switch (sortKey) {
+      case "name-desc":
+        return b.name.localeCompare(a.name);
+      case "price-asc":
+        return parseFloat(a.price) - parseFloat(b.price);
+      case "price-desc":
+        return parseFloat(b.price) - parseFloat(a.price);
+      case "stock-asc":
+        return parseFloat(a.stock_quantity ?? "0") - parseFloat(b.stock_quantity ?? "0");
+      case "stock-desc":
+        return parseFloat(b.stock_quantity ?? "0") - parseFloat(a.stock_quantity ?? "0");
+      case "name-asc":
+      default:
+        return a.name.localeCompare(b.name);
+    }
+  };
+
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: "name-asc", label: "Name (A–Z)" },
+    { key: "name-desc", label: "Name (Z–A)" },
+    { key: "price-asc", label: "Price (Low–High)" },
+    { key: "price-desc", label: "Price (High–Low)" },
+    { key: "stock-asc", label: "Stock (Low–High)" },
+    { key: "stock-desc", label: "Stock (High–Low)" },
+  ];
+
+  // Groups each root product with its variant children immediately
+  // following it — but variants only render when their root is expanded
+  // (tap "N variants" to reveal them), so a catalog with lots of
+  // size/flavor variants reads as one clean line per product by default
+  // instead of every variant always being visible. A variant whose parent
+  // got filtered out by search (an edge case) falls back to showing as its
+  // own root-level row instead of vanishing.
+  const visibleProducts = lowStockOnly ? products.filter(isProductLow) : products;
+  const rootProducts = visibleProducts.filter((p) => !p.parent_product_id).sort(sortFn);
+  const orphanVariants = visibleProducts
+    .filter((p) => p.parent_product_id && !visibleProducts.some((root) => root.id === p.parent_product_id))
+    .sort(sortFn);
   const groupedProducts: Product[] = [];
   for (const root of [...rootProducts, ...orphanVariants]) {
     groupedProducts.push(root);
     if (!expandedGroups.has(root.id)) continue;
-    for (const variant of products.filter((p) => p.parent_product_id === root.id).sort(byName)) {
+    for (const variant of visibleProducts.filter((p) => p.parent_product_id === root.id).sort(sortFn)) {
       groupedProducts.push(variant);
     }
   }
@@ -517,6 +564,57 @@ export default function InventoryScreen() {
           )}
         </View>
       </View>
+
+      {/* Sort + Low Stock Filter */}
+      <View className="flex-row items-center mb-6" style={{ gap: 8 }}>
+        <Pressable
+          onPress={() => setIsSortMenuOpen(true)}
+          className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3.5 py-2.5 rounded-xl"
+          style={{ gap: 5 }}
+        >
+          <MaterialCommunityIcons name="sort" size={15} color="#3e4944" />
+          <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
+            {SORT_OPTIONS.find((o) => o.key === sortKey)?.label}
+          </Text>
+          <MaterialCommunityIcons name="chevron-down" size={15} color="#3e4944" />
+        </Pressable>
+        <Pressable
+          onPress={() => setLowStockOnly((v) => !v)}
+          className={`flex-row items-center px-3.5 py-2.5 rounded-xl border ${
+            lowStockOnly ? "bg-error border-error" : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
+          }`}
+          style={{ gap: 5 }}
+        >
+          <MaterialCommunityIcons name="alert-circle-outline" size={15} color={lowStockOnly ? "#fff" : "#D64545"} />
+          <Text className={`text-sm font-bold ${lowStockOnly ? "text-white" : "text-error"}`}>Low Stock</Text>
+        </Pressable>
+      </View>
+
+      {/* Sort Menu */}
+      <Modal visible={isSortMenuOpen} animationType="fade" transparent onRequestClose={() => setIsSortMenuOpen(false)}>
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setIsSortMenuOpen(false)}>
+          <Pressable className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
+            <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-4">Sort By</Text>
+            {SORT_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.key}
+                onPress={() => {
+                  setSortKey(opt.key);
+                  setIsSortMenuOpen(false);
+                }}
+                className="flex-row items-center justify-between py-3.5 border-b border-outline-variant dark:border-outline"
+              >
+                <Text
+                  className={`text-base ${sortKey === opt.key ? "font-bold text-primary dark:text-primary-dark" : "font-medium text-on-surface dark:text-text-primary-dark"}`}
+                >
+                  {opt.label}
+                </Text>
+                {sortKey === opt.key && <MaterialCommunityIcons name="check" size={18} color="#0F7A5F" />}
+              </Pressable>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Warehouse Selector */}
       <ScrollView
