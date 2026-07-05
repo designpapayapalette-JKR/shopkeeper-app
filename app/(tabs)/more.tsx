@@ -101,7 +101,7 @@ interface Party {
 }
 
 export default function MoreScreen() {
-  const { user, activeCompany, refreshCompany, setupQuickPin, pinLoginAvailable } = useAuth();
+  const { user, activeCompany, refreshCompany, setupQuickPin, pinLoginAvailable, logout } = useAuth();
   const router = useRouter();
   const confirm = useConfirm();
   const confirmDiscard = async () =>
@@ -887,45 +887,18 @@ export default function MoreScreen() {
         </Text>
       </View>
 
-      {/* Business Profile */}
+      {/* ══════════════════════ OPERATIONS ══════════════════════
+          Day-to-day workflows a shopkeeper reaches for often: history,
+          staff, reports, inventory movement. */}
+      <Text className="text-sm font-black text-primary dark:text-primary-dark uppercase tracking-widest mb-3">
+        Operations
+      </Text>
+
+      {/* Data & Activity */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
-          Business Profile
+          Data & Activity
         </Text>
-        <Pressable
-          onPress={openBusinessProfileModal}
-          className="flex-row justify-between items-center py-3"
-        >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Edit Business Details
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              GSTIN, address, phone, and bank details shown on your Tally-style GST invoices.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
-        </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
-        <Pressable
-          onPress={() => router.push("/printer-settings" as any)}
-          className="flex-row justify-between items-center py-3"
-        >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Printer Settings
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Pair a thermal receipt printer over Bluetooth, USB, or Wi-Fi.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
-        </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
         <Pressable
           onPress={() => router.push("/bank-accounts" as any)}
           className="flex-row justify-between items-center py-3"
@@ -940,13 +913,9 @@ export default function MoreScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
         </Pressable>
-      </View>
 
-      {/* Data & Activity */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
-          Data & Activity
-        </Text>
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
         <Pressable
           onPress={() => router.push("/scanned-documents" as any)}
           className="flex-row justify-between items-center py-3"
@@ -1028,32 +997,6 @@ export default function MoreScreen() {
             </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
-        </Pressable>
-      </View>
-
-      {/* Security */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
-          Security
-        </Text>
-        <Pressable
-          onPress={() => setIsPinSetupModal(true)}
-          className="flex-row justify-between items-center py-3"
-        >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              {pinLoginAvailable ? "Change Quick PIN" : "Set Up Quick PIN"}
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              A 4-digit PIN to unlock the app quickly instead of typing your email and password every time.
-            </Text>
-          </View>
-          <View className="flex-row items-center" style={{ gap: 4 }}>
-            <Text className="text-primary font-bold text-base">
-              {pinLoginAvailable ? "Change" : "Set Up"}
-            </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
-          </View>
         </Pressable>
       </View>
 
@@ -1281,7 +1224,7 @@ export default function MoreScreen() {
       </View>
 
       {/* Staff Operations */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-10">
+      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
           Staff Management
         </Text>
@@ -1321,6 +1264,101 @@ export default function MoreScreen() {
             </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+      </View>
+
+      {/* ══════════════════════ SETTINGS ══════════════════════
+          Configuration you set up once and rarely touch again. */}
+      <Text className="text-sm font-black text-primary dark:text-primary-dark uppercase tracking-widest mb-3 mt-2">
+        Settings
+      </Text>
+
+      {/* Business Profile */}
+      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+          Business Profile
+        </Text>
+        <Pressable
+          onPress={openBusinessProfileModal}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Edit Business Details
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              GSTIN, address, phone, and bank details shown on your Tally-style GST invoices.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/printer-settings" as any)}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Printer Settings
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Pair a thermal receipt printer over Bluetooth, USB, or Wi-Fi.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+      </View>
+
+      {/* Security */}
+      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-10">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+          Security
+        </Text>
+        <Pressable
+          onPress={() => setIsPinSetupModal(true)}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              {pinLoginAvailable ? "Change Quick PIN" : "Set Up Quick PIN"}
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              A 4-digit PIN to unlock the app quickly instead of typing your email and password every time.
+            </Text>
+          </View>
+          <View className="flex-row items-center" style={{ gap: 4 }}>
+            <Text className="text-primary font-bold text-base">
+              {pinLoginAvailable ? "Change" : "Set Up"}
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          </View>
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={async () => {
+            const ok = await confirm({
+              title: "Sign out?",
+              message: "You'll need your email and password (or Quick PIN) to sign back in.",
+              confirmLabel: "Sign Out",
+              destructive: true,
+            });
+            if (ok) logout();
+          }}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-error">
+              Sign Out
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Sign out of this device.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="logout" size={20} color="#D64545" />
         </Pressable>
       </View>
 
