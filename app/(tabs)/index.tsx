@@ -38,6 +38,17 @@ interface ActivityItem {
   date_created: string;
 }
 
+interface TrendDay {
+  date: string;
+  total: number;
+}
+
+interface TopProduct {
+  name: string;
+  revenue: number;
+  quantity: number;
+}
+
 const QUICK_ACTIONS = [
   { id: "pos", label: "New Bill", icon: "receipt", route: "/pos", primary: true },
   { id: "scan", label: "Scan", icon: "qrcode-scan", route: "/inventory?openScanner=1", primary: false },
@@ -86,6 +97,8 @@ export default function DashboardScreen() {
   });
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [weekTrend, setWeekTrend] = useState<TrendDay[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -168,6 +181,14 @@ export default function DashboardScreen() {
       setStats({ salesToday, yesterdaySales, invoicesToday, pendingReceivables, cashOut });
       setLowStockItems(lowStock);
       setActivity(recentInvoices);
+
+      try {
+        const insightsRes = await api.get<{ data: { week_trend: TrendDay[]; top_products: TopProduct[] } }>(
+          "/invoices/dashboard/insights"
+        );
+        setWeekTrend(insightsRes.data.week_trend ?? []);
+        setTopProducts(insightsRes.data.top_products ?? []);
+      } catch (_) {}
     } catch (e) {
       console.error("Dashboard stats load failed:", e);
     } finally {
@@ -487,6 +508,74 @@ export default function DashboardScreen() {
               ))}
             </View>
           </View>
+
+          {/* ── This Week ── */}
+          {weekTrend.length > 0 && (
+            <View style={{ gap: 8 }}>
+              <Text className="font-headline-sm text-headline-sm text-on-surface dark:text-text-primary-dark">
+                This Week
+              </Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4">
+                {(() => {
+                  const max = Math.max(1, ...weekTrend.map((d) => d.total));
+                  return (
+                    <View className="flex-row items-end justify-between" style={{ height: 100, gap: 6 }}>
+                      {weekTrend.map((d) => {
+                        const dayLabel = new Date(d.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short" });
+                        const isToday = d.date === todayStr;
+                        const heightPct = Math.max(4, (d.total / max) * 100);
+                        return (
+                          <View key={d.date} className="flex-1 items-center" style={{ gap: 4 }}>
+                            <View className="w-full flex-1 justify-end">
+                              <View
+                                className={`w-full rounded-md ${isToday ? "bg-primary dark:bg-primary-dark" : "bg-primary/25 dark:bg-primary-dark/25"}`}
+                                style={{ height: `${heightPct}%`, minHeight: 3 }}
+                              />
+                            </View>
+                            <Text className={`text-xs font-bold ${isToday ? "text-primary dark:text-primary-dark" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                              {dayLabel[0]}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  );
+                })()}
+              </View>
+            </View>
+          )}
+
+          {/* ── Top Products This Month ── */}
+          {topProducts.length > 0 && (
+            <View style={{ gap: 8 }}>
+              <Text className="font-headline-sm text-headline-sm text-on-surface dark:text-text-primary-dark">
+                Top Products This Month
+              </Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4" style={{ gap: 10 }}>
+                {topProducts.map((p, idx) => {
+                  const max = topProducts[0]?.revenue || 1;
+                  return (
+                    <View key={p.name + idx}>
+                      <View className="flex-row justify-between items-center mb-1">
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>
+                          {idx + 1}. {p.name}
+                        </Text>
+                        <Text className="text-sm font-black text-primary dark:text-primary-dark">
+                          {formatCurrency(p.revenue)}
+                        </Text>
+                      </View>
+                      <View className="w-full h-1.5 bg-surface-container dark:bg-bg-dark rounded-full overflow-hidden">
+                        <View
+                          className="h-full bg-primary dark:bg-primary-dark rounded-full"
+                          style={{ width: `${Math.max(4, (p.revenue / max) * 100)}%` }}
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
 
           {/* ── Low Stock Alerts ── */}
           <View style={{ gap: 8 }}>
