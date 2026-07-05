@@ -1,5 +1,1183 @@
-import { PlaceholderScreen } from "@/components/PlaceholderScreen";
+import React, { useState, useEffect } from "react";
+import {
+  Text,
+  View,
+  ScrollView,
+  Pressable,
+  TextInput,
+  Modal,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  useWindowDimensions,
+} from "react-native";
+import * as Print from "expo-print";
+import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { generateReceiptHtml, ReceiptData, THERMAL_PAGE_WIDTH_PT, estimateThermalPageHeightPt } from "../../src/lib/printer";
+import { generateTallyInvoiceHtml, TallyInvoiceItem } from "../../src/lib/invoiceTemplate";
+import { shareInvoiceFile } from "../../src/lib/sharer";
+import { printToSavedPrinter, getSavedPrinter } from "../../src/lib/thermalPrinter";
+import { useAuth } from "../../src/lib/auth-context";
+import { api, ApiError } from "../../src/lib/api";
+import { useTopInset } from "../../src/lib/useTopInset";
+import { useBottomInset } from "../../src/lib/useBottomInset";
+
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  barcode: string;
+  hsn_code?: string;
+  price: string;
+  tax_rate: string;
+  stock_quantity?: string;
+}
+
+interface Party {
+  id: string;
+  name: string;
+  phone: string;
+  type: string;
+  state?: string | null;
+  gstin?: string | null;
+  category?: "b2b" | "b2c";
+  current_balance?: string;
+}
+
+interface Warehouse {
+  id: string;
+  name: string;
+}
+
+interface CartItem {
+  product: Product;
+  quantity: number;
+}
 
 export default function PosScreen() {
-  return <PlaceholderScreen title="POS Billing" />;
+  const { user, activeCompany, activeBrand } = useAuth();
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const topInset = useTopInset();
+  const bottomInset = useBottomInset();
+
+  // Data State
+  const [products, setProducts] = useState<Product[]>([]);
+  const [parties, setParties] = useState<Party[]>([]);
+  const [defaultWarehouseId, setDefaultWarehouseId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  // Search & Cart State
+  const [productSearch, setProductSearch] = useState("");
+  const [partySearch, setPartySearch] = useState("");
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [discount, setDiscount] = useState("");
+  const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
+  const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate">("retail");
+  const businessMode: "retail" | "b2b" = activeCompany?.business_mode === "b2b" ? "b2b" : "retail";
+  const [cashCustomerId, setCashCustomerId] = useState<string | null>(null);
+
+  // Switching company-wide mode changes what a *new* bill defaults to.
+  // Guarded by an empty cart so it never yanks the bill type out from under
+  // an in-progress sale if the mode happens to change mid-session.
+  useEffect(() => {
+    if (cart.length > 0) return;
+    setInvoiceType(businessMode === "b2b" ? "gst" : "retail");
+  }, [businessMode]);
+
+  // Party Selector State
+  const [selectedParty, setSelectedParty] = useState<Party | null>(null);
+  const [isSelectingParty, setIsSelectingParty] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // Add Customer State
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState("");
+  const [newCustomerState, setNewCustomerState] = useState("");
+  const [addCustomerLoading, setAddCustomerLoading] = useState(false);
+
+  // Quick Add Product State — lets a cashier add a brand-new SKU mid-bill
+  // instead of having to abandon the sale, go to Inventory, add it, and
+  // come back to POS to start over.
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [newProductName, setNewProductName] = useState("");
+  const [newProductPrice, setNewProductPrice] = useState("");
+  const [newProductTax, setNewProductTax] = useState("18.00");
+  const [newProductStock, setNewProductStock] = useState("");
+  const [addProductLoading, setAddProductLoading] = useState(false);
+
+  const fetchData = async () => {
+    if (!user?.company_id) return;
+    setLoading(true);
+    try {
+      // Fetch products
+      const pRes = await api.get<{ data: Product[] }>("/products", {
+        params: { brandId: activeBrand?.id },
+      });
+      setProducts(pRes.data ?? []);
+
+      // Fetch parties (customers/clients)
+      const ptRes = await api.get<{ data: Party[] }>("/parties", { params: { type: "customer" } });
+      setParties(ptRes.data ?? []);
+
+      // Resolve (or auto-create) a default warehouse so sales can deduct stock
+      // without forcing every shop through a warehouse-setup step first.
+      const whRes = await api.get<{ data: Warehouse[] }>("/warehouses");
+      const warehouses = whRes.data ?? [];
+      if (warehouses.length > 0) {
+        setDefaultWarehouseId(warehouses[0].id);
+      } else {
+        const created = await api.post<{ data: Warehouse }>("/warehouses", { name: "Main Store" });
+        setDefaultWarehouseId(created.data.id);
+      }
+    } catch (error) {
+      console.error("Failed to fetch POS setup data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [user, activeBrand]);
+
+  const handleAddCustomer = async () => {
+    if (!newCustomerName) {
+      Alert.alert("Required Fields", "Name is required.");
+      return;
+    }
+    if (!user?.company_id) return;
+
+    setAddCustomerLoading(true);
+    try {
+      const created = await api.post<{ data: Party }>("/parties", {
+        name: newCustomerName,
+        phone: newCustomerPhone || undefined,
+        state: newCustomerState || undefined,
+        type: "customer",
+        current_balance: 0,
+        opening_balance: 0,
+      });
+
+      const newCustomer = created.data;
+      setParties((prev) => [newCustomer, ...prev]);
+      setSelectedParty(newCustomer);
+      setIsAddingCustomer(false);
+      setIsSelectingParty(false); // Close selection modal
+
+      setNewCustomerName("");
+      setNewCustomerPhone("");
+      setNewCustomerState("");
+      Alert.alert("Success", "Customer added and selected.");
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add customer.");
+    } finally {
+      setAddCustomerLoading(false);
+    }
+  };
+
+  const handleAddProduct = async () => {
+    if (!newProductName.trim() || !newProductPrice) {
+      Alert.alert("Required Fields", "Name and price are required.");
+      return;
+    }
+    if (!user?.company_id) return;
+
+    setAddProductLoading(true);
+    try {
+      const created = await api.post<{ data: Product }>("/products", {
+        name: newProductName.trim(),
+        brand_id: activeBrand?.id,
+        price: parseFloat(newProductPrice),
+        tax_rate: parseFloat(newProductTax || "0"),
+        stock_quantity: parseFloat(newProductStock || "0"),
+        status: "active",
+      });
+
+      const newProduct = created.data;
+      setProducts((prev) => [newProduct, ...prev]);
+      addToCart(newProduct);
+      setIsAddingProduct(false);
+      setProductSearch("");
+      setNewProductName("");
+      setNewProductPrice("");
+      setNewProductTax("18.00");
+      setNewProductStock("");
+      Alert.alert("Success", "Product added and placed in the cart.");
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add product.");
+    } finally {
+      setAddProductLoading(false);
+    }
+  };
+
+  const addToCart = (product: Product) => {
+    setCart((prevCart) => {
+      const existing = prevCart.find((item) => item.product.id === product.id);
+      if (existing) {
+        return prevCart.map((item) =>
+          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { product, quantity: 1 }];
+    });
+  };
+
+  const updateQuantity = (productId: string, delta: number) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((item) => {
+          if (item.product.id === productId) {
+            const nextQty = item.quantity + delta;
+            return { ...item, quantity: nextQty };
+          }
+          return item;
+        })
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  // Calculations
+  const getSubtotal = () => {
+    return cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
+  };
+
+  const getDiscountValue = () => {
+    const val = parseFloat(discount || "0");
+    return val > 0 ? val : 0;
+  };
+
+  const getTaxTotal = () => {
+    if (invoiceType !== "gst") return 0;
+    return cart.reduce((sum, item) => {
+      const price = parseFloat(item.product.price);
+      const taxRate = parseFloat(item.product.tax_rate || "18.00");
+      const taxAmount = price * (taxRate / 100);
+      return sum + taxAmount * item.quantity;
+    }, 0);
+  };
+
+  const getTotal = () => {
+    return Math.max(0, getSubtotal() + getTaxTotal() - getDiscountValue());
+  };
+
+  // Retail mode allows checkout with no chosen customer — this resolves (or
+  // lazily creates, once, then caches) a generic "Cash Customer" party so
+  // the invoice still has a valid partyId without forcing the cashier
+  // through full name/GSTIN entry for a walk-in sale. B2B mode keeps the
+  // existing strict requirement untouched.
+  const resolveCheckoutParty = async (): Promise<Party | null> => {
+    if (selectedParty) return selectedParty;
+    if (businessMode === "b2b") return null;
+
+    if (cashCustomerId) {
+      const cached = parties.find((p) => p.id === cashCustomerId);
+      if (cached) return cached;
+    }
+
+    try {
+      const existing = await api.get<{ data: Party[] }>("/parties", {
+        params: { type: "customer", search: "Cash Customer" },
+      });
+      const found = (existing.data ?? []).find((p) => p.name === "Cash Customer");
+      if (found) {
+        setCashCustomerId(found.id);
+        return found;
+      }
+      const created = await api.post<{ data: Party }>("/parties", {
+        name: "Cash Customer",
+        type: "customer",
+        category: "b2c",
+        current_balance: 0,
+        opening_balance: 0,
+      });
+      setCashCustomerId(created.data.id);
+      setParties((prev) => [created.data, ...prev]);
+      return created.data;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (cart.length === 0) {
+      Alert.alert("Empty Cart", "Add items to the cart before checking out.");
+      return;
+    }
+    const checkoutParty = await resolveCheckoutParty();
+    if (!checkoutParty) {
+      Alert.alert("No Customer", "Please select a customer before checking out.");
+      return;
+    }
+    if (!user?.company_id || !defaultWarehouseId) {
+      Alert.alert("Error", "Missing company or warehouse data. Cannot process.");
+      return;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const subtotal = getSubtotal();
+      const discountVal = getDiscountValue();
+      const total = getTotal();
+
+      if (total < 0) {
+        Alert.alert("Invalid Discount", "Discount cannot exceed the bill total.");
+        setCheckoutLoading(false);
+        return;
+      }
+
+      // The entire invoice + items + stock + ledger write happens atomically
+      // server-side now — see shopkeeper-api/src/routes/pos.ts checkout.
+      const checkoutRes = await api.post<{
+        data: { invoice_number: string; cgst_total: string; sgst_total: string; igst_total: string };
+      }>("/pos/checkout", {
+        party_id: checkoutParty.id,
+        brand_id: activeBrand?.id,
+        warehouse_id: defaultWarehouseId,
+        type: invoiceType,
+        payment_mode: paymentMode,
+        discount_total: discountVal,
+        items: cart.map((item) => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          price: parseFloat(item.product.price),
+          tax_rate: invoiceType === "gst" ? parseFloat(item.product.tax_rate || "18.00") : 0,
+        })),
+      });
+
+      const invoiceNumber = checkoutRes.data.invoice_number;
+      const gstSplit = {
+        cgst: parseFloat(checkoutRes.data.cgst_total || "0"),
+        sgst: parseFloat(checkoutRes.data.sgst_total || "0"),
+        igst: parseFloat(checkoutRes.data.igst_total || "0"),
+      };
+      const invoiceDate = new Date().toLocaleDateString();
+      const partyForInvoice = checkoutParty;
+
+      const finishSale = () => {
+        setCart([]);
+        setSelectedParty(null);
+        setIsCheckoutOpen(false);
+      };
+
+      const buildReceiptData = (): ReceiptData => {
+        const printItems = cart.map((item) => {
+          const price = parseFloat(item.product.price);
+          return {
+            name: item.product.name,
+            quantity: item.quantity,
+            price: price,
+            total: price * item.quantity,
+          };
+        });
+        return {
+          storeName: activeCompany?.name || "Merchant POS Store",
+          storeAddress: activeCompany?.address,
+          storePhone: activeCompany?.phone,
+          gstNumber: activeCompany?.gstin,
+          upiId: activeCompany?.upi_id || undefined,
+          invoiceNumber,
+          date: invoiceDate,
+          invoiceType,
+          items: printItems,
+          subtotal,
+          cgst: gstSplit.cgst,
+          sgst: gstSplit.sgst,
+          igst: gstSplit.igst,
+          total,
+        };
+      };
+
+      const buildReceiptHtml = () => generateReceiptHtml(buildReceiptData());
+
+      const buildTallyHtml = () => {
+        const tallyItems: TallyInvoiceItem[] = cart.map((item) => {
+          const price = parseFloat(item.product.price);
+          const taxRate = invoiceType === "gst" ? parseFloat(item.product.tax_rate || "18.00") : 0;
+          const lineSubtotal = price * item.quantity;
+          return {
+            name: item.product.name,
+            hsnCode: item.product.hsn_code,
+            quantity: item.quantity,
+            price,
+            taxRate,
+            taxAmount: lineSubtotal * (taxRate / 100),
+            total: lineSubtotal * (1 + taxRate / 100),
+          };
+        });
+        return generateTallyInvoiceHtml({
+          company: {
+            name: activeCompany?.name || "Merchant POS Store",
+            address: activeCompany?.address,
+            phone: activeCompany?.phone,
+            gstin: activeCompany?.gstin,
+            state: activeCompany?.state,
+            bankName: activeCompany?.bank_name,
+            bankAccountNumber: activeCompany?.bank_account_number,
+            bankIfsc: activeCompany?.bank_ifsc,
+            upiId: activeCompany?.upi_id,
+          },
+          party: {
+            name: partyForInvoice?.name || "Walk-in Customer",
+            phone: partyForInvoice?.phone || undefined,
+            gstin: partyForInvoice?.gstin || undefined,
+            state: partyForInvoice?.state || undefined,
+            category: partyForInvoice?.category || "b2c",
+          },
+          invoiceNumber,
+          date: invoiceDate,
+          invoiceType,
+          items: tallyItems,
+          subtotal,
+          discountTotal: discountVal,
+          cgst: gstSplit.cgst,
+          sgst: gstSplit.sgst,
+          igst: gstSplit.igst,
+          total,
+        });
+      };
+
+      // For the thermal format, prefer a direct raw print to a paired
+      // Bluetooth/USB/Wi-Fi printer when one is set up (Printer Settings);
+      // only fall back to the OS print dialog if no printer is paired or the
+      // direct print fails (e.g. printer powered off, out of range).
+      const printThermal = async () => {
+        const saved = await getSavedPrinter();
+        if (saved) {
+          try {
+            await printToSavedPrinter(buildReceiptData());
+            return;
+          } catch (e: any) {
+            Alert.alert("Printer Unreachable", `Could not reach ${saved.name}. Falling back to the system print dialog.`);
+          }
+        }
+        await Print.printAsync({
+          html: buildReceiptHtml(),
+          width: THERMAL_PAGE_WIDTH_PT,
+          height: estimateThermalPageHeightPt(cart.length, !!activeCompany?.upi_id),
+        });
+      };
+
+      const offerPrintOrShare = (formatLabel: string, buildHtml: () => string, isThermal: boolean) => {
+        const thermalPageSize = isThermal
+          ? { width: THERMAL_PAGE_WIDTH_PT, height: estimateThermalPageHeightPt(cart.length, !!activeCompany?.upi_id) }
+          : undefined;
+        Alert.alert(formatLabel, `Invoice ${invoiceNumber} — what would you like to do?`, [
+          {
+            text: "Print",
+            onPress: async () => {
+              try {
+                if (isThermal) {
+                  await printThermal();
+                } else {
+                  await Print.printAsync({ html: buildHtml() });
+                }
+              } catch (e: any) {
+                Alert.alert("Print Error", e.message || "Could not print invoice.");
+              } finally {
+                finishSale();
+              }
+            },
+          },
+          {
+            text: "Share",
+            onPress: async () => {
+              try {
+                await shareInvoiceFile(buildHtml(), `Invoice ${invoiceNumber}`, thermalPageSize);
+              } catch (e: any) {
+                Alert.alert("Share Error", e.message || "Could not share invoice.");
+              } finally {
+                finishSale();
+              }
+            },
+          },
+          { text: "Cancel", style: "cancel", onPress: finishSale },
+        ]);
+      };
+
+      // Tally-style is only offered for GST invoices — a retail/estimate
+      // bill (the default in Retail Mode) is a quick paper-slip sale and
+      // only ever needs the thermal format, per how the two business modes
+      // are defined.
+      if (invoiceType === "gst") {
+        Alert.alert(
+          "Checkout Success",
+          `Invoice ${invoiceNumber} created successfully! Choose an invoice format.`,
+          [
+            {
+              text: "Tally Style Invoice",
+              onPress: () => offerPrintOrShare("Tally Style Invoice", buildTallyHtml, false),
+            },
+            {
+              text: "Thermal Receipt",
+              onPress: () => offerPrintOrShare("Thermal Receipt", buildReceiptHtml, true),
+            },
+            { text: "New Sale", onPress: finishSale },
+          ]
+        );
+      } else {
+        offerPrintOrShare("Thermal Receipt", buildReceiptHtml, true);
+      }
+    } catch (error) {
+      Alert.alert("Checkout Error", error instanceof ApiError ? error.message : "Failed to process checkout.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+  // Filter products by search bar input
+  const filteredProducts = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+      p.sku.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  // Filter parties by search bar input
+  const filteredParties = parties.filter(
+    (p) =>
+      p.name.toLowerCase().includes(partySearch.toLowerCase()) ||
+      p.phone.includes(partySearch)
+  );
+
+  const BILL_TYPE_COLORS: Record<string, string> = {
+    retail: "#6B21A8",
+    gst:    "#0F7A5F",
+    estimate: "#B45309",
+  };
+
+  const activeBillColor = BILL_TYPE_COLORS[invoiceType];
+
+  // ─────────────────────────────────────────────
+  //  Product Card
+  // ─────────────────────────────────────────────
+  const renderProductCard = ({ item }: { item: Product }) => {
+    const inCart = cart.find((c) => c.product.id === item.id);
+    return (
+      <Pressable
+        onPress={() => addToCart(item)}
+        className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline mb-3 overflow-hidden active:opacity-80"
+      >
+        <View className="p-4">
+          <View className="flex-row justify-between items-start">
+            <View className="flex-1 mr-3">
+              <Text numberOfLines={2} className="font-bold text-base text-on-surface dark:text-text-primary-dark leading-snug">
+                {item.name}
+              </Text>
+              {item.sku ? (
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark font-semibold mt-1 uppercase tracking-wider">
+                  SKU: {item.sku}
+                </Text>
+              ) : null}
+            </View>
+            <View className="items-end">
+              <Text className="font-black text-base text-primary dark:text-primary-dark">
+                ₹{parseFloat(item.price).toFixed(0)}
+              </Text>
+              {item.stock_quantity !== undefined && (
+                <Text className="text-xs text-on-surface-variant mt-0.5">
+                  Stock: {item.stock_quantity}
+                </Text>
+              )}
+            </View>
+          </View>
+        </View>
+        {inCart && (
+          <View className="bg-primary/10 dark:bg-primary-dark/10 px-4 py-1.5 flex-row justify-between items-center">
+            <Text className="text-xs font-bold text-primary dark:text-primary-dark">In cart</Text>
+            <View className="flex-row items-center gap-3">
+              <Pressable onPress={() => updateQuantity(item.id, -1)} className="w-7 h-7 rounded-full bg-primary dark:bg-primary-dark items-center justify-center">
+                <MaterialCommunityIcons name="minus" size={14} color="white" />
+              </Pressable>
+              <Text className="text-primary dark:text-primary-dark font-black text-base min-w-[16px] text-center">{inCart.quantity}</Text>
+              <Pressable onPress={() => updateQuantity(item.id, 1)} className="w-7 h-7 rounded-full bg-primary dark:bg-primary-dark items-center justify-center">
+                <MaterialCommunityIcons name="plus" size={14} color="white" />
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </Pressable>
+    );
+  };
+
+  // ─────────────────────────────────────────────
+  //  Checkout Panel content (shared phone+tablet)
+  // ─────────────────────────────────────────────
+  const CheckoutPanel = (
+    <>
+      {/* Customer row */}
+      <Pressable
+        onPress={() => setIsSelectingParty(true)}
+        className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-dashed border-gray-300 dark:border-zinc-700 p-4 mb-5 flex-row justify-between items-center active:opacity-75"
+      >
+        <View className="flex-row items-center flex-1 mr-3">
+          <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mr-3">
+            <MaterialCommunityIcons name="account" size={20} color="#005f49" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Customer</Text>
+            <Text numberOfLines={1} className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-0.5">
+              {selectedParty ? selectedParty.name : "Tap to select →"}
+            </Text>
+          </View>
+        </View>
+        {selectedParty && (
+          <View className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg flex-row items-center" style={{ gap: 3 }}>
+            <MaterialCommunityIcons name="check-circle" size={12} color="#15803d" />
+            <Text className="text-green-700 dark:text-green-400 text-xs font-bold">Set</Text>
+          </View>
+        )}
+      </Pressable>
+
+      {/* Cart items */}
+      {cart.length === 0 ? (
+        <View className="items-center py-8">
+          <MaterialCommunityIcons name="cart-outline" size={40} color="#6e7a74" style={{ marginBottom: 8 }} />
+          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-semibold text-sm">
+            Add products from the left panel
+          </Text>
+        </View>
+      ) : (
+        <View className="mb-4">
+          {cart.map((item) => (
+            <View key={item.product.id} className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline px-4 py-3 mb-2">
+              <View className="flex-1 mr-2">
+                <Text numberOfLines={1} className="font-bold text-sm text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
+                <Text className="text-xs text-on-surface-variant mt-0.5">₹{parseFloat(item.product.price).toFixed(2)} each</Text>
+              </View>
+              <View className="flex-row items-center gap-2 mr-3">
+                <Pressable onPress={() => updateQuantity(item.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
+                  <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
+                </Pressable>
+                <Text className="text-base font-black text-on-surface dark:text-text-primary-dark min-w-[20px] text-center">{item.quantity}</Text>
+                <Pressable onPress={() => updateQuantity(item.product.id, 1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
+                  <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
+                </Pressable>
+              </View>
+              <Text className="font-black text-base text-primary dark:text-primary-dark min-w-[60px] text-right">
+                ₹{(parseFloat(item.product.price) * item.quantity).toFixed(0)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* ── Bill Options ── */}
+      <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-4 mb-4">
+        {/* Bill Type */}
+        <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Bill Type</Text>
+        <View className="flex-row gap-2 mb-4">
+          {(businessMode === "b2b"
+            ? ([
+                { key: "gst",      label: "GST",       icon: "file-document-outline" },
+                { key: "estimate", label: "Estimate",  icon: "note-edit-outline" },
+              ] as const)
+            : ([
+                { key: "retail",   label: "Retail",   icon: "storefront-outline" },
+                { key: "gst",      label: "GST",       icon: "file-document-outline" },
+                { key: "estimate", label: "Estimate",  icon: "note-edit-outline" },
+              ] as const)
+          ).map((opt) => (
+            <Pressable
+              key={opt.key}
+              onPress={() => setInvoiceType(opt.key as "gst" | "retail" | "estimate")}
+              className={`flex-1 py-2.5 rounded-xl items-center border ${
+                invoiceType === opt.key
+                  ? "border-transparent"
+                  : "border-outline-variant dark:border-outline"
+              }`}
+              style={invoiceType === opt.key ? { backgroundColor: activeBillColor } : undefined}
+            >
+              <MaterialCommunityIcons
+                name={opt.icon}
+                size={18}
+                color={invoiceType === opt.key ? "#FFFFFF" : "#6e7a74"}
+              />
+              <Text className={`text-xs font-bold mt-0.5 ${invoiceType === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Payment Mode */}
+        <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Payment</Text>
+        <View className="flex-row gap-2 mb-4">
+          {([
+            { key: "cash",   label: "Cash",  icon: "cash" as const },
+            { key: "upi",    label: "UPI",   icon: "cellphone" as const },
+            { key: "credit", label: "Credit", icon: "book-account-outline" as const },
+          ] as const).map((opt) => (
+            <Pressable
+              key={opt.key}
+              onPress={() => setPaymentMode(opt.key)}
+              className={`flex-1 py-2.5 rounded-xl items-center border ${
+                paymentMode === opt.key
+                  ? "bg-primary dark:bg-primary-dark border-primary"
+                  : "border-outline-variant dark:border-outline"
+              }`}
+            >
+              <MaterialCommunityIcons
+                name={opt.icon}
+                size={18}
+                color={paymentMode === opt.key ? "#FFFFFF" : "#6e7a74"}
+              />
+              <Text className={`text-xs font-bold mt-0.5 ${paymentMode === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Discount */}
+        <View className="flex-row justify-between items-center">
+          <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Discount (₹)</Text>
+          <TextInput
+            value={discount}
+            onChangeText={setDiscount}
+            keyboardType="numeric"
+            placeholder="0"
+            placeholderTextColor="#A0A0A0"
+            className="border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-right text-base font-bold w-24 bg-background dark:bg-bg-dark text-on-surface dark:text-text-primary-dark"
+          />
+        </View>
+      </View>
+
+      {/* ── Totals ── */}
+      <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-4 mb-4">
+        <View className="flex-row justify-between mb-2">
+          <Text className="text-sm text-on-surface-variant font-medium">Subtotal</Text>
+          <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">₹{getSubtotal().toFixed(2)}</Text>
+        </View>
+        {invoiceType === "gst" && getTaxTotal() > 0 && (
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-sm text-on-surface-variant font-medium">GST</Text>
+            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getTaxTotal().toFixed(2)}</Text>
+          </View>
+        )}
+        {getDiscountValue() > 0 && (
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-sm text-on-surface-variant font-medium">Discount</Text>
+            <Text className="text-sm font-semibold text-red-500">−₹{getDiscountValue().toFixed(2)}</Text>
+          </View>
+        )}
+        <View className="h-px bg-surface-container my-2" />
+        <View className="flex-row justify-between items-center">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">Total</Text>
+          <Text className="text-2xl font-black text-primary dark:text-primary-dark">₹{getTotal().toFixed(2)}</Text>
+        </View>
+      </View>
+
+      {/* Checkout button */}
+      <Pressable
+        onPress={handleCheckout}
+        disabled={checkoutLoading}
+        className="rounded-2xl py-4 items-center shadow-sm active:opacity-90"
+        style={{ backgroundColor: activeBillColor }}
+      >
+        {checkoutLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text className="text-white font-black text-lg tracking-wide">
+            {invoiceType === "estimate" ? "Save Estimate" : "Confirm Sale"} →
+          </Text>
+        )}
+      </Pressable>
+    </>
+  );
+
+  return (
+    <View className="flex-1 bg-background dark:bg-bg-dark">
+      {isTablet ? (
+        /* ══════ TABLET: side-by-side layout ══════ */
+        <View className="flex-1 flex-row" style={{ paddingTop: topInset }}>
+          {/* Left — product catalogue */}
+          <View className="w-[58%] px-4">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Products</Text>
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Pressable
+                  onPress={() => router.push("/invoice-history" as any)}
+                  className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3 py-1.5 rounded-full"
+                  style={{ gap: 5 }}
+                >
+                  <MaterialCommunityIcons name="chart-box-outline" size={14} color="#3e4944" />
+                  <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">Dashboard</Text>
+                </Pressable>
+                {cart.length > 0 && (
+                  <View className="bg-primary/10 dark:bg-primary-dark/10 px-3 py-1 rounded-full">
+                    <Text className="text-primary dark:text-primary-dark text-sm font-bold">{cart.reduce((s, i) => s + i.quantity, 0)} in cart</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 mb-4 flex-row items-center">
+              <MaterialCommunityIcons name="magnify" size={18} color="#3e4944" style={{ marginRight: 8 }} />
+              <TextInput
+                placeholder="Search by name or SKU..."
+                placeholderTextColor="#A0A0A0"
+                value={productSearch}
+                onChangeText={setProductSearch}
+                className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
+              />
+            </View>
+            {loading ? (
+              <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" color="#0F7A5F" />
+              </View>
+            ) : (
+              <FlatList
+                data={filteredProducts}
+                keyExtractor={(item) => item.id}
+                renderItem={renderProductCard}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View className="flex-1 justify-center items-center py-20">
+                    <Text className="text-on-surface-variant font-bold text-base mb-3">No products found</Text>
+                    <Pressable
+                      onPress={() => {
+                        setNewProductName(productSearch);
+                        setIsAddingProduct(true);
+                      }}
+                      className="bg-primary dark:bg-primary-dark px-5 py-3 rounded-xl"
+                    >
+                      <Text className="text-white font-bold text-sm">+ Add "{productSearch || "New Product"}"</Text>
+                    </Pressable>
+                  </View>
+                }
+              />
+            )}
+          </View>
+
+          {/* Right — checkout panel */}
+          <View className="w-[42%] border-l border-outline-variant dark:border-outline px-4 pt-2">
+            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-4">Cart</Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+              {CheckoutPanel}
+            </ScrollView>
+          </View>
+        </View>
+      ) : (
+        /* ══════ PHONE: product list + floating cart bar ══════ */
+        <View className="flex-1" style={{ paddingTop: topInset }}>
+          {/* Header */}
+          <View className="px-5 mb-4">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Sale</Text>
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Pressable
+                  onPress={() => router.push("/invoice-history" as any)}
+                  className="w-9 h-9 rounded-full bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
+                >
+                  <MaterialCommunityIcons name="chart-box-outline" size={16} color="#3e4944" />
+                </Pressable>
+                {selectedParty && (
+                  <Pressable onPress={() => setIsSelectingParty(true)} className="bg-primary/10 dark:bg-primary-dark/10 px-3 py-1.5 rounded-full flex-row items-center" style={{ gap: 4 }}>
+                    <MaterialCommunityIcons name="account" size={14} color="#005f49" />
+                    <Text className="text-primary dark:text-primary-dark text-sm font-bold">{selectedParty.name}</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Search */}
+          <View className="px-5 mb-3">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 flex-row items-center">
+              <MaterialCommunityIcons name="magnify" size={18} color="#3e4944" style={{ marginRight: 8 }} />
+              <TextInput
+                placeholder="Search products..."
+                placeholderTextColor="#A0A0A0"
+                value={productSearch}
+                onChangeText={setProductSearch}
+                className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
+              />
+            </View>
+          </View>
+
+          {/* Product list */}
+          <View className="flex-1 px-5">
+            {loading ? (
+              <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" color="#0F7A5F" />
+              </View>
+            ) : (
+              <FlatList
+                data={filteredProducts}
+                keyExtractor={(item) => item.id}
+                renderItem={renderProductCard}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 16 }}
+                ListEmptyComponent={
+                  <View className="flex-1 justify-center items-center py-20">
+                    <Text className="text-on-surface-variant font-bold text-base text-center mb-3">No products found</Text>
+                    <Pressable
+                      onPress={() => {
+                        setNewProductName(productSearch);
+                        setIsAddingProduct(true);
+                      }}
+                      className="bg-primary dark:bg-primary-dark px-5 py-3 rounded-xl"
+                    >
+                      <Text className="text-white font-bold text-sm">+ Add "{productSearch || "New Product"}"</Text>
+                    </Pressable>
+                  </View>
+                }
+              />
+            )}
+          </View>
+
+          {/* Floating cart bar */}
+          {cart.length > 0 && (
+            <Pressable
+              onPress={() => setIsCheckoutOpen(true)}
+              className="mx-5 rounded-2xl px-5 py-4 flex-row justify-between items-center shadow-lg active:opacity-90"
+              style={{ backgroundColor: activeBillColor, marginBottom: bottomInset }}
+            >
+              <View>
+                <Text className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                  {cart.reduce((s, i) => s + i.quantity, 0)} item{cart.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
+                </Text>
+                <Text className="text-white font-black text-lg">₹{getTotal().toFixed(2)}</Text>
+              </View>
+              <View className="flex-row items-center gap-2">
+                <Text className="text-white font-bold text-base">View Cart</Text>
+                <MaterialCommunityIcons name="arrow-right" size={18} color="white" />
+              </View>
+            </Pressable>
+          )}
+        </View>
+      )}
+
+      {/* ══════ Checkout Sheet (phone only) ══════ */}
+      {!isTablet && (
+        <Modal visible={isCheckoutOpen} animationType="slide">
+          <View className="flex-1 bg-background dark:bg-bg-dark">
+            {/* Sheet header */}
+            <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
+              <View>
+                <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Checkout</Text>
+                <Text className="text-sm text-on-surface-variant mt-0.5">{cart.reduce((s, i) => s + i.quantity, 0)} items · ₹{getTotal().toFixed(2)}</Text>
+              </View>
+              <Pressable onPress={() => setIsCheckoutOpen(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+                <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+              </Pressable>
+            </View>
+            <ScrollView className="flex-1 px-5 pt-5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
+              {CheckoutPanel}
+            </ScrollView>
+          </View>
+        </Modal>
+      )}
+
+      {/* ══════ Select Customer Modal ══════ */}
+      <Modal visible={isSelectingParty} animationType="slide">
+        <View className="flex-1 bg-background dark:bg-bg-dark">
+          <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
+            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Select Customer</Text>
+            <Pressable onPress={() => setIsSelectingParty(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+            </Pressable>
+          </View>
+
+          <View className="px-5 pt-4 flex-row gap-2 mb-2">
+            <View className="flex-1 bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 flex-row items-center">
+              <MaterialCommunityIcons name="magnify" size={18} color="#3e4944" style={{ marginRight: 8 }} />
+              <TextInput
+                placeholder="Search by name or phone..."
+                placeholderTextColor="#A0A0A0"
+                value={partySearch}
+                onChangeText={setPartySearch}
+                className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
+              />
+            </View>
+            <Pressable
+              onPress={() => setIsAddingCustomer(true)}
+              className="bg-primary dark:bg-primary-dark px-4 rounded-2xl items-center justify-center active:opacity-90"
+            >
+              <Text className="text-white font-black text-lg">+</Text>
+            </Pressable>
+          </View>
+
+          <FlatList
+            data={filteredParties}
+            keyExtractor={(item) => item.id}
+            className="px-5 pt-2"
+            contentContainerStyle={{ paddingBottom: bottomInset }}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => {
+                  setSelectedParty(item);
+                  setIsSelectingParty(false);
+                }}
+                className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-3 flex-row justify-between items-center active:opacity-75"
+              >
+                <View>
+                  <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark">{item.name}</Text>
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{item.phone || "No phone"}</Text>
+                </View>
+                <View className="bg-primary/10 dark:bg-primary-dark/10 px-3 py-1.5 rounded-full">
+                  <Text className="text-primary dark:text-primary-dark text-sm font-bold">Select</Text>
+                </View>
+              </Pressable>
+            )}
+            ListEmptyComponent={
+              <View className="flex-1 justify-center items-center py-20">
+                <Text className="text-on-surface-variant font-bold text-base">No customers found</Text>
+              </View>
+            }
+          />
+        </View>
+      </Modal>
+
+      {/* ══════ Add New Customer Modal ══════ */}
+      <Modal visible={isAddingCustomer} animationType="slide">
+        <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Customer</Text>
+            <Pressable onPress={() => setIsAddingCustomer(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+            </Pressable>
+          </View>
+
+          <View className="space-y-4">
+            <View>
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Name *</Text>
+              <TextInput
+                value={newCustomerName}
+                onChangeText={setNewCustomerName}
+                placeholder="Customer Name"
+                placeholderTextColor="#A0A0A0"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Phone</Text>
+              <TextInput
+                value={newCustomerPhone}
+                onChangeText={setNewCustomerPhone}
+                placeholder="10-digit number"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="phone-pad"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">State (for GST)</Text>
+              <TextInput
+                value={newCustomerState}
+                onChangeText={setNewCustomerState}
+                placeholder="e.g. Maharashtra"
+                placeholderTextColor="#A0A0A0"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+          </View>
+
+          <View className="flex-row gap-3 mt-8">
+            <Pressable
+              onPress={() => setIsAddingCustomer(false)}
+              className="flex-1 border border-outline-variant dark:border-outline py-4 rounded-2xl items-center"
+            >
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleAddCustomer}
+              disabled={addCustomerLoading}
+              className="flex-1 bg-primary dark:bg-primary-dark py-4 rounded-2xl items-center"
+            >
+              {addCustomerLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white font-black text-base">Save & Select</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={isAddingProduct} animationType="slide">
+        <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Product</Text>
+            <Pressable onPress={() => setIsAddingProduct(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+            </Pressable>
+          </View>
+
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-6">
+            Adds this product to Inventory and puts it straight into the current cart. You can fill in SKU, barcode, and HSN code later from the Inventory tab.
+          </Text>
+
+          <View className="space-y-4">
+            <View>
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Name *</Text>
+              <TextInput
+                value={newProductName}
+                onChangeText={setNewProductName}
+                placeholder="Product Name"
+                placeholderTextColor="#A0A0A0"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Selling Price (INR) *</Text>
+              <TextInput
+                value={newProductPrice}
+                onChangeText={setNewProductPrice}
+                placeholder="0.00"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="numeric"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">GST Tax Rate (%)</Text>
+              <TextInput
+                value={newProductTax}
+                onChangeText={setNewProductTax}
+                placeholder="18.00"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="numeric"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Opening Stock</Text>
+              <TextInput
+                value={newProductStock}
+                onChangeText={setNewProductStock}
+                placeholder="0"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="numeric"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+          </View>
+
+          <View className="flex-row gap-3 mt-8">
+            <Pressable
+              onPress={() => setIsAddingProduct(false)}
+              className="flex-1 border border-outline-variant dark:border-outline py-4 rounded-2xl items-center"
+            >
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleAddProduct}
+              disabled={addProductLoading}
+              className="flex-1 bg-primary dark:bg-primary-dark py-4 rounded-2xl items-center"
+            >
+              {addProductLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white font-black text-base">Save & Add to Cart</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }

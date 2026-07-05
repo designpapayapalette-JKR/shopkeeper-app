@@ -13,11 +13,42 @@
       "bundleIdentifier": "com.papayapalette.shopkeeper"
     },
     "android": {
-      "package": "com.papayapalette.shopkeeper"
+      "package": "com.papayapalette.shopkeeper",
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
-    "plugins": ["expo-router", "expo-dev-client"],
+    "plugins": [
+      "expo-router",
+      "expo-dev-client",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false,
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      "expo-sharing"
+    ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "a9c628d7-7fd8-481b-8076-a32a0ce72a68"
+      }
+    },
+    "owner": "papayapalette"
   }
 }
