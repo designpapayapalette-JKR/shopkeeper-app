@@ -18,6 +18,7 @@ import { generateReceiptHtml, ReceiptData, THERMAL_PAGE_WIDTH_PT, estimateTherma
 import { generateTallyInvoiceHtml, TallyInvoiceItem } from "../../src/lib/invoiceTemplate";
 import { shareInvoiceFile } from "../../src/lib/sharer";
 import { printToSavedPrinter, getSavedPrinter } from "../../src/lib/thermalPrinter";
+import PosDashboardPanel from "../../src/components/PosDashboardPanel";
 import { useAuth } from "../../src/lib/auth-context";
 import { api, ApiError } from "../../src/lib/api";
 import { useConfirm } from "../../src/components/ConfirmDialog";
@@ -64,6 +65,12 @@ export default function PosScreen() {
   const isTablet = width >= 768;
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
+
+  // POS is a proper module with two modes: "New Sale" (billing/cart, the
+  // default) and "Dashboard" (today's sales broken down by retail/GST/
+  // estimate, the full invoice list, and reprint/return/void — all inline
+  // in this same tab instead of forcing a trip to a different screen).
+  const [posView, setPosView] = useState<"sale" | "dashboard">("sale");
 
   // Data State
   const [products, setProducts] = useState<Product[]>([]);
@@ -824,6 +831,25 @@ export default function PosScreen() {
     </>
   );
 
+  if (posView === "dashboard") {
+    return (
+      <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+        <View className="px-4 pb-2 flex-row items-center justify-between">
+          <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">POS Dashboard</Text>
+          <Pressable
+            onPress={() => setPosView("sale")}
+            className="flex-row items-center bg-primary dark:bg-primary-dark px-4 py-2 rounded-full"
+            style={{ gap: 6 }}
+          >
+            <MaterialCommunityIcons name="plus" size={16} color="white" />
+            <Text className="text-white text-sm font-bold">New Sale</Text>
+          </Pressable>
+        </View>
+        <PosDashboardPanel />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark">
       {isTablet ? (
@@ -835,7 +861,7 @@ export default function PosScreen() {
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Products</Text>
               <View className="flex-row items-center" style={{ gap: 8 }}>
                 <Pressable
-                  onPress={() => router.push("/invoice-history" as any)}
+                  onPress={() => setPosView("dashboard")}
                   className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3 py-1.5 rounded-full"
                   style={{ gap: 5 }}
                 >
@@ -904,7 +930,7 @@ export default function PosScreen() {
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Sale</Text>
               <View className="flex-row items-center" style={{ gap: 8 }}>
                 <Pressable
-                  onPress={() => router.push("/invoice-history" as any)}
+                  onPress={() => setPosView("dashboard")}
                   className="w-9 h-9 rounded-full bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
                 >
                   <MaterialCommunityIcons name="chart-box-outline" size={16} color="#3e4944" />

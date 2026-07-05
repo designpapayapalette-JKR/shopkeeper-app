@@ -60,6 +60,26 @@ export default function InventoryScreen() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
+  // Two independent disclosure states, both collapsed by default, so a
+  // product list with many SKUs/variants reads as a clean single line per
+  // product instead of every detail being visible at once:
+  // - expandedGroups: which root products currently show their variants.
+  // - expandedDetails: which cards currently show SKU/Barcode/HSN.
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
+  const toggleGroup = (id: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const toggleDetails = (id: string) =>
+    setExpandedDetails((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
   // Warehouse filter — Product.stock_quantity is a company-wide total, so
   // selecting a specific warehouse (Shop / Godown / any custom one) swaps
   // the displayed quantity per row for that warehouse's actual stock,
@@ -420,10 +440,12 @@ export default function InventoryScreen() {
   };
 
   // Groups each root product with its variant children immediately
-  // following it, so the flat FlatList visually reads as a simple tree
-  // without needing expand/collapse state. A variant whose parent got
-  // filtered out by search (an edge case) just falls back to showing as
-  // its own root-level row instead of vanishing.
+  // following it — but variants only render when their root is expanded
+  // (tap "N variants" to reveal them), so a catalog with lots of
+  // size/flavor variants reads as one clean line per product by default
+  // instead of every variant always being visible. A variant whose parent
+  // got filtered out by search (an edge case) falls back to showing as its
+  // own root-level row instead of vanishing.
   const byName = (a: Product, b: Product) => a.name.localeCompare(b.name);
   const rootProducts = products.filter((p) => !p.parent_product_id).sort(byName);
   const orphanVariants = products
@@ -432,6 +454,7 @@ export default function InventoryScreen() {
   const groupedProducts: Product[] = [];
   for (const root of [...rootProducts, ...orphanVariants]) {
     groupedProducts.push(root);
+    if (!expandedGroups.has(root.id)) continue;
     for (const variant of products.filter((p) => p.parent_product_id === root.id).sort(byName)) {
       groupedProducts.push(variant);
     }
@@ -585,114 +608,122 @@ export default function InventoryScreen() {
             const avatarColor = getAvatarColor(item.name);
             const isVariant = !!item.parent_product_id;
             const variantCount = products.filter((p) => p.parent_product_id === item.id).length;
+            const isGroupExpanded = expandedGroups.has(item.id);
+            const isDetailsExpanded = expandedDetails.has(item.id);
+            const hasDetails = !!(item.sku || item.barcode || item.hsn_code);
             return (
               <View
-                className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline shadow-sm mb-4"
+                className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-2xl border border-outline-variant dark:border-outline shadow-sm mb-3"
                 style={isVariant ? { marginLeft: 24, borderLeftWidth: 3, borderLeftColor: "#0F7A5F" } : undefined}
               >
-                <View className="flex-row justify-between items-start">
+                {/* Single compact row: avatar, name, price, stock, quick actions */}
+                <View className="flex-row items-center">
                   <View
-                    className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+                    className="w-9 h-9 rounded-xl items-center justify-center mr-3"
                     style={{ backgroundColor: avatarColor.bg }}
                   >
                     {isVariant ? (
-                      <MaterialCommunityIcons name="subdirectory-arrow-right" size={16} color={avatarColor.text} />
+                      <MaterialCommunityIcons name="subdirectory-arrow-right" size={15} color={avatarColor.text} />
                     ) : (
                       <Text className="font-black text-sm" style={{ color: avatarColor.text }}>
                         {getInitial(item.name)}
                       </Text>
                     )}
                   </View>
-                  <View className="flex-1 mr-2">
-                    <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
+                  <Pressable className="flex-1 mr-2" onPress={() => openEditModal(item)}>
+                    <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
                       {item.name}
                       {item.variant_label ? ` — ${item.variant_label}` : ""}
                     </Text>
-                    <View className="flex-row flex-wrap items-center mt-1">
-                      {variantCount > 0 && (
-                        <Text className="text-sm font-semibold bg-primary/10 text-primary px-2 py-1 rounded-md mr-1.5 mt-1">
-                          {variantCount} variant{variantCount !== 1 ? "s" : ""}
-                        </Text>
-                      )}
-                      {item.pack_unit && item.pack_size && (
-                        <Text className="text-sm font-semibold bg-surface-container dark:bg-surface-dark text-on-surface-variant dark:text-text-secondary-dark px-2 py-1 rounded-md mr-1.5 mt-1">
-                          1 {item.pack_unit} = {item.pack_size} {item.unit || "pcs"}
-                        </Text>
-                      )}
-                      {item.sku && (
-                        <Text className="text-sm font-semibold bg-surface-container dark:bg-surface-dark text-on-surface-variant dark:text-text-secondary-dark px-2 py-1 rounded-md mr-1.5 mt-1">
-                          SKU: {item.sku}
-                        </Text>
-                      )}
-                      {item.barcode && (
-                        <Text className="text-sm font-semibold bg-surface-container dark:bg-surface-dark text-on-surface-variant dark:text-text-secondary-dark px-2 py-1 rounded-md mr-1.5 mt-1">
-                          Barcode: {item.barcode}
-                        </Text>
-                      )}
-                      {item.hsn_code && (
-                        <Text className="text-sm font-semibold bg-surface-container dark:bg-surface-dark text-on-surface-variant dark:text-text-secondary-dark px-2 py-1 rounded-md mt-1">
-                          HSN: {item.hsn_code}
-                        </Text>
-                      )}
+                    <View className="flex-row items-center mt-0.5" style={{ gap: 3 }}>
+                      {isLow && <MaterialCommunityIcons name="alert-circle" size={12} color="#D64545" />}
+                      <Text className={`text-sm font-semibold ${isLow ? "text-error" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                        {activeWarehouseId && warehouseStockLoading
+                          ? "Loading stock…"
+                          : `${activeWarehouseId ? `${qty} units here` : `${qty} units`}${activeWarehouseId ? ` · ${totalQty} total` : ""}`}
+                      </Text>
                     </View>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-lg font-bold text-primary dark:text-primary-dark">
-                      ₹{parseFloat(item.price).toFixed(2)}
+                  </Pressable>
+                  <View className="items-end mr-2">
+                    <Text className="text-base font-bold text-primary dark:text-primary-dark">
+                      ₹{parseFloat(item.price).toFixed(0)}
                     </Text>
-                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark font-medium mt-1">
-                      GST: {item.tax_rate}%
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                      GST {item.tax_rate}%
                     </Text>
                   </View>
-                </View>
-                <View className="mt-3 flex-row justify-between items-center border-t border-outline-variant dark:border-outline pt-3">
-                  <View
-                    className={`px-3 py-1.5 rounded-full flex-row items-center ${
-                      isLow ? "bg-error/10" : "bg-surface-container dark:bg-surface-dark"
-                    }`}
-                    style={{ gap: 4 }}
+                  <Pressable
+                    onPress={() => handleDeleteProduct(item)}
+                    disabled={deletingId === item.id}
+                    className="w-8 h-8 rounded-full bg-error/10 items-center justify-center"
                   >
-                    {isLow && (
-                      <MaterialCommunityIcons name="alert-circle" size={14} color="#D64545" />
+                    {deletingId === item.id ? (
+                      <ActivityIndicator size="small" color="#D64545" />
+                    ) : (
+                      <MaterialCommunityIcons name="trash-can-outline" size={15} color="#D64545" />
                     )}
-                    <Text
-                      className={`text-sm font-bold ${
-                        isLow ? "text-error" : "text-on-surface-variant dark:text-text-secondary-dark"
-                      }`}
-                    >
-                      {isLow ? "Low Stock: " : activeWarehouseId ? "At this warehouse: " : "Stock: "}
-                      {warehouseStockLoading && activeWarehouseId ? "…" : `${qty} units`}
-                      {activeWarehouseId ? ` (${totalQty} total)` : ""}
-                    </Text>
-                  </View>
-
-                  <View className="flex-row items-center">
-                    {!activeWarehouseId && (
-                      <>
-                        <Pressable onPress={() => handleQuickStockAdjustment(item, -1)} className="w-8 h-8 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center mr-2">
-                          <MaterialCommunityIcons name="minus" size={16} color="#6e7a74" />
-                        </Pressable>
-                        <Pressable onPress={() => handleQuickStockAdjustment(item, 1)} className="w-8 h-8 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
-                          <MaterialCommunityIcons name="plus" size={16} color="#6e7a74" />
-                        </Pressable>
-                      </>
-                    )}
-                    <Pressable onPress={() => openEditModal(item)} className="px-3 py-1.5 ml-4 bg-primary/10 rounded-lg">
-                      <Text className="text-primary font-bold text-xs uppercase tracking-wider">Edit</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleDeleteProduct(item)}
-                      disabled={deletingId === item.id}
-                      className="w-8 h-8 rounded-full bg-error/10 items-center justify-center ml-2"
-                    >
-                      {deletingId === item.id ? (
-                        <ActivityIndicator size="small" color="#D64545" />
-                      ) : (
-                        <MaterialCommunityIcons name="trash-can-outline" size={16} color="#D64545" />
-                      )}
-                    </Pressable>
-                  </View>
+                  </Pressable>
                 </View>
+
+                {/* Second row: quick stock +/-, variant toggle, details toggle — only what's actionable, nothing decorative */}
+                <View className="flex-row items-center mt-2.5 pt-2.5 border-t border-outline-variant dark:border-outline" style={{ gap: 8 }}>
+                  {!activeWarehouseId && (
+                    <View className="flex-row items-center bg-surface-container dark:bg-surface-dark rounded-lg">
+                      <Pressable onPress={() => handleQuickStockAdjustment(item, -1)} className="w-7 h-7 items-center justify-center">
+                        <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
+                      </Pressable>
+                      <View className="w-px h-4 bg-outline-variant dark:bg-outline" />
+                      <Pressable onPress={() => handleQuickStockAdjustment(item, 1)} className="w-7 h-7 items-center justify-center">
+                        <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
+                      </Pressable>
+                    </View>
+                  )}
+                  {variantCount > 0 && (
+                    <Pressable
+                      onPress={() => toggleGroup(item.id)}
+                      className="flex-row items-center bg-primary/10 px-2.5 py-1.5 rounded-lg"
+                      style={{ gap: 3 }}
+                    >
+                      <Text className="text-sm font-bold text-primary">
+                        {variantCount} variant{variantCount !== 1 ? "s" : ""}
+                      </Text>
+                      <MaterialCommunityIcons name={isGroupExpanded ? "chevron-up" : "chevron-down"} size={14} color="#0F7A5F" />
+                    </Pressable>
+                  )}
+                  {hasDetails && (
+                    <Pressable
+                      onPress={() => toggleDetails(item.id)}
+                      className="flex-row items-center bg-surface-container dark:bg-surface-dark px-2.5 py-1.5 rounded-lg"
+                      style={{ gap: 3 }}
+                    >
+                      <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Details</Text>
+                      <MaterialCommunityIcons name={isDetailsExpanded ? "chevron-up" : "chevron-down"} size={14} color="#6B7280" />
+                    </Pressable>
+                  )}
+                  {item.pack_unit && item.pack_size && (
+                    <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">
+                      1 {item.pack_unit} = {item.pack_size} {item.unit || "pcs"}
+                    </Text>
+                  )}
+                  <View className="flex-1" />
+                  <Pressable onPress={() => openEditModal(item)} className="px-2.5 py-1.5 bg-primary/10 rounded-lg">
+                    <Text className="text-primary font-bold text-xs uppercase tracking-wider">Edit</Text>
+                  </Pressable>
+                </View>
+
+                {isDetailsExpanded && (
+                  <View className="mt-2.5 pt-2.5 border-t border-outline-variant dark:border-outline" style={{ gap: 3 }}>
+                    {item.sku && (
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">SKU: {item.sku}</Text>
+                    )}
+                    {item.barcode && (
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Barcode: {item.barcode}</Text>
+                    )}
+                    {item.hsn_code && (
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">HSN: {item.hsn_code}</Text>
+                    )}
+                  </View>
+                )}
               </View>
             );
           }}
