@@ -20,6 +20,7 @@ import { shareInvoiceFile } from "../../src/lib/sharer";
 import { printToSavedPrinter, getSavedPrinter } from "../../src/lib/thermalPrinter";
 import { useAuth } from "../../src/lib/auth-context";
 import { api, ApiError } from "../../src/lib/api";
+import { useConfirm } from "../../src/components/ConfirmDialog";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 
@@ -58,6 +59,7 @@ interface CartItem {
 export default function PosScreen() {
   const { user, activeCompany, activeBrand } = useAuth();
   const router = useRouter();
+  const confirm = useConfirm();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const topInset = useTopInset();
@@ -178,6 +180,39 @@ export default function PosScreen() {
     } finally {
       setAddCustomerLoading(false);
     }
+  };
+
+  const closeAddCustomer = async () => {
+    const hasChanges =
+      newCustomerName.trim() !== "" || newCustomerPhone.trim() !== "" || newCustomerState.trim() !== "";
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setIsAddingCustomer(false);
+  };
+
+  const closeAddProduct = async () => {
+    const hasChanges =
+      newProductName.trim() !== "" ||
+      newProductPrice.trim() !== "" ||
+      newProductStock.trim() !== "" ||
+      newProductTax !== "18.00";
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setIsAddingProduct(false);
   };
 
   const handleAddProduct = async () => {
@@ -953,7 +988,7 @@ export default function PosScreen() {
 
       {/* ══════ Checkout Sheet (phone only) ══════ */}
       {!isTablet && (
-        <Modal visible={isCheckoutOpen} animationType="slide">
+        <Modal visible={isCheckoutOpen} animationType="slide" onRequestClose={() => setIsCheckoutOpen(false)}>
           <View className="flex-1 bg-background dark:bg-bg-dark">
             {/* Sheet header */}
             <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
@@ -973,7 +1008,7 @@ export default function PosScreen() {
       )}
 
       {/* ══════ Select Customer Modal ══════ */}
-      <Modal visible={isSelectingParty} animationType="slide">
+      <Modal visible={isSelectingParty} animationType="slide" onRequestClose={() => setIsSelectingParty(false)}>
         <View className="flex-1 bg-background dark:bg-bg-dark">
           <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Select Customer</Text>
@@ -1033,11 +1068,11 @@ export default function PosScreen() {
       </Modal>
 
       {/* ══════ Add New Customer Modal ══════ */}
-      <Modal visible={isAddingCustomer} animationType="slide">
+      <Modal visible={isAddingCustomer} animationType="slide" onRequestClose={closeAddCustomer}>
         <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Customer</Text>
-            <Pressable onPress={() => setIsAddingCustomer(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+            <Pressable onPress={closeAddCustomer} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
               <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
             </Pressable>
           </View>
@@ -1078,7 +1113,7 @@ export default function PosScreen() {
 
           <View className="flex-row gap-3 mt-8">
             <Pressable
-              onPress={() => setIsAddingCustomer(false)}
+              onPress={closeAddCustomer}
               className="flex-1 border border-outline-variant dark:border-outline py-4 rounded-2xl items-center"
             >
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
@@ -1098,11 +1133,11 @@ export default function PosScreen() {
         </View>
       </Modal>
 
-      <Modal visible={isAddingProduct} animationType="slide">
+      <Modal visible={isAddingProduct} animationType="slide" onRequestClose={closeAddProduct}>
         <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Product</Text>
-            <Pressable onPress={() => setIsAddingProduct(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+            <Pressable onPress={closeAddProduct} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
               <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
             </Pressable>
           </View>
@@ -1159,7 +1194,7 @@ export default function PosScreen() {
 
           <View className="flex-row gap-3 mt-8">
             <Pressable
-              onPress={() => setIsAddingProduct(false)}
+              onPress={closeAddProduct}
               className="flex-1 border border-outline-variant dark:border-outline py-4 rounded-2xl items-center"
             >
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>

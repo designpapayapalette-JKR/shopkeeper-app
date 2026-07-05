@@ -83,6 +83,21 @@ export default function LedgerScreen() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedBankAccountId, setSelectedBankAccountId] = useState<string | null>(null);
 
+  const closeRecordPayment = async () => {
+    const hasChanges =
+      paymentAmount.trim() !== "" || paymentReference.trim() !== "" || selectedBankAccountId !== null;
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setIsRecordingPayment(false);
+  };
+
   const openRecordPayment = async () => {
     setSelectedBankAccountId(null);
     setIsRecordingPayment(true);
@@ -200,6 +215,30 @@ export default function LedgerScreen() {
     setNewPartyGstin(party.gstin || "");
     setNewPartyCategory(party.category || "b2c");
     setNewPartyState("");
+  };
+
+  const closePartyForm = async () => {
+    const hasChanges = editingParty
+      ? newPartyName !== editingParty.name ||
+        newPartyPhone !== (editingParty.phone || "") ||
+        newPartyGstin !== (editingParty.gstin || "") ||
+        newPartyCategory !== (editingParty.category || "b2c")
+      : newPartyName.trim() !== "" ||
+        newPartyPhone.trim() !== "" ||
+        newPartyState.trim() !== "" ||
+        newPartyGstin.trim() !== "" ||
+        newPartyBalance.trim() !== "" ||
+        newPartyCategory !== "b2c";
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    resetPartyForm();
   };
 
   const handleAddParty = async () => {
@@ -490,7 +529,7 @@ export default function LedgerScreen() {
       </View>
 
       {/* Bulk Import Modal */}
-      <Modal visible={isBulkImportOpen} animationType="slide">
+      <Modal visible={isBulkImportOpen} animationType="slide" onRequestClose={() => setIsBulkImportOpen(false)}>
         <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
@@ -534,7 +573,7 @@ export default function LedgerScreen() {
 
       {/* Detailed Ledger Entries Modal */}
       {selectedParty && (
-        <Modal visible={selectedParty !== null} animationType="slide">
+        <Modal visible={selectedParty !== null} animationType="slide" onRequestClose={() => setSelectedParty(null)}>
           <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
             <View className="flex-row justify-between items-center mb-6">
               <View>
@@ -653,13 +692,13 @@ export default function LedgerScreen() {
       )}
 
       {/* Record Payment Form Modal */}
-      <Modal visible={isRecordingPayment} animationType="slide">
+      <Modal visible={isRecordingPayment} animationType="slide" onRequestClose={closeRecordPayment}>
         <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Record Payment
             </Text>
-            <Pressable onPress={() => setIsRecordingPayment(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeRecordPayment} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -779,7 +818,7 @@ export default function LedgerScreen() {
           {/* Form Actions */}
           <View className="flex-row justify-between mt-10">
             <Pressable
-              onPress={() => setIsRecordingPayment(false)}
+              onPress={closeRecordPayment}
               className="border border-outline-variant dark:border-outline py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
@@ -800,13 +839,13 @@ export default function LedgerScreen() {
       </Modal>
 
       {/* Add Party Modal Form */}
-      <Modal visible={isAddingParty || editingParty !== null} animationType="slide">
+      <Modal visible={isAddingParty || editingParty !== null} animationType="slide" onRequestClose={closePartyForm}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               {editingParty ? "Edit Party" : `Add New ${activeTab === "customer" ? "Customer" : "Supplier"}`}
             </Text>
-            <Pressable onPress={resetPartyForm} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+            <Pressable onPress={closePartyForm} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
               <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
             </Pressable>
           </View>
@@ -926,7 +965,7 @@ export default function LedgerScreen() {
           {/* Form Actions */}
           <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
             <Pressable
-              onPress={resetPartyForm}
+              onPress={closePartyForm}
               className="border border-outline-variant dark:border-outline py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>

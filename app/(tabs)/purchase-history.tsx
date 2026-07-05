@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../../src/lib/api";
+import { useConfirm } from "../../src/components/ConfirmDialog";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 
@@ -34,6 +35,7 @@ interface PurchaseRecord {
 export default function PurchaseHistoryScreen() {
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
+  const confirm = useConfirm();
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -67,6 +69,22 @@ export default function PurchaseHistoryScreen() {
     setReturnPurchase(purchase);
     setReturnQuantities({});
     setReturnReason("");
+  };
+
+  const closeReturn = async () => {
+    const hasChanges =
+      returnReason.trim().length > 0 ||
+      Object.values(returnQuantities).some((v) => v.trim().length > 0);
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setReturnPurchase(null);
   };
 
   const handleSubmitReturn = async () => {
@@ -164,13 +182,13 @@ export default function PurchaseHistoryScreen() {
         />
       )}
 
-      <Modal visible={returnPurchase !== null} animationType="slide">
+      <Modal visible={returnPurchase !== null} animationType="slide" onRequestClose={closeReturn}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Return / Debit Note
             </Text>
-            <Pressable onPress={() => setReturnPurchase(null)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeReturn} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>

@@ -129,7 +129,7 @@ export default function ScannedDocumentsScreen() {
         )}
       />
 
-      <Modal visible={viewingUri !== null} animationType="fade" transparent>
+      <Modal visible={viewingUri !== null} animationType="fade" transparent onRequestClose={() => setViewingUri(null)}>
         <Pressable className="flex-1 bg-black/90 items-center justify-center" onPress={() => setViewingUri(null)}>
           {viewingUri && <Image source={{ uri: viewingUri }} style={{ width: "90%", height: "70%" }} resizeMode="contain" />}
           <Text className="text-white text-sm font-bold mt-6">Tap anywhere to close · Long-press a card to delete</Text>

@@ -292,6 +292,23 @@ export default function InvoiceHistoryScreen() {
     }
   };
 
+  const closeReturn = async () => {
+    const hasChanges =
+      returnReason.trim().length > 0 ||
+      refundNow ||
+      Object.values(returnQuantities).some((v) => v.trim().length > 0);
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setReturnDetail(null);
+  };
+
   const handleSubmitReturn = async () => {
     if (!returnDetail) return;
     const items = returnDetail.items
@@ -454,13 +471,13 @@ export default function InvoiceHistoryScreen() {
         />
       )}
 
-      <Modal visible={returnDetail !== null} animationType="slide">
+      <Modal visible={returnDetail !== null} animationType="slide" onRequestClose={closeReturn}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Return / Credit Note
             </Text>
-            <Pressable onPress={() => setReturnDetail(null)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeReturn} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
