@@ -625,7 +625,7 @@ export default function DashboardScreen() {
       {/* Scan & Record Hub — camera/scan actions only. Non-camera shortcuts
           (New Sale, Record Payment, plain Record Purchase) already live in
           Quick Actions / More, so they don't belong in a "Scan" menu. */}
-      <Modal visible={isScanHubOpen} animationType="slide" transparent>
+      <Modal visible={isScanHubOpen} animationType="slide" transparent onRequestClose={() => setIsScanHubOpen(false)}>
         <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setIsScanHubOpen(false)}>
           <Pressable
             onPress={(e) => e.stopPropagation()}

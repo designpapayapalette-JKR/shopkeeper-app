@@ -83,6 +83,20 @@ export default function InventoryScreen() {
 
   useEffect(fetchWarehouses, [user]);
 
+  const closeAddWarehouse = async () => {
+    const hasChanges = newWarehouseName.trim() !== "" || newWarehouseLocation.trim() !== "";
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setIsAddingWarehouse(false);
+  };
+
   const handleAddWarehouse = async () => {
     if (!newWarehouseName.trim()) {
       Alert.alert("Required Field", "Give this location a name (e.g. Godown, Warehouse 2).");
@@ -293,6 +307,35 @@ export default function InventoryScreen() {
     }
   };
 
+  const closeAddProduct = async () => {
+    const hasChanges =
+      newProductName.trim() !== "" ||
+      newProductSku.trim() !== "" ||
+      newProductBarcode.trim() !== "" ||
+      newProductHsn.trim() !== "" ||
+      newProductPrice.trim() !== "" ||
+      newProductCost.trim() !== "" ||
+      newProductStock.trim() !== "" ||
+      newProductReorderLevel.trim() !== "" ||
+      newProductPackUnit.trim() !== "" ||
+      newProductPackSize.trim() !== "" ||
+      newProductParentId !== null ||
+      newProductVariantLabel.trim() !== "" ||
+      newProductTax !== "18.00" ||
+      newProductUnit !== "pcs";
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setIsAdding(false);
+    setProductPhotoUri(null);
+  };
+
   const openEditModal = (p: Product) => {
     setEditingProduct(p);
     setEditProductName(p.name);
@@ -322,6 +365,26 @@ export default function InventoryScreen() {
     } finally {
       setEditLoading(false);
     }
+  };
+
+  const closeEditProduct = async () => {
+    if (editingProduct) {
+      const hasChanges =
+        editProductName !== editingProduct.name ||
+        editProductPrice !== editingProduct.price ||
+        editProductCost !== (editingProduct.cost || "") ||
+        editProductTax !== (editingProduct.tax_rate || "18.00");
+      if (hasChanges) {
+        const ok = await confirm({
+          title: "Discard changes?",
+          message: "You have unsaved changes. Are you sure you want to go back?",
+          confirmLabel: "Discard",
+          destructive: true,
+        });
+        if (!ok) return;
+      }
+    }
+    setEditingProduct(null);
   };
 
   const handleQuickStockAdjustment = async (product: Product, delta: number) => {
@@ -637,7 +700,7 @@ export default function InventoryScreen() {
       )}
 
       {/* Bulk Import Modal */}
-      <Modal visible={isBulkImportOpen} animationType="slide">
+      <Modal visible={isBulkImportOpen} animationType="slide" onRequestClose={() => setIsBulkImportOpen(false)}>
         <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
@@ -684,7 +747,7 @@ export default function InventoryScreen() {
       </Modal>
 
       {/* Barcode Scanner Modal */}
-      <Modal visible={isScanning} animationType="slide">
+      <Modal visible={isScanning} animationType="slide" onRequestClose={() => setIsScanning(false)}>
         <View style={styles.scannerContainer}>
           <CameraView
             onBarcodeScanned={handleBarcodeScanned}
@@ -709,7 +772,7 @@ export default function InventoryScreen() {
       </Modal>
 
       {/* Add Product Modal Form */}
-      <Modal visible={isAdding} animationType="slide">
+      <Modal visible={isAdding} animationType="slide" onRequestClose={closeAddProduct}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Add New Product
@@ -956,10 +1019,7 @@ export default function InventoryScreen() {
           {/* Form Actions */}
           <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
             <Pressable
-              onPress={() => {
-                setIsAdding(false);
-                setProductPhotoUri(null);
-              }}
+              onPress={closeAddProduct}
               className="border border-outline-variant dark:border-outline py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
@@ -980,7 +1040,7 @@ export default function InventoryScreen() {
       </Modal>
 
       {/* Edit Product Modal */}
-      <Modal visible={!!editingProduct} animationType="slide">
+      <Modal visible={!!editingProduct} animationType="slide" onRequestClose={closeEditProduct}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Edit Product
@@ -1027,7 +1087,7 @@ export default function InventoryScreen() {
           
           <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
             <Pressable
-              onPress={() => setEditingProduct(null)}
+              onPress={closeEditProduct}
               className="border border-outline-variant dark:border-outline py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
@@ -1044,12 +1104,12 @@ export default function InventoryScreen() {
       </Modal>
 
       {/* Add Warehouse/Location Modal */}
-      <Modal visible={isAddingWarehouse} animationType="slide" transparent>
+      <Modal visible={isAddingWarehouse} animationType="slide" transparent onRequestClose={closeAddWarehouse}>
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
             <View className="flex-row justify-between items-center mb-6">
               <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Add Location</Text>
-              <Pressable onPress={() => setIsAddingWarehouse(false)} className="w-10 h-10 items-center justify-center">
+              <Pressable onPress={closeAddWarehouse} className="w-10 h-10 items-center justify-center">
                 <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
               </Pressable>
             </View>

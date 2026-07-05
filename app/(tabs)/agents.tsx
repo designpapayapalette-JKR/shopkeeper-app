@@ -29,11 +29,18 @@ interface AgentSummary {
   agent_id: string;
   name: string;
   initials: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   accuracy?: number;
-  lastSeen: string;  // ISO string of most recent ping
-  minutesAgo: number;
+  lastSeen: string | null;  // ISO string of most recent ping, null if never checked in
+  minutesAgo: number | null;
+}
+
+interface StaffMember {
+  id: string;
+  first_name: string;
+  last_name?: string;
+  role: string;
 }
 
 type ViewMode = "map" | "list";
@@ -53,14 +60,16 @@ function minutesAgo(isoStr: string): number {
   return Math.round((Date.now() - new Date(isoStr).getTime()) / 60_000);
 }
 
-function formatLastSeen(mins: number): string {
+function formatLastSeen(mins: number | null): string {
+  if (mins === null) return "Never checked in";
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   const h = Math.floor(mins / 60);
   return `${h}h ${mins % 60}m ago`;
 }
 
-function statusColor(mins: number): { dot: string; text: string } {
+function statusColor(mins: number | null): { dot: string; text: string } {
+  if (mins === null) return { dot: "bg-gray-300", text: "text-on-surface-variant" };
   if (mins < 5) return { dot: "bg-green-500", text: "text-green-600" };
   if (mins < 30) return { dot: "bg-amber-400", text: "text-amber-600" };
   return { dot: "bg-gray-400", text: "text-on-surface-variant" };
@@ -79,23 +88,32 @@ export default function AgentsScreen() {
   const refreshTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /**
-   * Fetches all recent agent_locations, groups by agent_id, and
-   * keeps only the most recent ping per agent.
+   * Fetches all recent agent_locations (latest ping per agent) AND every
+   * field_agent-role staff member, then merges them. Previously this only
+   * showed agents who had already sent at least one location ping, so a
+   * shop that had just added a field agent (but who hadn't opened the
+   * Employee App / granted location permission yet) saw an empty list and
+   * no way to tell the difference between "no agents" and "no check-ins
+   * yet" — a real gap the founder hit directly.
    */
   const fetchAgentLocations = useCallback(async () => {
     if (!user?.company_id) return;
 
     try {
-      // Latest-per-agent ping, joined server-side with the agent's name.
-      const res = await api.get<{ data: AgentPing[] }>("/agent-locations/latest");
-      const pings = res.data ?? [];
+      const [pingsRes, staffRes] = await Promise.all([
+        api.get<{ data: AgentPing[] }>("/agent-locations/latest"),
+        api.get<{ data: StaffMember[] }>("/staff").catch(() => ({ data: [] as StaffMember[] })),
+      ]);
+      const pings = pingsRes.data ?? [];
+      const fieldAgents = (staffRes.data ?? []).filter((s) => s.role === "field_agent");
 
-      const summaries: AgentSummary[] = pings.map((ping) => {
+      const byId = new Map<string, AgentSummary>();
+
+      for (const ping of pings) {
         const name =
           `${ping.agent?.first_name ?? ""} ${ping.agent?.last_name ?? ""}`.trim() ||
           `Agent ${ping.agent_id.slice(0, 6).toUpperCase()}`;
-        const mins = minutesAgo(ping.timestamp);
-        return {
+        byId.set(ping.agent_id, {
           agent_id: ping.agent_id,
           name,
           initials: getInitials(name),
@@ -103,11 +121,28 @@ export default function AgentsScreen() {
           longitude: ping.longitude,
           accuracy: ping.accuracy,
           lastSeen: ping.timestamp,
-          minutesAgo: mins,
-        };
-      });
+          minutesAgo: minutesAgo(ping.timestamp),
+        });
+      }
 
-      setAgents(summaries);
+      // Any field agent with no location ping yet still shows up, just
+      // without map coordinates — "added but hasn't checked in" instead of
+      // silently missing from the list entirely.
+      for (const staff of fieldAgents) {
+        if (byId.has(staff.id)) continue;
+        const name = `${staff.first_name} ${staff.last_name ?? ""}`.trim();
+        byId.set(staff.id, {
+          agent_id: staff.id,
+          name,
+          initials: getInitials(name),
+          latitude: null,
+          longitude: null,
+          lastSeen: null,
+          minutesAgo: null,
+        });
+      }
+
+      setAgents(Array.from(byId.values()));
     } catch (e) {
       console.error("Failed to fetch agent locations:", e);
     } finally {
@@ -132,6 +167,7 @@ export default function AgentsScreen() {
   };
 
   const flyToAgent = (agent: AgentSummary) => {
+    if (agent.latitude === null || agent.longitude === null) return;
     setSelectedAgentId(agent.agent_id);
     setViewMode("map");
     mapRef.current?.animateToRegion(
@@ -144,6 +180,8 @@ export default function AgentsScreen() {
       600
     );
   };
+
+  const agentsOnMap = agents.filter((a) => a.latitude !== null && a.longitude !== null);
 
   // Default region — India centre (zoomed out to show all agents)
   const defaultRegion = {
@@ -219,36 +257,39 @@ export default function AgentsScreen() {
       {/* ── Map View ── */}
       {viewMode === "map" && (
         <View className="flex-1">
-          {agents.length === 0 ? (
+          {agentsOnMap.length === 0 ? (
             <View className="flex-1 justify-center items-center px-8">
               <MaterialCommunityIcons name="map-marker-off-outline" size={40} color="#6e7a74" style={{ marginBottom: 16 }} />
               <Text className="text-on-surface dark:text-text-primary-dark font-bold text-center text-base">
-                No agents being tracked
+                {agents.length === 0 ? "No field agents added yet" : "No agents have checked in yet"}
               </Text>
               <Text className="text-on-surface-variant text-sm text-center mt-1">
-                Agent locations will appear here once field agents start pinging
-                from the Agent App.
+                {agents.length === 0
+                  ? "Add a field agent from More → Staff to start tracking their location."
+                  : "Locations will appear here once your field agents open the Employee App and share their location."}
               </Text>
             </View>
           ) : (
             <AgentMapView
               mapRef={mapRef}
-              agents={agents}
+              agents={agentsOnMap as { agent_id: string; name: string; initials: string; latitude: number; longitude: number; accuracy?: number; minutesAgo: number }[]}
               selectedAgentId={selectedAgentId}
               onSelectAgent={setSelectedAgentId}
               defaultRegion={defaultRegion}
             />
           )}
 
-          {/* Floating agent list pill (bottom sheet preview) */}
-          {agents.length > 0 && (
+          {/* Floating agent list pill (bottom sheet preview) — only agents
+              with a real location can be flown to on the map; agents who
+              haven't checked in yet appear in the List view instead. */}
+          {agentsOnMap.length > 0 && (
             <View className="absolute bottom-0 left-0 right-0 bg-surface-container-lowest dark:bg-surface-dark border-t border-outline-variant dark:border-outline px-4 pt-3 pb-6 gap-2">
               <Text className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-1">
                 Active Agents
               </Text>
               <FlatList
                 horizontal
-                data={agents}
+                data={agentsOnMap}
                 keyExtractor={(a) => a.agent_id}
                 showsHorizontalScrollIndicator={false}
                 renderItem={({ item }) => {
@@ -336,10 +377,9 @@ export default function AgentsScreen() {
                     {item.name}
                   </Text>
                   <Text className="text-sm text-on-surface-variant mt-0.5">
-                    {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
-                    {item.accuracy
-                      ? `  ·  ±${item.accuracy.toFixed(0)}m`
-                      : ""}
+                    {item.latitude !== null && item.longitude !== null
+                      ? `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}${item.accuracy ? `  ·  ±${item.accuracy.toFixed(0)}m` : ""}`
+                      : "No location shared yet"}
                   </Text>
                 </View>
 

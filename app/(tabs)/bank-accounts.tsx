@@ -60,6 +60,25 @@ export default function BankAccountsScreen() {
     load();
   }, [load]);
 
+  const closeAdd = async () => {
+    const hasChanges =
+      name.trim() !== "" ||
+      bankName.trim() !== "" ||
+      accountNumber.trim() !== "" ||
+      ifsc.trim() !== "" ||
+      openingBalance.trim() !== "";
+    if (hasChanges) {
+      const ok = await confirm({
+        title: "Discard changes?",
+        message: "You have unsaved changes. Are you sure you want to go back?",
+        confirmLabel: "Discard",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setIsAdding(false);
+  };
+
   const handleAdd = async () => {
     if (!name.trim()) {
       Alert.alert("Required Field", "Account name is required.");
@@ -178,11 +197,11 @@ export default function BankAccountsScreen() {
         />
       )}
 
-      <Modal visible={isAdding} animationType="slide">
+      <Modal visible={isAdding} animationType="slide" onRequestClose={closeAdd}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Add Bank Account</Text>
-            <Pressable onPress={() => setIsAdding(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeAdd} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -226,7 +245,7 @@ export default function BankAccountsScreen() {
         </ScrollView>
       </Modal>
 
-      <Modal visible={isBulkImportOpen} animationType="slide">
+      <Modal visible={isBulkImportOpen} animationType="slide" onRequestClose={() => setIsBulkImportOpen(false)}>
         <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">

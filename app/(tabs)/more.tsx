@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth-context";
 import { api, ApiError } from "../../src/lib/api";
+import { useConfirm } from "../../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../../src/lib/sharer";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
@@ -102,6 +103,14 @@ interface Party {
 export default function MoreScreen() {
   const { user, activeCompany, refreshCompany, setupQuickPin, pinLoginAvailable } = useAuth();
   const router = useRouter();
+  const confirm = useConfirm();
+  const confirmDiscard = async () =>
+    confirm({
+      title: "Discard changes?",
+      message: "You have unsaved changes. Are you sure you want to go back?",
+      confirmLabel: "Discard",
+      destructive: true,
+    });
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const params = useLocalSearchParams<{ openPurchase?: string; openReport?: string; openExpense?: string; billPhotoUri?: string; openTransfer?: string; transferPhotoUri?: string }>();
@@ -178,6 +187,21 @@ export default function MoreScreen() {
     }
   };
   
+  const closeBusinessProfileModal = async () => {
+    const hasChanges =
+      bizName !== (activeCompany?.name ?? "") ||
+      bizGstin !== (activeCompany?.gstin ?? "") ||
+      bizState !== (activeCompany?.state ?? "") ||
+      bizAddress !== (activeCompany?.address ?? "") ||
+      bizPhone !== (activeCompany?.phone ?? "") ||
+      bizBankName !== (activeCompany?.bank_name ?? "") ||
+      bizBankAccountNumber !== (activeCompany?.bank_account_number ?? "") ||
+      bizBankIfsc !== (activeCompany?.bank_ifsc ?? "") ||
+      bizUpiId !== (activeCompany?.upi_id ?? "");
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsBusinessProfileModal(false);
+  };
+
   // Lists
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -257,6 +281,13 @@ export default function MoreScreen() {
     } finally {
       setExpenseSubmitting(false);
     }
+  };
+
+  const closeExpenseModal = async () => {
+    const hasChanges = expenseAmount.trim() !== "" || expenseNotes.trim() !== "" || expenseCategory !== "other";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsExpenseModal(false);
+    setBillPhotoUri(null);
   };
 
   // Purchase Form State
@@ -520,6 +551,18 @@ export default function MoreScreen() {
     }
   };
 
+  const closePurchaseModal = async () => {
+    const hasChanges =
+      selectedSupplierId !== "" ||
+      selectedProductId !== "" ||
+      purchaseQuantity.trim() !== "" ||
+      purchasePrice.trim() !== "" ||
+      purchaseRef.trim() !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsPurchaseModal(false);
+    setBillPhotoUri(null);
+  };
+
   const handleCreateWarehouse = async () => {
     if (!newWhName) {
       Alert.alert("Required Fields", "Warehouse Name is required.");
@@ -540,6 +583,20 @@ export default function MoreScreen() {
     } finally {
       setWhLoading(false);
     }
+  };
+
+  const closeWarehouseModal = async () => {
+    const hasChanges = newWhName.trim() !== "" || newWhLoc.trim() !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsWarehouseModal(false);
+  };
+
+  const closeTransferModal = async () => {
+    const hasChanges =
+      transferProductId !== "" || transferQuantity.trim() !== "" || transferRef.trim() !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsTransferModal(false);
+    setTransferPhotoUri(null);
   };
 
   const handleStockTransfer = async () => {
@@ -599,6 +656,18 @@ export default function MoreScreen() {
     }
   };
 
+  const closeAttendanceModal = async () => {
+    const hasChanges = Object.values(attendanceMap).some((status) => status === "absent");
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsAttendanceModal(false);
+  };
+
+  const closeSalaryModal = async () => {
+    const hasChanges = selectedStaffId !== "" || salaryAmount.trim() !== "" || salaryRef.trim() !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsSalaryModal(false);
+  };
+
   const handleRecordSalary = async () => {
     if (!selectedStaffId || !salaryAmount) {
       Alert.alert("Required Fields", "Employee selection and Amount are required.");
@@ -625,6 +694,17 @@ export default function MoreScreen() {
     } finally {
       setSalarySubmitting(false);
     }
+  };
+
+  const closeCreateChallanModal = async () => {
+    const hasChanges =
+      selectedInvoiceId !== "" ||
+      vehicleNumber.trim() !== "" ||
+      driverName.trim() !== "" ||
+      driverPhone.trim() !== "" ||
+      destination.trim() !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsCreateChallanModal(false);
   };
 
   const handleCreateChallan = async () => {
@@ -680,6 +760,16 @@ export default function MoreScreen() {
     setAttendanceMap((prev) => ({ ...prev, [staffId]: status }));
   };
 
+  const closeAddStaffModal = async () => {
+    const hasChanges =
+      newStaffFirstName.trim() !== "" ||
+      newStaffLastName.trim() !== "" ||
+      newStaffEmail.trim() !== "" ||
+      newStaffPassword.trim() !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsAddingStaff(false);
+  };
+
   const handleAddStaff = async () => {
     if (!newStaffFirstName || !newStaffEmail || !newStaffPassword || !newStaffRole) {
       Alert.alert("Required Fields", "First Name, Email, Password, and Role are required.");
@@ -708,6 +798,12 @@ export default function MoreScreen() {
     } finally {
       setAddStaffLoading(false);
     }
+  };
+
+  const closeDispatchTaskModal = async () => {
+    const hasChanges = taskTitle.trim() !== "" || taskDescription.trim() !== "" || taskAssignedTo !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsDispatchTaskModal(false);
   };
 
   const handleDispatchTask = async () => {
@@ -747,6 +843,14 @@ export default function MoreScreen() {
   const totalPayables = partiesList
     .filter((p) => p.type === "supplier")
     .reduce((acc, curr) => acc + parseFloat(curr.current_balance || "0"), 0);
+
+  const closePinSetupModal = async () => {
+    const hasChanges = newPin.trim() !== "" || confirmPin.trim() !== "";
+    if (hasChanges && !(await confirmDiscard())) return;
+    setIsPinSetupModal(false);
+    setNewPin("");
+    setConfirmPin("");
+  };
 
   const handleSetupPin = async () => {
     if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
@@ -1221,7 +1325,7 @@ export default function MoreScreen() {
       </View>
 
       {/* Record Purchase Modal */}
-      <Modal visible={isPurchaseModal} animationType="slide">
+      <Modal visible={isPurchaseModal} animationType="slide" onRequestClose={closePurchaseModal}>
         {loading ? (
           <View className="flex-1 justify-center items-center bg-background dark:bg-background-dark">
             <ActivityIndicator size="large" color="#0F7A5F" />
@@ -1233,10 +1337,7 @@ export default function MoreScreen() {
                 Record Purchase Bill
               </Text>
               <Pressable
-                onPress={() => {
-                  setIsPurchaseModal(false);
-                  setBillPhotoUri(null);
-                }}
+                onPress={closePurchaseModal}
                 className="w-11 h-11 items-center justify-center"
               >
                 <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
@@ -1513,7 +1614,7 @@ export default function MoreScreen() {
 
             <View className="flex-row justify-between mt-10" style={{ marginBottom: bottomInset }}>
               <Pressable
-                onPress={() => setIsPurchaseModal(false)}
+                onPress={closePurchaseModal}
                 className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
               >
                 <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
@@ -1535,17 +1636,14 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Record Expense Modal */}
-      <Modal visible={isExpenseModal} animationType="slide">
+      <Modal visible={isExpenseModal} animationType="slide" onRequestClose={closeExpenseModal}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Record Expense
             </Text>
             <Pressable
-              onPress={() => {
-                setIsExpenseModal(false);
-                setBillPhotoUri(null);
-              }}
+              onPress={closeExpenseModal}
               className="w-11 h-11 items-center justify-center"
             >
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
@@ -1626,13 +1724,13 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Warehouse Management Modal */}
-      <Modal visible={isWarehouseModal} animationType="slide">
+      <Modal visible={isWarehouseModal} animationType="slide" onRequestClose={closeWarehouseModal}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Warehouses
             </Text>
-            <Pressable onPress={() => setIsWarehouseModal(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeWarehouseModal} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -1687,13 +1785,13 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Stock Transfer Modal */}
-      <Modal visible={isTransferModal} animationType="slide">
+      <Modal visible={isTransferModal} animationType="slide" onRequestClose={closeTransferModal}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Stock Transfer
             </Text>
-            <Pressable onPress={() => setIsTransferModal(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeTransferModal} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -1839,10 +1937,7 @@ export default function MoreScreen() {
 
             <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
               <Pressable
-                onPress={() => {
-                  setIsTransferModal(false);
-                  setTransferPhotoUri(null);
-                }}
+                onPress={closeTransferModal}
                 className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
               >
                 <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
@@ -1864,7 +1959,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Staff Attendance Checklist Modal */}
-      <Modal visible={isAttendanceModal} animationType="slide">
+      <Modal visible={isAttendanceModal} animationType="slide" onRequestClose={closeAttendanceModal}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
@@ -1875,7 +1970,7 @@ export default function MoreScreen() {
                 Date: {attendanceDate}
               </Text>
             </View>
-            <Pressable onPress={() => setIsAttendanceModal(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeAttendanceModal} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -1943,13 +2038,13 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Salary Management Modal */}
-      <Modal visible={isSalaryModal} animationType="slide">
+      <Modal visible={isSalaryModal} animationType="slide" onRequestClose={closeSalaryModal}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Employee Salaries
             </Text>
-            <Pressable onPress={() => setIsSalaryModal(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeSalaryModal} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -2054,7 +2149,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Logistics & Delivery Challans Modal */}
-      <Modal visible={isChallanModal} animationType="slide">
+      <Modal visible={isChallanModal} animationType="slide" onRequestClose={() => setIsChallanModal(false)}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
@@ -2135,13 +2230,13 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Create Challan Modal */}
-      <Modal visible={isCreateChallanModal} animationType="slide">
+      <Modal visible={isCreateChallanModal} animationType="slide" onRequestClose={closeCreateChallanModal}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Generate Challan
             </Text>
-            <Pressable onPress={() => setIsCreateChallanModal(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeCreateChallanModal} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -2235,7 +2330,7 @@ export default function MoreScreen() {
 
           <View className="flex-row justify-between mt-10" style={{ marginBottom: bottomInset }}>
             <Pressable
-              onPress={() => setIsCreateChallanModal(false)}
+              onPress={closeCreateChallanModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
@@ -2256,7 +2351,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Sales Report Modal */}
-      <Modal visible={isSalesReportModal} animationType="slide">
+      <Modal visible={isSalesReportModal} animationType="slide" onRequestClose={() => setIsSalesReportModal(false)}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-8">
             <View>
@@ -2312,7 +2407,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Stock Levels Report Modal */}
-      <Modal visible={isStockReportModal} animationType="slide">
+      <Modal visible={isStockReportModal} animationType="slide" onRequestClose={() => setIsStockReportModal(false)}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
@@ -2375,7 +2470,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Ledger Outstanding Modal */}
-      <Modal visible={isLedgerReportModal} animationType="slide">
+      <Modal visible={isLedgerReportModal} animationType="slide" onRequestClose={() => setIsLedgerReportModal(false)}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
@@ -2476,7 +2571,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Stock Movements Log Modal */}
-      <Modal visible={isMovementsModal} animationType="slide">
+      <Modal visible={isMovementsModal} animationType="slide" onRequestClose={() => setIsMovementsModal(false)}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
@@ -2545,13 +2640,13 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Business Profile Modal */}
-      <Modal visible={isBusinessProfileModal} animationType="slide">
+      <Modal visible={isBusinessProfileModal} animationType="slide" onRequestClose={closeBusinessProfileModal}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Business Profile
             </Text>
-            <Pressable onPress={() => setIsBusinessProfileModal(false)} className="w-11 h-11 items-center justify-center">
+            <Pressable onPress={closeBusinessProfileModal} className="w-11 h-11 items-center justify-center">
               <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
@@ -2586,7 +2681,7 @@ export default function MoreScreen() {
 
           <View className="flex-row justify-between mt-10" style={{ marginBottom: bottomInset }}>
             <Pressable
-              onPress={() => setIsBusinessProfileModal(false)}
+              onPress={closeBusinessProfileModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-text-secondary dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
@@ -2607,7 +2702,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Quick PIN Setup Modal */}
-      <Modal visible={isPinSetupModal} animationType="slide" transparent>
+      <Modal visible={isPinSetupModal} animationType="slide" transparent onRequestClose={closePinSetupModal}>
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-background dark:bg-background-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
             <View className="flex-row justify-between items-center mb-6">
@@ -2615,11 +2710,7 @@ export default function MoreScreen() {
                 {pinLoginAvailable ? "Change Quick PIN" : "Set Up Quick PIN"}
               </Text>
               <Pressable
-                onPress={() => {
-                  setIsPinSetupModal(false);
-                  setNewPin("");
-                  setConfirmPin("");
-                }}
+                onPress={closePinSetupModal}
                 className="w-11 h-11 items-center justify-center"
               >
                 <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
@@ -2670,7 +2761,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Add Staff Modal */}
-      <Modal visible={isAddingStaff} animationType="slide">
+      <Modal visible={isAddingStaff} animationType="slide" onRequestClose={closeAddStaffModal}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
             Add New Employee
@@ -2768,7 +2859,7 @@ export default function MoreScreen() {
           {/* Form Actions */}
           <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
             <Pressable
-              onPress={() => setIsAddingStaff(false)}
+              onPress={closeAddStaffModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-text-secondary dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
@@ -2791,7 +2882,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Dispatch Task Modal */}
-      <Modal visible={isDispatchTaskModal} animationType="slide">
+      <Modal visible={isDispatchTaskModal} animationType="slide" onRequestClose={closeDispatchTaskModal}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
             Dispatch Task to Agent
@@ -2861,7 +2952,7 @@ export default function MoreScreen() {
 
           <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
             <Pressable
-              onPress={() => setIsDispatchTaskModal(false)}
+              onPress={closeDispatchTaskModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
               <Text className="text-text-secondary dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
