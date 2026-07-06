@@ -98,9 +98,11 @@ export default function InventoryScreen() {
   const [warehouseStock, setWarehouseStock] = useState<Record<string, number>>({});
   const [warehouseStockLoading, setWarehouseStockLoading] = useState(false);
   const [isAddingWarehouse, setIsAddingWarehouse] = useState(false);
+  const [editingWarehouseId, setEditingWarehouseId] = useState<string | null>(null);
   const [newWarehouseName, setNewWarehouseName] = useState("");
   const [newWarehouseLocation, setNewWarehouseLocation] = useState("");
   const [addWarehouseLoading, setAddWarehouseLoading] = useState(false);
+  const [isManagingWarehouses, setIsManagingWarehouses] = useState(false);
 
   const fetchWarehouses = () => {
     if (!user?.company_id) return;
@@ -113,7 +115,10 @@ export default function InventoryScreen() {
   useEffect(fetchWarehouses, [user]);
 
   const closeAddWarehouse = async () => {
-    const hasChanges = newWarehouseName.trim() !== "" || newWarehouseLocation.trim() !== "";
+    const original = editingWarehouseId ? warehouses.find((w) => w.id === editingWarehouseId) : null;
+    const hasChanges = editingWarehouseId
+      ? newWarehouseName.trim() !== (original?.name ?? "") || newWarehouseLocation.trim() !== (original?.location ?? "")
+      : newWarehouseName.trim() !== "" || newWarehouseLocation.trim() !== "";
     if (hasChanges) {
       const ok = await confirm({
         title: "Discard changes?",
@@ -124,6 +129,21 @@ export default function InventoryScreen() {
       if (!ok) return;
     }
     setIsAddingWarehouse(false);
+    setEditingWarehouseId(null);
+  };
+
+  const openAddWarehouse = () => {
+    setEditingWarehouseId(null);
+    setNewWarehouseName("");
+    setNewWarehouseLocation("");
+    setIsAddingWarehouse(true);
+  };
+
+  const openEditWarehouse = (w: Warehouse) => {
+    setEditingWarehouseId(w.id);
+    setNewWarehouseName(w.name);
+    setNewWarehouseLocation(w.location ?? "");
+    setIsAddingWarehouse(true);
   };
 
   const handleAddWarehouse = async () => {
@@ -133,18 +153,45 @@ export default function InventoryScreen() {
     }
     setAddWarehouseLoading(true);
     try {
-      await api.post("/warehouses", {
+      const payload = {
         name: newWarehouseName.trim(),
         location: newWarehouseLocation.trim() || undefined,
-      });
+      };
+      if (editingWarehouseId) {
+        await api.patch(`/warehouses/${editingWarehouseId}`, payload);
+      } else {
+        await api.post("/warehouses", payload);
+      }
       setIsAddingWarehouse(false);
+      setEditingWarehouseId(null);
       setNewWarehouseName("");
       setNewWarehouseLocation("");
       fetchWarehouses();
     } catch (e) {
-      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add location.");
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to save location.");
     } finally {
       setAddWarehouseLoading(false);
+    }
+  };
+
+  const handleDeleteWarehouse = async (w: Warehouse) => {
+    const ok = await confirm({
+      title: `Delete "${w.name}"?`,
+      message:
+        "This permanently removes the location. It can't be undone — an entry will be kept in the Activity Log with the full details. Locations with existing stock movements can't be deleted.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await api.delete(`/warehouses/${w.id}`);
+      if (activeWarehouseId === w.id) setActiveWarehouseId(null);
+      fetchWarehouses();
+    } catch (e) {
+      Alert.alert(
+        "Can't Delete",
+        e instanceof ApiError ? e.message : "This location still has stock movements recorded against it."
+      );
     }
   };
 
@@ -666,12 +713,20 @@ export default function InventoryScreen() {
           </Pressable>
         ))}
         <Pressable
-          onPress={() => setIsAddingWarehouse(true)}
+          onPress={openAddWarehouse}
           className="px-4 py-2.5 rounded-xl border border-dashed border-outline-variant dark:border-outline flex-row items-center"
         >
           <MaterialCommunityIcons name="plus" size={14} color="#0F7A5F" style={{ marginRight: 5 }} />
           <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Location</Text>
         </Pressable>
+        {warehouses.length > 0 && (
+          <Pressable
+            onPress={() => setIsManagingWarehouses(true)}
+            className="px-3 py-2.5 rounded-xl border border-outline-variant dark:border-outline flex-row items-center"
+          >
+            <MaterialCommunityIcons name="cog-outline" size={14} color="#6B7280" />
+          </Pressable>
+        )}
       </ScrollView>
 
       {/* Catalog List */}
@@ -1221,12 +1276,14 @@ export default function InventoryScreen() {
         </ScrollView>
       </Modal>
 
-      {/* Add Warehouse/Location Modal */}
+      {/* Add/Edit Warehouse Location Modal */}
       <Modal visible={isAddingWarehouse} animationType="slide" transparent onRequestClose={closeAddWarehouse}>
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Add Location</Text>
+              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
+                {editingWarehouseId ? "Edit Location" : "Add Location"}
+              </Text>
               <Pressable onPress={closeAddWarehouse} className="w-10 h-10 items-center justify-center">
                 <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
               </Pressable>
@@ -1259,9 +1316,62 @@ export default function InventoryScreen() {
               {addWarehouseLoading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-bold text-base">Add Location</Text>
+                <Text className="text-white font-bold text-base">
+                  {editingWarehouseId ? "Save Changes" : "Add Location"}
+                </Text>
               )}
             </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Manage Locations Modal — edit/delete existing warehouses */}
+      <Modal
+        visible={isManagingWarehouses}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setIsManagingWarehouses(false)}
+      >
+        <View className="flex-1 justify-end bg-black/40">
+          <View
+            className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6"
+            style={{ paddingBottom: bottomInset + 24, maxHeight: "75%" }}
+          >
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Manage Locations</Text>
+              <Pressable onPress={() => setIsManagingWarehouses(false)} className="w-10 h-10 items-center justify-center">
+                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+            <ScrollView contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+              {warehouses.map((w) => (
+                <View
+                  key={w.id}
+                  className="flex-row items-center justify-between bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3"
+                >
+                  <View className="flex-1 mr-2">
+                    <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">{w.name}</Text>
+                    {!!w.location && (
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                        {w.location}
+                      </Text>
+                    )}
+                  </View>
+                  <Pressable
+                    onPress={() => {
+                      setIsManagingWarehouses(false);
+                      openEditWarehouse(w);
+                    }}
+                    className="w-10 h-10 items-center justify-center"
+                  >
+                    <MaterialCommunityIcons name="pencil-outline" size={20} color="#3B7DD8" />
+                  </Pressable>
+                  <Pressable onPress={() => handleDeleteWarehouse(w)} className="w-10 h-10 items-center justify-center">
+                    <MaterialCommunityIcons name="trash-can-outline" size={20} color="#D64545" />
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </Modal>
