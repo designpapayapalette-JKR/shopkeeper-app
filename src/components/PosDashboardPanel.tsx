@@ -41,6 +41,9 @@ interface InvoiceDetail {
   sgst_total: string;
   igst_total: string;
   grand_total: string;
+  payment_mode?: "cash" | "upi" | "credit" | null;
+  extra_charge_total?: string | null;
+  extra_charge_label?: string | null;
   items: InvoiceDetailItem[];
   party: {
     id: string;
@@ -154,6 +157,9 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
     sgst: parseFloat(detail.sgst_total || "0"),
     igst: parseFloat(detail.igst_total || "0"),
     total: parseFloat(detail.grand_total),
+    paymentMode: detail.payment_mode ?? undefined,
+    extraCharge: parseFloat(detail.extra_charge_total || "0"),
+    extraChargeLabel: detail.extra_charge_label ?? undefined,
   });
 
   const buildHtmlFromDetail = (detail: InvoiceDetail, format: "tally" | "thermal") => {
@@ -208,6 +214,9 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
       sgst: gstSplit.sgst,
       igst: gstSplit.igst,
       total,
+      paymentMode: detail.payment_mode ?? undefined,
+      extraCharge: parseFloat(detail.extra_charge_total || "0"),
+      extraChargeLabel: detail.extra_charge_label ?? undefined,
     });
   };
 

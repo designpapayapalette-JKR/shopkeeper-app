@@ -29,6 +29,14 @@ export interface ReceiptData {
   // printer (set in Printer Settings) gets a correctly-sized receipt
   // instead of a 58mm-wide layout stretched or clipped onto their paper.
   paperWidth?: ThermalPaperWidth;
+  // Shown so it's unambiguous on the printed slip how the customer is
+  // expected to pay — especially important on an estimate, where no money
+  // has actually changed hands yet.
+  paymentMode?: "cash" | "upi" | "credit";
+  // A surcharge on top of the total (e.g. a credit/commission charge) —
+  // shown as its own line so it isn't mistaken for a pricing error.
+  extraCharge?: number;
+  extraChargeLabel?: string;
 }
 
 // expo-print's printAsync/printToFileAsync default to a full Letter/A4 page
@@ -58,6 +66,10 @@ export function generateReceiptHtml(data: ReceiptData): string {
   const pct = (amount: number) =>
     data.subtotal > 0 ? ((amount / data.subtotal) * 100).toFixed(1) : "0.0";
   const widthMm = data.paperWidth ?? "58";
+  const hasTax = data.cgst > 0 || data.sgst > 0 || data.igst > 0;
+  const paymentModeLabel = data.paymentMode
+    ? { cash: "CASH", upi: "UPI", credit: "CREDIT" }[data.paymentMode]
+    : null;
 
   const itemsHtml = data.items
     .map(
@@ -136,9 +148,17 @@ export function generateReceiptHtml(data: ReceiptData): string {
           <div class="store-title">${data.storeName}</div>
           ${data.storeAddress ? `<div style="font-size: 10px;">${data.storeAddress}</div>` : ""}
           ${data.storePhone ? `<div style="font-size: 10px;">Phone: ${data.storePhone}</div>` : ""}
-          ${data.invoiceType === "gst" && data.gstNumber ? `<div style="font-size: 10px; font-weight: bold; margin-top: 2px;">GSTIN: ${data.gstNumber}</div>` : ""}
+          ${(data.invoiceType === "gst" || hasTax) && data.gstNumber ? `<div style="font-size: 10px; font-weight: bold; margin-top: 2px;">GSTIN: ${data.gstNumber}</div>` : ""}
           <div style="font-size: 12px; font-weight: bold; margin-top: 4px; border: 1px solid #000; padding: 2px; display: inline-block;">
-            ${data.invoiceType === "gst" ? "TAX INVOICE" : data.invoiceType === "retail" ? "RETAIL BILL" : "ESTIMATE / QUOTATION"}
+            ${
+              data.invoiceType === "gst"
+                ? "TAX INVOICE"
+                : data.invoiceType === "retail"
+                ? "RETAIL BILL"
+                : hasTax
+                ? "GST ESTIMATE / QUOTATION"
+                : "ESTIMATE / QUOTATION"
+            }
           </div>
         </div>
 
@@ -148,6 +168,7 @@ export function generateReceiptHtml(data: ReceiptData): string {
         <div class="invoice-details">
           <div>Bill No: ${data.invoiceNumber}</div>
           <div>Date: ${data.date}</div>
+          ${paymentModeLabel ? `<div>Payment: ${paymentModeLabel}</div>` : ""}
         </div>
 
         <div class="divider"></div>
@@ -172,7 +193,7 @@ export function generateReceiptHtml(data: ReceiptData): string {
         </div>
 
         ${
-          data.invoiceType === "gst"
+          hasTax
             ? data.igst > 0
               ? `
           <div class="totals-row">
@@ -188,6 +209,17 @@ export function generateReceiptHtml(data: ReceiptData): string {
           <div class="totals-row">
             <span>SGST (${pct(data.sgst)}%):</span>
             <span>₹${data.sgst.toFixed(2)}</span>
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          data.extraCharge && data.extraCharge > 0
+            ? `
+          <div class="totals-row">
+            <span>${data.extraChargeLabel || "Extra Charge"}:</span>
+            <span>₹${data.extraCharge.toFixed(2)}</span>
           </div>
         `
             : ""

@@ -100,6 +100,15 @@ export default function PosScreen() {
   const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate">("retail");
   const businessMode: "retail" | "b2b" = activeCompany?.business_mode === "b2b" ? "b2b" : "retail";
   const [cashCustomerId, setCashCustomerId] = useState<string | null>(null);
+  // An estimate is normally tax-free (it's a quotation, not a bill yet), but
+  // some customers want to see the GST-inclusive number before they commit
+  // to the purchase — this opts a single estimate into real tax computation
+  // without turning it into an actual GST invoice.
+  const [estimateWithGst, setEstimateWithGst] = useState(false);
+  // Extra charge added on top of the total — e.g. a credit/commission
+  // surcharge when the customer wants to buy on credit terms. Shown whenever
+  // Credit is the selected payment mode, but usable for any bill type.
+  const [extraCharge, setExtraCharge] = useState("");
 
   // Switching company-wide mode changes what a *new* bill defaults to.
   // Guarded by an empty cart so it never yanks the bill type out from under
@@ -108,6 +117,12 @@ export default function PosScreen() {
     if (cart.length > 0) return;
     setInvoiceType(businessMode === "b2b" ? "gst" : "retail");
   }, [businessMode]);
+
+  // Reset the GST-on-estimate toggle whenever the bill type changes away
+  // from estimate, so it doesn't silently carry over into a GST/retail bill.
+  useEffect(() => {
+    if (invoiceType !== "estimate") setEstimateWithGst(false);
+  }, [invoiceType]);
 
   // Party Selector State
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
@@ -317,8 +332,12 @@ export default function PosScreen() {
   const effectiveTaxRate = (item: CartItem): number =>
     parseFloat(item.customTaxRate ?? item.product.tax_rate ?? "18.00");
 
+  // A GST invoice always computes tax; an estimate only does when the
+  // customer explicitly wants a GST-inclusive quote; retail never does.
+  const shouldApplyTax = invoiceType === "gst" || (invoiceType === "estimate" && estimateWithGst);
+
   const getTaxTotal = () => {
-    if (invoiceType !== "gst") return 0;
+    if (!shouldApplyTax) return 0;
     return cart.reduce((sum, item) => {
       const price = parseFloat(item.product.price);
       const taxAmount = price * (effectiveTaxRate(item) / 100);
@@ -326,8 +345,13 @@ export default function PosScreen() {
     }, 0);
   };
 
+  const getExtraChargeValue = () => {
+    const val = parseFloat(extraCharge || "0");
+    return val > 0 ? val : 0;
+  };
+
   const getTotal = () => {
-    return Math.max(0, getSubtotal() + getTaxTotal() - getDiscountValue());
+    return Math.max(0, getSubtotal() + getTaxTotal() + getExtraChargeValue() - getDiscountValue());
   };
 
   // Retail mode allows checkout with no chosen customer — this resolves (or
@@ -387,6 +411,7 @@ export default function PosScreen() {
     try {
       const subtotal = getSubtotal();
       const discountVal = getDiscountValue();
+      const extraChargeVal = getExtraChargeValue();
       const total = getTotal();
 
       if (total < 0) {
@@ -406,11 +431,14 @@ export default function PosScreen() {
         type: invoiceType,
         payment_mode: paymentMode,
         discount_total: discountVal,
+        apply_gst: invoiceType === "estimate" ? estimateWithGst : undefined,
+        extra_charge_total: extraChargeVal,
+        extra_charge_label: extraChargeVal > 0 && paymentMode === "credit" ? "Credit Charge" : undefined,
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
           price: parseFloat(item.product.price),
-          tax_rate: invoiceType === "gst" ? effectiveTaxRate(item) : 0,
+          tax_rate: shouldApplyTax ? effectiveTaxRate(item) : 0,
         })),
       });
 
@@ -427,6 +455,9 @@ export default function PosScreen() {
         setCart([]);
         setSelectedParty(null);
         setIsCheckoutOpen(false);
+        setDiscount("");
+        setExtraCharge("");
+        setEstimateWithGst(false);
       };
 
       const buildReceiptData = (): ReceiptData => {
@@ -455,6 +486,9 @@ export default function PosScreen() {
           sgst: gstSplit.sgst,
           igst: gstSplit.igst,
           total,
+          paymentMode,
+          extraCharge: extraChargeVal,
+          extraChargeLabel: extraChargeVal > 0 && paymentMode === "credit" ? "Credit Charge" : undefined,
         };
       };
 
@@ -463,7 +497,7 @@ export default function PosScreen() {
       const buildTallyHtml = () => {
         const tallyItems: TallyInvoiceItem[] = cart.map((item) => {
           const price = parseFloat(item.product.price);
-          const taxRate = invoiceType === "gst" ? effectiveTaxRate(item) : 0;
+          const taxRate = shouldApplyTax ? effectiveTaxRate(item) : 0;
           const lineSubtotal = price * item.quantity;
           return {
             name: item.product.name,
@@ -504,6 +538,9 @@ export default function PosScreen() {
           sgst: gstSplit.sgst,
           igst: gstSplit.igst,
           total,
+          paymentMode,
+          extraCharge: extraChargeVal,
+          extraChargeLabel: extraChargeVal > 0 && paymentMode === "credit" ? "Credit Charge" : undefined,
         });
       };
 
@@ -728,7 +765,7 @@ export default function PosScreen() {
                   ₹{(parseFloat(item.product.price) * item.quantity).toFixed(0)}
                 </Text>
               </View>
-              {invoiceType === "gst" && (
+              {shouldApplyTax && (
                 <Pressable
                   onPress={() => {
                     setGstEditProductId(item.product.id);
@@ -787,6 +824,29 @@ export default function PosScreen() {
           ))}
         </View>
 
+        {/* An estimate is normally tax-free (it's a quotation), but some
+            customers want to see the GST-inclusive number before committing. */}
+        {invoiceType === "estimate" && (
+          <Pressable
+            onPress={() => setEstimateWithGst((v) => !v)}
+            className={`flex-row items-center justify-between px-3 py-2.5 rounded-xl border mb-4 ${
+              estimateWithGst ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline"
+            }`}
+          >
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <MaterialCommunityIcons name="percent-outline" size={16} color={estimateWithGst ? "#0F7A5F" : "#6e7a74"} />
+              <Text className={`text-sm font-bold ${estimateWithGst ? "text-primary dark:text-primary-dark" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                Include GST in this estimate
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name={estimateWithGst ? "toggle-switch" : "toggle-switch-off-outline"}
+              size={26}
+              color={estimateWithGst ? "#0F7A5F" : "#9E9E9E"}
+            />
+          </Pressable>
+        )}
+
         {/* Payment Mode */}
         <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Payment</Text>
         <View className="flex-row gap-2 mb-4">
@@ -817,7 +877,7 @@ export default function PosScreen() {
         </View>
 
         {/* Discount */}
-        <View className="flex-row justify-between items-center">
+        <View className="flex-row justify-between items-center mb-3">
           <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Discount (₹)</Text>
           <TextInput
             value={discount}
@@ -828,6 +888,24 @@ export default function PosScreen() {
             className="border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-right text-base font-bold w-24 bg-background dark:bg-bg-dark text-on-surface dark:text-text-primary-dark"
           />
         </View>
+
+        {/* A customer buying on credit sometimes gets an extra charge added
+            on top (a commission/service charge) to cover the cost of
+            offering credit — surfaced only when Credit is selected, but the
+            field stays usable for any other one-off addition too. */}
+        {paymentMode === "credit" && (
+          <View className="flex-row justify-between items-center">
+            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Credit Charge (₹)</Text>
+            <TextInput
+              value={extraCharge}
+              onChangeText={setExtraCharge}
+              keyboardType="numeric"
+              placeholder="0"
+              placeholderTextColor="#A0A0A0"
+              className="border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-right text-base font-bold w-24 bg-background dark:bg-bg-dark text-on-surface dark:text-text-primary-dark"
+            />
+          </View>
+        )}
       </View>
 
       {/* ── Totals ── */}
@@ -836,10 +914,16 @@ export default function PosScreen() {
           <Text className="text-sm text-on-surface-variant font-medium">Subtotal</Text>
           <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">₹{getSubtotal().toFixed(2)}</Text>
         </View>
-        {invoiceType === "gst" && getTaxTotal() > 0 && (
+        {shouldApplyTax && getTaxTotal() > 0 && (
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-on-surface-variant font-medium">GST</Text>
             <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getTaxTotal().toFixed(2)}</Text>
+          </View>
+        )}
+        {getExtraChargeValue() > 0 && (
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-sm text-on-surface-variant font-medium">Credit Charge</Text>
+            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getExtraChargeValue().toFixed(2)}</Text>
           </View>
         )}
         {getDiscountValue() > 0 && (

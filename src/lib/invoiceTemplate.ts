@@ -47,6 +47,9 @@ export interface TallyInvoiceData {
   sgst: number;
   igst: number;
   total: number;
+  paymentMode?: "cash" | "upi" | "credit";
+  extraCharge?: number;
+  extraChargeLabel?: string;
 }
 
 const ONES = [
@@ -236,10 +239,20 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
                      <tr><td class="label">SGST</td><td class="value">₹${data.sgst.toFixed(2)}</td></tr>`
                 : ""
             }
+            ${
+              data.extraCharge && data.extraCharge > 0
+                ? `<tr><td class="label">${data.extraChargeLabel || "Extra Charge"}</td><td class="value">₹${data.extraCharge.toFixed(2)}</td></tr>`
+                : ""
+            }
             <tr class="grand-total-row">
               <td class="label">Grand Total</td>
               <td class="value">₹${data.total.toFixed(2)}</td>
             </tr>
+            ${
+              data.paymentMode
+                ? `<tr><td class="label">Payment Mode</td><td class="value">${{ cash: "CASH", upi: "UPI", credit: "CREDIT" }[data.paymentMode]}</td></tr>`
+                : ""
+            }
           </table>
 
           <div class="words-row">

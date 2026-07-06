@@ -136,17 +136,29 @@ function buildEscPosBill(data: ReceiptData, paperWidth: PaperWidth): string {
   // Standard font is ~32 chars/line at 58mm, ~48 chars/line at 80mm.
   const colWidth = paperWidth === "80" ? 32 : 20;
 
+  const hasTax = data.cgst > 0 || data.sgst > 0 || data.igst > 0;
+  const paymentModeLabel = data.paymentMode ? { cash: "CASH", upi: "UPI", credit: "CREDIT" }[data.paymentMode] : null;
+
   const lines: string[] = [];
   lines.push(`${ALIGN_CT}${BOLD_ON}${data.storeName}${BOLD_OFF}\n`);
   if (data.storeAddress) lines.push(`${data.storeAddress}\n`);
   if (data.storePhone) lines.push(`Phone: ${data.storePhone}\n`);
-  if (data.invoiceType === "gst" && data.gstNumber) lines.push(`GSTIN: ${data.gstNumber}\n`);
+  if ((data.invoiceType === "gst" || hasTax) && data.gstNumber) lines.push(`GSTIN: ${data.gstNumber}\n`);
   lines.push(
-    `${data.invoiceType === "gst" ? "TAX INVOICE" : data.invoiceType === "retail" ? "RETAIL BILL" : "ESTIMATE"}\n`
+    `${
+      data.invoiceType === "gst"
+        ? "TAX INVOICE"
+        : data.invoiceType === "retail"
+        ? "RETAIL BILL"
+        : hasTax
+        ? "GST ESTIMATE"
+        : "ESTIMATE"
+    }\n`
   );
   lines.push(`${HR}\n`);
   lines.push(`${ALIGN_LT}Bill No: ${data.invoiceNumber}\n`);
   lines.push(`Date: ${data.date}\n`);
+  if (paymentModeLabel) lines.push(`Payment: ${paymentModeLabel}\n`);
   lines.push(`${HR}\n`);
 
   for (const item of data.items) {
@@ -156,13 +168,16 @@ function buildEscPosBill(data: ReceiptData, paperWidth: PaperWidth): string {
 
   lines.push(`${HR}\n`);
   lines.push(`Subtotal:`.padEnd(colWidth) + `Rs.${data.subtotal.toFixed(2)}\n`);
-  if (data.invoiceType === "gst") {
+  if (hasTax) {
     if (data.igst > 0) {
       lines.push(`IGST:`.padEnd(colWidth) + `Rs.${data.igst.toFixed(2)}\n`);
     } else {
       lines.push(`CGST:`.padEnd(colWidth) + `Rs.${data.cgst.toFixed(2)}\n`);
       lines.push(`SGST:`.padEnd(colWidth) + `Rs.${data.sgst.toFixed(2)}\n`);
     }
+  }
+  if (data.extraCharge && data.extraCharge > 0) {
+    lines.push(`${data.extraChargeLabel || "Extra Charge"}:`.padEnd(colWidth) + `Rs.${data.extraCharge.toFixed(2)}\n`);
   }
   lines.push(`${HR}\n`);
   lines.push(`${BOLD_ON}GRAND TOTAL:`.padEnd(colWidth) + `Rs.${data.total.toFixed(2)}${BOLD_OFF}\n`);
