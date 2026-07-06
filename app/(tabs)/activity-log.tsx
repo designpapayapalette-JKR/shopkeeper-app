@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, RefreshControl } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Pressable, RefreshControl, Modal, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth-context";
 import { api } from "../../src/lib/api";
 import { useTopInset } from "../../src/lib/useTopInset";
+import { useBottomInset } from "../../src/lib/useBottomInset";
 
 interface LogEntry {
   id: string;
@@ -14,7 +15,40 @@ interface LogEntry {
   entity_id: string;
   entity_label: string | null;
   notes: string | null;
+  // Full field-value snapshot at the time of the action — populated for
+  // hard-deleted entities (no recycle bin) so the record can be viewed and
+  // manually re-created even though it's gone for good; for updates it's
+  // {before, after} so a change can actually be reviewed.
+  detail: Record<string, unknown> | { before: Record<string, unknown>; after: Record<string, unknown> } | null;
   created_at: string;
+}
+
+// Renders an arbitrary snapshot object as a readable key/value list —
+// there's no fixed shape since this can be a product, warehouse, brand,
+// party, etc., so this just formats whatever fields exist.
+function DetailFields({ data }: { data: Record<string, unknown> }) {
+  const entries = Object.entries(data).filter(
+    ([key]) => !["id", "companyId", "createdAt", "updatedAt", "deletedAt"].includes(key)
+  );
+  if (entries.length === 0) {
+    return (
+      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">No details recorded.</Text>
+    );
+  }
+  return (
+    <View style={{ gap: 8 }}>
+      {entries.map(([key, value]) => (
+        <View key={key} className="flex-row justify-between" style={{ gap: 12 }}>
+          <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark" style={{ flex: 1 }}>
+            {key}
+          </Text>
+          <Text className="text-sm text-on-surface dark:text-text-primary-dark" style={{ flex: 1, textAlign: "right" }}>
+            {value === null || value === undefined || value === "" ? "—" : String(value)}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 // Maps a logged entity type to the screen that can actually show it, so a
@@ -66,9 +100,11 @@ export default function ActivityLogScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [detailEntry, setDetailEntry] = useState<LogEntry | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.company_id) return;
@@ -128,7 +164,7 @@ export default function ActivityLogScreen() {
             const meta = ACTION_META[item.action];
             return (
               <Pressable
-                onPress={() => navigateToEntity(router, item)}
+                onPress={() => setDetailEntry(item)}
                 className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline p-md flex-row items-center active:opacity-70"
                 style={{ gap: 12 }}
               >
@@ -155,6 +191,68 @@ export default function ActivityLogScreen() {
           }}
         />
       )}
+
+      <Modal
+        visible={!!detailEntry}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setDetailEntry(null)}
+      >
+        <View className="flex-1 justify-end bg-black/40">
+          <View
+            className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6"
+            style={{ paddingBottom: bottomInset + 24, maxHeight: "80%" }}
+          >
+            {detailEntry && (
+              <>
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark" style={{ flex: 1 }}>
+                    {ACTION_META[detailEntry.action].verb.charAt(0).toUpperCase() + ACTION_META[detailEntry.action].verb.slice(1)}
+                    {" "}{detailEntry.entity_type}
+                  </Text>
+                  <Pressable onPress={() => setDetailEntry(null)} className="w-10 h-10 items-center justify-center">
+                    <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  </Pressable>
+                </View>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-1">
+                  {detailEntry.entity_label} · by {detailEntry.user_label ?? "Someone"} · {timeAgo(detailEntry.created_at)}
+                </Text>
+                {detailEntry.notes && (
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-3">{detailEntry.notes}</Text>
+                )}
+                <ScrollView style={{ marginTop: 12 }} contentContainerStyle={{ paddingBottom: 8 }}>
+                  {detailEntry.detail && "before" in detailEntry.detail ? (
+                    <View style={{ gap: 16 }}>
+                      <View>
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2">Before</Text>
+                        <DetailFields data={(detailEntry.detail as any).before ?? {}} />
+                      </View>
+                      <View>
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2">After</Text>
+                        <DetailFields data={(detailEntry.detail as any).after ?? {}} />
+                      </View>
+                    </View>
+                  ) : (
+                    <DetailFields data={(detailEntry.detail as Record<string, unknown>) ?? {}} />
+                  )}
+                </ScrollView>
+                {detailEntry.action !== "delete" && (
+                  <Pressable
+                    onPress={() => {
+                      const entry = detailEntry;
+                      setDetailEntry(null);
+                      navigateToEntity(router, entry);
+                    }}
+                    className="bg-primary dark:bg-primary-dark py-4 rounded-xl items-center mt-4"
+                  >
+                    <Text className="text-white font-bold text-base">View Record</Text>
+                  </Pressable>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
