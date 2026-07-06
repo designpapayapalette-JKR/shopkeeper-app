@@ -4,8 +4,16 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { colorScheme } from "nativewind";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
 import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
+
+// The app is light-theme only — several screens have incomplete `dark:`
+// class coverage (a card gets a dark background but its text stays the
+// light-mode color, making it unreadable), and auditing every screen for
+// that is a much bigger job than just not following the system theme.
+// Locking the scheme here overrides NativeWind's "media" (system) mode app-wide.
+colorScheme.set("light");
 
 function NavigationGuard() {
   const { isAuthenticated, isLoading } = useAuth();
