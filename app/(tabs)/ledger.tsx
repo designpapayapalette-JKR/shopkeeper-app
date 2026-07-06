@@ -657,6 +657,7 @@ export default function LedgerScreen() {
                 data={ledgerEntries}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
                 renderItem={({ item }) => {
                   const isDebit = item.type === "debit";
                   const indicatorColor = isDebit ? "text-red-500 font-bold" : "text-green-500 font-bold";

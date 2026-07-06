@@ -98,15 +98,9 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="more"
-        options={{
-          title: "More",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon active="dots-grid" inactive="dots-grid" focused={focused} />
-          ),
-        }}
-      />
+      {/* Reachable only via the Dashboard header's Profile menu now — not a
+          bottom tab, to keep the main tab bar to the day-to-day screens. */}
+      <Tabs.Screen name="more" options={{ href: null }} />
       <Tabs.Screen name="activity-log" options={{ href: null }} />
       <Tabs.Screen name="recycle-bin" options={{ href: null }} />
       <Tabs.Screen name="invoice-history" options={{ href: null }} />

@@ -310,11 +310,11 @@ export default function DashboardScreen() {
         />
       </Pressable>
 
-      {/* Profile menu — Settings and Sign Out, reachable from the header
-          avatar instead of only from the Operations tab. */}
+      {/* Profile menu — the only way to reach Operations/Settings now that
+          "More" is no longer a bottom tab, plus Sign Out. */}
       <Modal visible={isProfileMenuOpen} animationType="fade" transparent onRequestClose={() => setIsProfileMenuOpen(false)}>
         <Pressable className="flex-1 bg-black/40 justify-start items-end" onPress={() => setIsProfileMenuOpen(false)} style={{ paddingTop: topInset + 56, paddingRight: 12 }}>
-          <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline shadow-lg overflow-hidden" style={{ minWidth: 200 }}>
+          <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline shadow-lg overflow-hidden" style={{ minWidth: 220 }}>
             <Pressable
               onPress={() => {
                 setIsProfileMenuOpen(false);
@@ -324,7 +324,7 @@ export default function DashboardScreen() {
               style={{ gap: 10 }}
             >
               <MaterialCommunityIcons name="cog-outline" size={20} color="#6e7a74" />
-              <Text className="text-base font-semibold text-on-surface dark:text-text-primary-dark">Settings</Text>
+              <Text className="text-base font-semibold text-on-surface dark:text-text-primary-dark">Operations & Settings</Text>
             </Pressable>
             <View className="h-px bg-outline-variant dark:bg-outline" />
             <Pressable

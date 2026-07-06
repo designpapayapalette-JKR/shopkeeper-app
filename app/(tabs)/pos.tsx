@@ -1021,6 +1021,7 @@ export default function PosScreen() {
                 keyExtractor={(item) => item.id}
                 renderItem={renderProductCard}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 16 }}
                 ListEmptyComponent={
                   <View className="flex-1 justify-center items-center py-20">
                     <Text className="text-on-surface-variant font-bold text-base mb-3">No products found</Text>

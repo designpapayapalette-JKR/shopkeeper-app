@@ -2090,6 +2090,7 @@ export default function MoreScreen() {
           <FlatList
             data={salariesList}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
             ListHeaderComponent={
               <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-155 dark:border-zinc-800 mb-6 shadow-sm">
                 <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark mb-4">
@@ -2223,6 +2224,7 @@ export default function MoreScreen() {
               data={challans}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
               renderItem={({ item }) => {
                 let badgeColor = "bg-gray-100 text-gray-700";
                 if (item.status === "in_transit") badgeColor = "bg-orange-50 text-orange-600 dark:bg-orange-950/20";
@@ -2470,6 +2472,7 @@ export default function MoreScreen() {
               data={products}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
               renderItem={({ item }) => {
                 const stock = parseFloat(item.stock_quantity ?? "0");
                 const badgeColor = stock > 10 ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50";
@@ -2633,6 +2636,7 @@ export default function MoreScreen() {
               data={movements}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
               renderItem={({ item }) => {
                 const isPurchase = item.type === "purchase";
                 const isSale = item.type === "sale";
