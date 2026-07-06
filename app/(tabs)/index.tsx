@@ -14,6 +14,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth-context";
 import { api } from "../../src/lib/api";
 import { useTopInset } from "../../src/lib/useTopInset";
+import { useBottomInset } from "../../src/lib/useBottomInset";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 
@@ -74,6 +75,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const confirm = useConfirm();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const insets = useSafeAreaInsets();
   const [switchingMode, setSwitchingMode] = useState(false);
   const [isScanHubOpen, setIsScanHubOpen] = useState(false);
@@ -350,7 +352,7 @@ export default function DashboardScreen() {
           does something instead of being a dead decoration. */}
       <Modal visible={isBrandSwitcherOpen} animationType="slide" transparent onRequestClose={() => setIsBrandSwitcherOpen(false)}>
         <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setIsBrandSwitcherOpen(false)}>
-          <Pressable className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6 pb-10" onPress={() => {}}>
+          <Pressable className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }} onPress={() => {}}>
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Switch Brand</Text>
               <Pressable onPress={() => setIsBrandSwitcherOpen(false)} className="w-10 h-10 items-center justify-center">
