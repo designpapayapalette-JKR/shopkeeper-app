@@ -22,6 +22,7 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
 import BulkUploadCard from "../../src/components/BulkUploadCard";
+import { GstRatePicker } from "../../src/components/GstRatePicker";
 
 interface Product {
   id: string;
@@ -978,12 +979,7 @@ export default function InventoryScreen() {
               <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 GST Rate (%)
               </Text>
-              <TextInput
-                value={newProductTax}
-                onChangeText={setNewProductTax}
-                keyboardType="numeric"
-                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
-              />
+              <GstRatePicker value={newProductTax} onChange={setNewProductTax} />
             </View>
 
             <View className="mt-4">
@@ -1192,25 +1188,18 @@ export default function InventoryScreen() {
                 className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
-            <View className="mt-4 flex-row justify-between">
-              <View className="w-[48%]">
-                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Cost Price (₹)</Text>
-                <TextInput
-                  value={editProductCost}
-                  onChangeText={setEditProductCost}
-                  keyboardType="numeric"
-                  className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
-                />
-              </View>
-              <View className="w-[48%]">
-                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">GST Rate (%)</Text>
-                <TextInput
-                  value={editProductTax}
-                  onChangeText={setEditProductTax}
-                  keyboardType="numeric"
-                  className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
-                />
-              </View>
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Cost Price (₹)</Text>
+              <TextInput
+                value={editProductCost}
+                onChangeText={setEditProductCost}
+                keyboardType="numeric"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">GST Rate (%)</Text>
+              <GstRatePicker value={editProductTax} onChange={setEditProductTax} />
             </View>
           </View>
           

@@ -19,6 +19,7 @@ import { generateTallyInvoiceHtml, TallyInvoiceItem } from "../../src/lib/invoic
 import { shareInvoiceFile } from "../../src/lib/sharer";
 import { printToSavedPrinter, getSavedPrinter } from "../../src/lib/thermalPrinter";
 import PosDashboardPanel from "../../src/components/PosDashboardPanel";
+import { GstRatePicker } from "../../src/components/GstRatePicker";
 import { useAuth } from "../../src/lib/auth-context";
 import { api, ApiError } from "../../src/lib/api";
 import { useConfirm } from "../../src/components/ConfirmDialog";
@@ -55,6 +56,10 @@ interface Warehouse {
 interface CartItem {
   product: Product;
   quantity: number;
+  // Per-sale GST override — lets the cashier correct a rate for this one
+  // bill (e.g. the product master has the wrong slab, or a one-off
+  // exemption applies) without editing the product's stored default.
+  customTaxRate?: string;
 }
 
 export default function PosScreen() {
@@ -78,6 +83,8 @@ export default function PosScreen() {
   const [defaultWarehouseId, setDefaultWarehouseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [gstEditProductId, setGstEditProductId] = useState<string | null>(null);
+  const [gstEditValue, setGstEditValue] = useState("");
 
   // Search & Cart State
   const [productSearch, setProductSearch] = useState("");
@@ -283,6 +290,13 @@ export default function PosScreen() {
     );
   };
 
+  const applyCustomTaxRate = (productId: string, rate: string) => {
+    setCart((prevCart) =>
+      prevCart.map((item) => (item.product.id === productId ? { ...item, customTaxRate: rate || undefined } : item))
+    );
+    setGstEditProductId(null);
+  };
+
   // Calculations
   const getSubtotal = () => {
     return cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
@@ -293,12 +307,16 @@ export default function PosScreen() {
     return val > 0 ? val : 0;
   };
 
+  // Per-sale override wins over the product's stored default — lets a
+  // cashier fix the GST slab for this one bill without editing the product.
+  const effectiveTaxRate = (item: CartItem): number =>
+    parseFloat(item.customTaxRate ?? item.product.tax_rate ?? "18.00");
+
   const getTaxTotal = () => {
     if (invoiceType !== "gst") return 0;
     return cart.reduce((sum, item) => {
       const price = parseFloat(item.product.price);
-      const taxRate = parseFloat(item.product.tax_rate || "18.00");
-      const taxAmount = price * (taxRate / 100);
+      const taxAmount = price * (effectiveTaxRate(item) / 100);
       return sum + taxAmount * item.quantity;
     }, 0);
   };
@@ -387,7 +405,7 @@ export default function PosScreen() {
           product_id: item.product.id,
           quantity: item.quantity,
           price: parseFloat(item.product.price),
-          tax_rate: invoiceType === "gst" ? parseFloat(item.product.tax_rate || "18.00") : 0,
+          tax_rate: invoiceType === "gst" ? effectiveTaxRate(item) : 0,
         })),
       });
 
@@ -439,7 +457,7 @@ export default function PosScreen() {
       const buildTallyHtml = () => {
         const tallyItems: TallyInvoiceItem[] = cart.map((item) => {
           const price = parseFloat(item.product.price);
-          const taxRate = invoiceType === "gst" ? parseFloat(item.product.tax_rate || "18.00") : 0;
+          const taxRate = invoiceType === "gst" ? effectiveTaxRate(item) : 0;
           const lineSubtotal = price * item.quantity;
           return {
             name: item.product.name,
@@ -685,23 +703,41 @@ export default function PosScreen() {
       ) : (
         <View className="mb-4">
           {cart.map((item) => (
-            <View key={item.product.id} className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline px-4 py-3 mb-2">
-              <View className="flex-1 mr-2">
-                <Text numberOfLines={1} className="font-bold text-sm text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
-                <Text className="text-xs text-on-surface-variant mt-0.5">₹{parseFloat(item.product.price).toFixed(2)} each</Text>
+            <View key={item.product.id} className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline px-4 py-3 mb-2">
+              <View className="flex-row items-center">
+                <View className="flex-1 mr-2">
+                  <Text numberOfLines={1} className="font-bold text-sm text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
+                  <Text className="text-xs text-on-surface-variant mt-0.5">₹{parseFloat(item.product.price).toFixed(2)} each</Text>
+                </View>
+                <View className="flex-row items-center gap-2 mr-3">
+                  <Pressable onPress={() => updateQuantity(item.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
+                    <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
+                  </Pressable>
+                  <Text className="text-base font-black text-on-surface dark:text-text-primary-dark min-w-[20px] text-center">{item.quantity}</Text>
+                  <Pressable onPress={() => updateQuantity(item.product.id, 1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
+                    <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
+                  </Pressable>
+                </View>
+                <Text className="font-black text-base text-primary dark:text-primary-dark min-w-[60px] text-right">
+                  ₹{(parseFloat(item.product.price) * item.quantity).toFixed(0)}
+                </Text>
               </View>
-              <View className="flex-row items-center gap-2 mr-3">
-                <Pressable onPress={() => updateQuantity(item.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
-                  <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
+              {invoiceType === "gst" && (
+                <Pressable
+                  onPress={() => {
+                    setGstEditProductId(item.product.id);
+                    setGstEditValue(item.customTaxRate ?? item.product.tax_rate ?? "18");
+                  }}
+                  className="flex-row items-center self-start bg-primary/10 px-2.5 py-1 rounded-lg mt-2"
+                  style={{ gap: 4 }}
+                >
+                  <MaterialCommunityIcons name="percent-outline" size={12} color="#0F7A5F" />
+                  <Text className="text-xs font-bold text-primary dark:text-primary-dark">
+                    GST {effectiveTaxRate(item)}% {item.customTaxRate ? "(custom)" : ""}
+                  </Text>
+                  <MaterialCommunityIcons name="pencil" size={11} color="#0F7A5F" />
                 </Pressable>
-                <Text className="text-base font-black text-on-surface dark:text-text-primary-dark min-w-[20px] text-center">{item.quantity}</Text>
-                <Pressable onPress={() => updateQuantity(item.product.id, 1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
-                  <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
-                </Pressable>
-              </View>
-              <Text className="font-black text-base text-primary dark:text-primary-dark min-w-[60px] text-right">
-                ₹{(parseFloat(item.product.price) * item.quantity).toFixed(0)}
-              </Text>
+              )}
             </View>
           ))}
         </View>
@@ -1238,6 +1274,30 @@ export default function PosScreen() {
             </Pressable>
           </View>
         </View>
+      </Modal>
+
+      {/* Per-item GST override */}
+      <Modal
+        visible={gstEditProductId !== null}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setGstEditProductId(null)}
+      >
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setGstEditProductId(null)}>
+          <Pressable className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
+            <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-1">GST Rate for this bill</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">
+              Only changes this item on this sale — the product's saved GST rate stays the same.
+            </Text>
+            <GstRatePicker value={gstEditValue} onChange={setGstEditValue} />
+            <Pressable
+              onPress={() => gstEditProductId && applyCustomTaxRate(gstEditProductId, gstEditValue)}
+              className="bg-primary dark:bg-primary-dark py-4 rounded-xl items-center mt-5"
+            >
+              <Text className="text-white font-bold text-base">Apply</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
   );
