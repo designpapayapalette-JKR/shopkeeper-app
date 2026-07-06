@@ -112,6 +112,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="scanned-documents" options={{ href: null }} />
       <Tabs.Screen name="unified-ledger" options={{ href: null }} />
       <Tabs.Screen name="onboarding" options={{ href: null }} />
+      <Tabs.Screen name="walkie-talkie" options={{ href: null }} />
     </Tabs>
   );
 }

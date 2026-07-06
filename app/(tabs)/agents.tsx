@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import type MapView from "react-native-maps";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../src/lib/auth-context";
 import { api } from "../../src/lib/api";
 import AgentMapView from "../../src/components/AgentMapView";
@@ -77,6 +78,7 @@ function statusColor(mins: number | null): { dot: string; text: string } {
 
 export default function AgentsScreen() {
   const { user, activeCompany } = useAuth();
+  const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const topInset = useTopInset();
 
@@ -220,6 +222,14 @@ export default function AgentsScreen() {
             </Text>
           </View>
 
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <Pressable
+              onPress={() => router.push("/walkie-talkie" as any)}
+              className="w-11 h-11 rounded-xl bg-primary/10 items-center justify-center"
+            >
+              <MaterialCommunityIcons name="radio-handheld" size={20} color="#0F7A5F" />
+            </Pressable>
+
           {/* Map / List toggle */}
           <View className="flex-row bg-surface-container dark:bg-surface-dark rounded-xl p-1 gap-1">
             {(["map", "list"] as ViewMode[]).map((mode) => (
@@ -250,6 +260,7 @@ export default function AgentsScreen() {
                 </View>
               </Pressable>
             ))}
+          </View>
           </View>
         </View>
       </View>

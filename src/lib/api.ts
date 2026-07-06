@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { toCamelCase, toSnakeCase } from "./caseConvert";
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+export const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 if (!apiUrl) {
   throw new Error("EXPO_PUBLIC_API_URL is not set — see .env.example");
@@ -65,7 +65,7 @@ async function refreshAccessToken(): Promise<string | null> {
   return updated.accessToken;
 }
 
-async function getValidAccessToken(): Promise<string | null> {
+export async function getValidAccessToken(): Promise<string | null> {
   const auth = await getAuthData();
   if (!auth) return null;
   // Refresh a little before actual expiry to avoid a request landing right
