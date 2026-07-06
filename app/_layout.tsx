@@ -16,7 +16,7 @@ import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
 colorScheme.set("light");
 
 function NavigationGuard() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, activeCompany } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -24,6 +24,14 @@ function NavigationGuard() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const onOnboarding = segments.includes("onboarding" as never);
+    // A brand-new company (fresh registration via a beta invite link) hasn't
+    // completed the onboarding wizard yet — send them straight into it
+    // instead of leaving it as an easy-to-miss dashboard banner, so a
+    // first-time download actually gets set up properly. Uses the explicit
+    // onboardingCompletedAt flag (not "has a GSTIN") since a shop below the
+    // GST threshold legitimately has neither and shouldn't get stuck looping.
+    const needsOnboarding = !!activeCompany && !activeCompany.onboarding_completed_at;
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to sign-in if not logged in
@@ -33,8 +41,10 @@ function NavigationGuard() {
       // Note: the dashboard route file is app/(tabs)/index.tsx, not .../dashboard —
       // "/(tabs)" resolves to that group's index route.
       router.replace("/(tabs)");
+    } else if (isAuthenticated && needsOnboarding && !onOnboarding) {
+      router.replace("/onboarding" as any);
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, segments, activeCompany]);
 
   if (isLoading) {
     return (

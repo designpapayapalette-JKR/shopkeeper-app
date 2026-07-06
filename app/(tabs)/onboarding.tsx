@@ -304,7 +304,16 @@ export default function OnboardingScreen() {
             Your business details are saved{addedMembers.length > 0 ? ` and ${addedMembers.length} team member${addedMembers.length > 1 ? "s" : ""} added` : ""}. You're ready to start billing.
           </Text>
           <Pressable
-            onPress={() => router.replace("/" as any)}
+            onPress={async () => {
+              try {
+                await api.patch("/companies/me", { onboarding_completed_at: new Date().toISOString() });
+                await refreshCompany();
+              } catch (e) {
+                // Best-effort — don't block the user from reaching the
+                // dashboard just because this one flag failed to save.
+              }
+              router.replace("/" as any);
+            }}
             className="bg-primary dark:bg-primary-dark py-4 px-10 rounded-xl items-center"
           >
             <Text className="text-white font-bold text-base">Go to Dashboard</Text>
