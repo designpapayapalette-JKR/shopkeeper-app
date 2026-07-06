@@ -7,6 +7,8 @@ export interface ReceiptItem {
   total: number;
 }
 
+export type ThermalPaperWidth = "58" | "80";
+
 export interface ReceiptData {
   storeName: string;
   storeAddress?: string;
@@ -22,16 +24,25 @@ export interface ReceiptData {
   sgst: number;
   igst: number;
   total: number;
+  // Which roll width this receipt is laid out for — defaults to 58mm to
+  // match the printer most shops already have, but a shop with an 80mm
+  // printer (set in Printer Settings) gets a correctly-sized receipt
+  // instead of a 58mm-wide layout stretched or clipped onto their paper.
+  paperWidth?: ThermalPaperWidth;
 }
 
 // expo-print's printAsync/printToFileAsync default to a full Letter/A4 page
-// (the body's `width: 58mm` CSS only limits content width *inside* that big
-// page, leaving a mostly-blank sheet) — the actual PDF/print page size has to
-// be set explicitly via the `width`/`height` options, in points (1mm ≈
+// (the body's `width` CSS only limits content width *inside* that big page,
+// leaving a mostly-blank sheet) — the actual PDF/print page size has to be
+// set explicitly via the `width`/`height` options, in points (1mm ≈
 // 2.8346pt). Height is estimated from item count since a thermal roll is
 // continuous-feed, not a fixed page.
 const MM_TO_PT = 2.8346;
-export const THERMAL_PAGE_WIDTH_PT = Math.round(58 * MM_TO_PT);
+export function thermalPageWidthPt(paperWidth: ThermalPaperWidth = "58"): number {
+  return Math.round(parseInt(paperWidth, 10) * MM_TO_PT);
+}
+// Kept for existing call sites that only ever printed at 58mm.
+export const THERMAL_PAGE_WIDTH_PT = thermalPageWidthPt("58");
 
 export function estimateThermalPageHeightPt(itemCount: number, hasUpiQr: boolean = false): number {
   const headerFooterPt = 220;
@@ -46,6 +57,7 @@ export function generateReceiptHtml(data: ReceiptData): string {
   // mixed-rate cart, but never fabricated the way a hardcoded 9%/9% would be.
   const pct = (amount: number) =>
     data.subtotal > 0 ? ((amount / data.subtotal) * 100).toFixed(1) : "0.0";
+  const widthMm = data.paperWidth ?? "58";
 
   const itemsHtml = data.items
     .map(
@@ -68,11 +80,11 @@ export function generateReceiptHtml(data: ReceiptData): string {
         <meta charset="utf-8">
         <style>
           @page {
-            size: 58mm auto;
+            size: ${widthMm}mm auto;
             margin: 0;
           }
           body {
-            width: 58mm;
+            width: ${widthMm}mm;
             margin: 0;
             padding: 2mm;
             font-family: 'Courier New', Courier, monospace;

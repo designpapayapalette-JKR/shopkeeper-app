@@ -5,10 +5,10 @@ import * as Print from "expo-print";
 import { useAuth } from "../lib/auth-context";
 import { api, ApiError } from "../lib/api";
 import { useConfirm } from "./ConfirmDialog";
-import { generateReceiptHtml, ReceiptData, THERMAL_PAGE_WIDTH_PT, estimateThermalPageHeightPt } from "../lib/printer";
+import { generateReceiptHtml, ReceiptData, thermalPageWidthPt, estimateThermalPageHeightPt, ThermalPaperWidth } from "../lib/printer";
 import { generateTallyInvoiceHtml, TallyInvoiceItem } from "../lib/invoiceTemplate";
 import { shareInvoiceFile } from "../lib/sharer";
-import { printToSavedPrinter, getSavedPrinter } from "../lib/thermalPrinter";
+import { printToSavedPrinter, getDefaultPrinter } from "../lib/thermalPrinter";
 import { useBottomInset } from "../lib/useBottomInset";
 import { useTopInset } from "../lib/useTopInset";
 
@@ -102,6 +102,11 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
   const [refundMode, setRefundMode] = useState<"cash" | "upi">("cash");
 
   const [summary, setSummary] = useState<PosSummary | null>(null);
+  const [defaultPaperWidth, setDefaultPaperWidth] = useState<ThermalPaperWidth>("58");
+
+  useEffect(() => {
+    getDefaultPrinter().then((p) => setDefaultPaperWidth(p?.paperWidth ?? "58"));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -134,6 +139,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
     storePhone: activeCompany?.phone,
     gstNumber: activeCompany?.gstin,
     upiId: activeCompany?.upi_id || undefined,
+    paperWidth: defaultPaperWidth,
     invoiceNumber: detail.invoice_number,
     date: new Date(detail.date).toLocaleDateString(),
     invoiceType: detail.type,
@@ -215,7 +221,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
         const offerPrintOrShare = (formatLabel: string, format: "tally" | "thermal") => {
           const thermalPageSize =
             format === "thermal"
-              ? { width: THERMAL_PAGE_WIDTH_PT, height: estimateThermalPageHeightPt(detail.items.length, !!activeCompany?.upi_id) }
+              ? { width: thermalPageWidthPt(defaultPaperWidth), height: estimateThermalPageHeightPt(detail.items.length, !!activeCompany?.upi_id) }
               : undefined;
           Alert.alert(formatLabel, `Invoice ${detail.invoice_number} — what would you like to do?`, [
             {
@@ -223,10 +229,10 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
               onPress: async () => {
                 try {
                   if (format === "thermal") {
-                    const saved = await getSavedPrinter();
+                    const saved = await getDefaultPrinter();
                     if (saved) {
                       try {
-                        await printToSavedPrinter(buildReceiptDataFromDetail(detail));
+                        await printToSavedPrinter(buildReceiptDataFromDetail(detail), saved);
                         return;
                       } catch {
                         Alert.alert("Printer Unreachable", `Could not reach ${saved.name}. Falling back to the system print dialog.`);
@@ -270,7 +276,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
         setOpeningId(null);
       }
     },
-    [activeCompany]
+    [activeCompany, defaultPaperWidth]
   );
 
   const handleVoidInvoice = async (invoice: InvoiceSummary) => {

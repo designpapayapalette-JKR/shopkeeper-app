@@ -14,10 +14,10 @@ import {
 import * as Print from "expo-print";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { generateReceiptHtml, ReceiptData, THERMAL_PAGE_WIDTH_PT, estimateThermalPageHeightPt } from "../../src/lib/printer";
+import { generateReceiptHtml, ReceiptData, thermalPageWidthPt, estimateThermalPageHeightPt, ThermalPaperWidth } from "../../src/lib/printer";
 import { generateTallyInvoiceHtml, TallyInvoiceItem } from "../../src/lib/invoiceTemplate";
 import { shareInvoiceFile } from "../../src/lib/sharer";
-import { printToSavedPrinter, getSavedPrinter } from "../../src/lib/thermalPrinter";
+import { printToSavedPrinter, getDefaultPrinter } from "../../src/lib/thermalPrinter";
 import PosDashboardPanel from "../../src/components/PosDashboardPanel";
 import { GstRatePicker } from "../../src/components/GstRatePicker";
 import { useAuth } from "../../src/lib/auth-context";
@@ -85,6 +85,11 @@ export default function PosScreen() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [gstEditProductId, setGstEditProductId] = useState<string | null>(null);
   const [gstEditValue, setGstEditValue] = useState("");
+  const [defaultPaperWidth, setDefaultPaperWidth] = useState<ThermalPaperWidth>("58");
+
+  useEffect(() => {
+    getDefaultPrinter().then((p) => setDefaultPaperWidth(p?.paperWidth ?? "58"));
+  }, []);
 
   // Search & Cart State
   const [productSearch, setProductSearch] = useState("");
@@ -440,6 +445,7 @@ export default function PosScreen() {
           storePhone: activeCompany?.phone,
           gstNumber: activeCompany?.gstin,
           upiId: activeCompany?.upi_id || undefined,
+          paperWidth: defaultPaperWidth,
           invoiceNumber,
           date: invoiceDate,
           invoiceType,
@@ -506,10 +512,10 @@ export default function PosScreen() {
       // only fall back to the OS print dialog if no printer is paired or the
       // direct print fails (e.g. printer powered off, out of range).
       const printThermal = async () => {
-        const saved = await getSavedPrinter();
+        const saved = await getDefaultPrinter();
         if (saved) {
           try {
-            await printToSavedPrinter(buildReceiptData());
+            await printToSavedPrinter(buildReceiptData(), saved);
             return;
           } catch (e: any) {
             Alert.alert("Printer Unreachable", `Could not reach ${saved.name}. Falling back to the system print dialog.`);
@@ -517,14 +523,14 @@ export default function PosScreen() {
         }
         await Print.printAsync({
           html: buildReceiptHtml(),
-          width: THERMAL_PAGE_WIDTH_PT,
+          width: thermalPageWidthPt(defaultPaperWidth),
           height: estimateThermalPageHeightPt(cart.length, !!activeCompany?.upi_id),
         });
       };
 
       const offerPrintOrShare = (formatLabel: string, buildHtml: () => string, isThermal: boolean) => {
         const thermalPageSize = isThermal
-          ? { width: THERMAL_PAGE_WIDTH_PT, height: estimateThermalPageHeightPt(cart.length, !!activeCompany?.upi_id) }
+          ? { width: thermalPageWidthPt(defaultPaperWidth), height: estimateThermalPageHeightPt(cart.length, !!activeCompany?.upi_id) }
           : undefined;
         Alert.alert(formatLabel, `Invoice ${invoiceNumber} — what would you like to do?`, [
           {
