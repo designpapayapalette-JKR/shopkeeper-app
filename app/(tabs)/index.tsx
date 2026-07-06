@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
+  Switch,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -14,6 +15,7 @@ import { useAuth } from "../../src/lib/auth-context";
 import { api } from "../../src/lib/api";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useConfirm } from "../../src/components/ConfirmDialog";
 
 interface DashboardStats {
   salesToday: number;
@@ -54,6 +56,7 @@ const QUICK_ACTIONS = [
   { id: "scan", label: "Scan", icon: "qrcode-scan", route: "/inventory?openScanner=1", primary: false },
   { id: "payment", label: "Payment", icon: "cash-multiple", route: "/ledger", primary: false },
   { id: "purchase", label: "Purchase", icon: "cart-check", route: "/more?openPurchase=1", primary: false },
+  { id: "expense", label: "Expense", icon: "wallet-outline", route: "/more?openExpense=1", primary: false },
 ] as const;
 
 function timeAgo(iso: string): string {
@@ -66,13 +69,16 @@ function timeAgo(iso: string): string {
 }
 
 export default function DashboardScreen() {
-  const { user, activeCompany, activeBrand, availableBrands, setActiveBrand, refreshCompany } =
+  const { user, activeCompany, activeBrand, availableBrands, setActiveBrand, refreshCompany, logout } =
     useAuth();
   const router = useRouter();
+  const confirm = useConfirm();
   const topInset = useTopInset();
   const insets = useSafeAreaInsets();
   const [switchingMode, setSwitchingMode] = useState(false);
   const [isScanHubOpen, setIsScanHubOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isBrandSwitcherOpen, setIsBrandSwitcherOpen] = useState(false);
   const businessMode: "retail" | "b2b" = activeCompany?.business_mode === "b2b" ? "b2b" : "retail";
 
   const handleSwitchMode = async (mode: "retail" | "b2b") => {
@@ -237,7 +243,10 @@ export default function DashboardScreen() {
             >
               SwiftRetail
             </Text>
-            <Pressable className="flex-row items-center gap-xs">
+            <Pressable
+              onPress={() => setIsBrandSwitcherOpen(true)}
+              className="flex-row items-center gap-xs"
+            >
               <Text
                 className="font-label-md text-label-md text-on-surface-variant dark:text-text-secondary-dark"
                 numberOfLines={1}
@@ -259,58 +268,131 @@ export default function DashboardScreen() {
           >
             <MaterialCommunityIcons name="barcode-scan" size={22} color="#005f49" />
           </Pressable>
-          <View className="w-touch-target h-touch-target rounded-full items-center justify-center bg-primary/10 border border-outline-variant">
+          <Pressable
+            onPress={() => setIsProfileMenuOpen(true)}
+            className="w-touch-target h-touch-target rounded-full items-center justify-center bg-primary/10 border border-outline-variant active:opacity-70"
+          >
             <Text className="text-primary dark:text-primary-dark font-bold">
               {initials}
             </Text>
-          </View>
+          </Pressable>
         </View>
       </View>
 
-      {/* Business Mode Toggle */}
-      <View className="bg-surface-container-highest dark:bg-surface-dark border-b border-outline-variant dark:border-outline px-margin-mobile py-3">
-        <View className="flex-row bg-surface-container-lowest dark:bg-bg-dark border border-outline-variant dark:border-outline p-1 rounded-2xl">
-          <Pressable
-            onPress={() => handleSwitchMode("retail")}
-            disabled={switchingMode}
-            className={`flex-1 py-2.5 rounded-xl items-center flex-row justify-center ${
-              businessMode === "retail" ? "bg-primary dark:bg-primary-dark" : "bg-transparent"
-            }`}
-            style={{ gap: 6 }}
-          >
-            <MaterialCommunityIcons
-              name="storefront-outline"
-              size={16}
-              color={businessMode === "retail" ? "#FFFFFF" : "#6e7a74"}
-            />
-            <Text className={`font-bold text-sm ${businessMode === "retail" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
-              Retail Mode
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => handleSwitchMode("b2b")}
-            disabled={switchingMode}
-            className={`flex-1 py-2.5 rounded-xl items-center flex-row justify-center ${
-              businessMode === "b2b" ? "bg-primary dark:bg-primary-dark" : "bg-transparent"
-            }`}
-            style={{ gap: 6 }}
-          >
-            <MaterialCommunityIcons
-              name="file-document-outline"
-              size={16}
-              color={businessMode === "b2b" ? "#FFFFFF" : "#6e7a74"}
-            />
-            <Text className={`font-bold text-sm ${businessMode === "b2b" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
-              B2B Mode
-            </Text>
-          </Pressable>
+      {/* Business Mode — compact switch instead of a full-width segmented
+          control, so it doesn't push the rest of the dashboard down. */}
+      <Pressable
+        onPress={() => handleSwitchMode(businessMode === "retail" ? "b2b" : "retail")}
+        disabled={switchingMode}
+        className="bg-surface-container-highest dark:bg-surface-dark border-b border-outline-variant dark:border-outline px-margin-mobile py-2 flex-row items-center justify-between"
+      >
+        <View className="flex-row items-center flex-1 mr-2" style={{ gap: 8 }}>
+          <MaterialCommunityIcons
+            name={businessMode === "retail" ? "storefront-outline" : "file-document-outline"}
+            size={16}
+            color="#0F7A5F"
+          />
+          <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
+            {businessMode === "retail" ? "Retail Mode" : "B2B Mode"}
+          </Text>
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark flex-1" numberOfLines={1}>
+            {businessMode === "retail" ? "Non-GST, party optional" : "GST only, full party required"}
+          </Text>
         </View>
-        <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-2 text-center">
-          {businessMode === "retail"
-            ? "Quick counter sales — non-GST by default, party optional"
-            : "GST invoicing only — full party details required"}
-        </Text>
-      </View>
+        <Switch
+          value={businessMode === "b2b"}
+          onValueChange={(v) => handleSwitchMode(v ? "b2b" : "retail")}
+          disabled={switchingMode}
+          trackColor={{ false: "#D1D5DB", true: "#0F7A5F" }}
+          thumbColor="#FFFFFF"
+        />
+      </Pressable>
+
+      {/* Profile menu — Settings and Sign Out, reachable from the header
+          avatar instead of only from the Operations tab. */}
+      <Modal visible={isProfileMenuOpen} animationType="fade" transparent onRequestClose={() => setIsProfileMenuOpen(false)}>
+        <Pressable className="flex-1 bg-black/40 justify-start items-end" onPress={() => setIsProfileMenuOpen(false)} style={{ paddingTop: topInset + 56, paddingRight: 12 }}>
+          <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline shadow-lg overflow-hidden" style={{ minWidth: 200 }}>
+            <Pressable
+              onPress={() => {
+                setIsProfileMenuOpen(false);
+                router.push("/more" as any);
+              }}
+              className="flex-row items-center px-4 py-3.5 active:bg-surface-container-low"
+              style={{ gap: 10 }}
+            >
+              <MaterialCommunityIcons name="cog-outline" size={20} color="#6e7a74" />
+              <Text className="text-base font-semibold text-on-surface dark:text-text-primary-dark">Settings</Text>
+            </Pressable>
+            <View className="h-px bg-outline-variant dark:bg-outline" />
+            <Pressable
+              onPress={async () => {
+                setIsProfileMenuOpen(false);
+                const ok = await confirm({
+                  title: "Sign out?",
+                  message: "You'll need your email and password (or Quick PIN) to sign back in.",
+                  confirmLabel: "Sign Out",
+                  destructive: true,
+                });
+                if (ok) logout();
+              }}
+              className="flex-row items-center px-4 py-3.5 active:bg-surface-container-low"
+              style={{ gap: 10 }}
+            >
+              <MaterialCommunityIcons name="logout" size={20} color="#D64545" />
+              <Text className="text-base font-semibold text-error">Sign Out</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Brand switcher — the header's business-name chevron now actually
+          does something instead of being a dead decoration. */}
+      <Modal visible={isBrandSwitcherOpen} animationType="slide" transparent onRequestClose={() => setIsBrandSwitcherOpen(false)}>
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setIsBrandSwitcherOpen(false)}>
+          <Pressable className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6 pb-10" onPress={() => {}}>
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Switch Brand</Text>
+              <Pressable onPress={() => setIsBrandSwitcherOpen(false)} className="w-10 h-10 items-center justify-center">
+                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+            {availableBrands.length === 0 ? (
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
+                {activeCompany?.name ?? "Main Branch"} — no additional brands set up yet.
+              </Text>
+            ) : (
+              <ScrollView style={{ maxHeight: 320 }}>
+                <Pressable
+                  onPress={() => { setActiveBrand(null); setIsBrandSwitcherOpen(false); }}
+                  className={`flex-row items-center justify-between px-4 py-3.5 rounded-xl mb-2 border ${
+                    activeBrand === null ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline"
+                  }`}
+                >
+                  <Text className={`text-base font-bold ${activeBrand === null ? "text-primary dark:text-primary-dark" : "text-on-surface dark:text-text-primary-dark"}`}>
+                    All Brands
+                  </Text>
+                  {activeBrand === null && <MaterialCommunityIcons name="check" size={18} color="#0F7A5F" />}
+                </Pressable>
+                {availableBrands.map((brand) => (
+                  <Pressable
+                    key={brand.id}
+                    onPress={() => { setActiveBrand(brand); setIsBrandSwitcherOpen(false); }}
+                    className={`flex-row items-center justify-between px-4 py-3.5 rounded-xl mb-2 border ${
+                      activeBrand?.id === brand.id ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline"
+                    }`}
+                  >
+                    <Text className={`text-base font-bold ${activeBrand?.id === brand.id ? "text-primary dark:text-primary-dark" : "text-on-surface dark:text-text-primary-dark"}`}>
+                      {brand.name}
+                    </Text>
+                    {activeBrand?.id === brand.id && <MaterialCommunityIcons name="check" size={18} color="#0F7A5F" />}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Complete Setup nudge — shows until the shop has filled in the basics
           that matter for a real GST invoice (never asked for at signup). */}

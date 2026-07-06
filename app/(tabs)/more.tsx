@@ -880,10 +880,10 @@ export default function MoreScreen() {
       {/* Title */}
       <View className="mb-8">
         <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
-          Operations & Settings
+          Operations
         </Text>
         <Text className="text-sm text-text-secondary dark:text-text-secondary-dark font-medium mt-0.5">
-          Advanced merchant configuration and workflows
+          Day-to-day workflows and merchant configuration
         </Text>
       </View>
 
