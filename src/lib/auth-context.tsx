@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { api, login as apiLogin, logout as apiLogout, fetchMe, hasStoredSession } from "./api";
+import { api, login as apiLogin, logout as apiLogout, registerCompany as apiRegisterCompany, fetchMe, hasStoredSession } from "./api";
 import { setPin, verifyPin, hasPin, setLastUserId, getLastUserId } from "./pin";
 
 interface AuthContextType {
@@ -11,6 +11,15 @@ interface AuthContextType {
   availableBrands: any[];
   setActiveBrand: (brand: any | null) => void;
   login: (email: string, password: string) => Promise<void>;
+  register: (data: {
+    companyName: string;
+    state?: string;
+    email: string;
+    password: string;
+    firstName: string;
+    lastName?: string;
+    inviteCode: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   refreshBrands: () => Promise<void>;
   refreshCompany: () => Promise<void>;
@@ -120,6 +129,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = async (data: {
+    companyName: string;
+    state?: string;
+    email: string;
+    password: string;
+    firstName: string;
+    lastName?: string;
+    inviteCode: string;
+  }) => {
+    try {
+      const me = await apiRegisterCompany(data);
+      setUser(me);
+      setIsAuthenticated(true);
+      await setLastUserId(me.id);
+      if (me.company_id) {
+        await fetchTenantData();
+      }
+    } catch (error) {
+      setIsAuthenticated(false);
+      setUser(null);
+      setActiveCompany(null);
+      setActiveBrand(null);
+      setAvailableBrands([]);
+      throw error;
+    }
+  };
+
   const setupQuickPin = async (pin: string) => {
     if (!user?.id) throw new Error("You must be signed in to set up a PIN.");
     await setPin(user.id, pin);
@@ -176,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         availableBrands,
         setActiveBrand,
         login,
+        register,
         logout,
         refreshBrands,
         refreshCompany,

@@ -11,6 +11,7 @@ import {
   Alert,
   FlatList,
   Image,
+  Linking,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -20,6 +21,12 @@ import { useConfirm } from "../../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../../src/lib/sharer";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
+
+// Not meant to be memorable — it's shared with the new employee over
+// WhatsApp and they're expected to change it after first login.
+function randomTempPassword(): string {
+  return Math.random().toString(36).slice(-8) + "!1";
+}
 
 // The new backend has a fixed set of assignable roles (see
 // shopkeeper-api/src/routes/staff.ts) instead of Directus's dynamic
@@ -229,6 +236,7 @@ export default function MoreScreen() {
   const [newStaffFirstName, setNewStaffFirstName] = useState("");
   const [newStaffLastName, setNewStaffLastName] = useState("");
   const [newStaffEmail, setNewStaffEmail] = useState("");
+  const [newStaffPhone, setNewStaffPhone] = useState("");
   const [newStaffPassword, setNewStaffPassword] = useState("");
   const [newStaffRole, setNewStaffRole] = useState<string>("");
   const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
@@ -783,16 +791,42 @@ export default function MoreScreen() {
         first_name: newStaffFirstName,
         last_name: newStaffLastName || undefined,
         email: newStaffEmail,
+        phone: newStaffPhone.trim() || undefined,
         password: newStaffPassword,
         role: newStaffRole,
       });
-      Alert.alert("Success", "Employee created successfully. They can now log in.");
       setIsAddingStaff(false);
+      const createdPhone = newStaffPhone.trim();
+      const createdName = newStaffFirstName;
+      const createdEmail = newStaffEmail;
+      const createdPassword = newStaffPassword;
       setNewStaffFirstName("");
       setNewStaffLastName("");
       setNewStaffEmail("");
+      setNewStaffPhone("");
       setNewStaffPassword("");
       fetchSetupData();
+
+      // Employees can only ever be created this way — there's no
+      // self-service signup for staff/field agents — so getting the login
+      // to them (WhatsApp, if a phone number was given) is the natural next
+      // step right after creation, not a separate screen to hunt for later.
+      if (createdPhone) {
+        const ok = await confirm({
+          title: "Employee Created",
+          message: `Send ${createdName}'s login (email + password) to them over WhatsApp now?`,
+          confirmLabel: "Send via WhatsApp",
+        });
+        if (ok) {
+          const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the Shopkeeper Employee App.\n\nDownload the app and log in with:\nEmail: ${createdEmail}\nPassword: ${createdPassword}\n\nPlease change your password after logging in.`;
+          const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${createdPhone.replace(/\D/g, "")}`;
+          const supported = await Linking.canOpenURL(url);
+          if (supported) await Linking.openURL(url);
+          else Alert.alert("WhatsApp Not Installed", "Could not open WhatsApp on this device.");
+        }
+      } else {
+        Alert.alert("Success", "Employee created successfully. They can now log in.");
+      }
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to create staff member. Make sure the email is unique.");
     } finally {
@@ -2854,16 +2888,36 @@ export default function MoreScreen() {
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                Temporary Password *
+                Phone (optional — for sending login via WhatsApp)
               </Text>
+              <TextInput
+                value={newStaffPhone}
+                onChangeText={setNewStaffPhone}
+                placeholder="10-digit mobile number"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="phone-pad"
+                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+
+            <View className="mt-4">
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider">
+                  Temporary Password *
+                </Text>
+                <Pressable onPress={() => setNewStaffPassword(randomTempPassword())}>
+                  <Text className="text-sm font-bold text-primary dark:text-primary-dark">Auto-Generate</Text>
+                </Pressable>
+              </View>
               <TextInput
                 value={newStaffPassword}
                 onChangeText={setNewStaffPassword}
-                placeholder="Enter strong password"
+                placeholder="Enter a password, or tap Auto-Generate"
                 placeholderTextColor="#A0A0A0"
                 secureTextEntry
                 className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
               />
+              <Text className="text-xs text-text-secondary mt-1.5">They can change this after their first login.</Text>
             </View>
 
             <View className="mt-4">

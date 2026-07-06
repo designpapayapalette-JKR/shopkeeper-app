@@ -9,9 +9,11 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../src/lib/auth-context";
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { login, unlockWithPin, pinLoginAvailable } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -170,6 +172,14 @@ export default function LoginScreen() {
               >
                 <Text className="text-primary dark:text-primary-dark font-semibold text-base">
                   {isPinLogin ? "Use Email & Password" : "Use Quick PIN"}
+                </Text>
+              </Pressable>
+            )}
+
+            {!isPinLogin && (
+              <Pressable onPress={() => router.push("/(auth)/register" as any)} className="mt-3 py-3 items-center">
+                <Text className="text-primary dark:text-primary-dark font-semibold text-base">
+                  Have an invite code? Sign Up
                 </Text>
               </Pressable>
             )}

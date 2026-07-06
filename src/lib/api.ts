@@ -148,6 +148,7 @@ export async function registerCompany(data: {
   password: string;
   firstName: string;
   lastName?: string;
+  inviteCode: string;
 }) {
   const json: any = await request<any>("POST", "/companies/register", data, { skipAuth: true });
   await setAuthData({ accessToken: json.access_token, refreshToken: json.refresh_token, expiresAt: json.expires_at });
