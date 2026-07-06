@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 import { api, ApiError } from "../../src/lib/api";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 import { useTopInset } from "../../src/lib/useTopInset";
@@ -36,6 +37,7 @@ export default function PurchaseHistoryScreen() {
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
+  const params = useLocalSearchParams<{ openPurchaseId?: string }>();
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -50,12 +52,16 @@ export default function PurchaseHistoryScreen() {
     try {
       const res = await api.get<{ data: PurchaseRecord[] }>("/purchases");
       setPurchases(res.data ?? []);
+      if (params.openPurchaseId) {
+        const match = res.data?.find((p) => p.id === params.openPurchaseId);
+        if (match) openReturn(match);
+      }
     } catch (e) {
       console.error("Failed to load purchase history:", e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [params.openPurchaseId]);
 
   useEffect(() => {
     load();

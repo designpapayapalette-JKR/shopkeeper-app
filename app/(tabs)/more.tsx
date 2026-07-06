@@ -12,6 +12,8 @@ import {
   FlatList,
   Image,
   Linking,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -265,6 +267,16 @@ export default function MoreScreen() {
     if (params.transferPhotoUri) setTransferPhotoUri(decodeURIComponent(params.transferPhotoUri));
   }, [params.openPurchase, params.openReport, params.openExpense, params.billPhotoUri, params.openTransfer, params.transferPhotoUri]);
 
+  // Quick Actions on the Dashboard (and the Scan Hub) open these modals by
+  // navigating to /more?openXyz=1 — that's a real navigation, not just a
+  // modal toggle, so simply closing the modal left the user stranded on the
+  // Operations screen underneath instead of back where they tapped from.
+  // Popping the stack only when we actually arrived via that deep link
+  // keeps the normal "already on Operations, tap Add Expense" flow intact.
+  const returnIfDeepLinked = (cameFromDeepLink: boolean) => {
+    if (cameFromDeepLink && router.canGoBack()) router.back();
+  };
+
   const handleRecordExpense = async () => {
     if (!expenseAmount) {
       Alert.alert("Required Field", "Amount is required.");
@@ -280,10 +292,12 @@ export default function MoreScreen() {
       });
       Alert.alert("Success", "Expense recorded successfully.");
       setIsExpenseModal(false);
+      const cameFromDeepLink = params.openExpense === "1";
       setExpenseAmount("");
       setExpenseNotes("");
       setExpenseCategory("other");
       setBillPhotoUri(null);
+      returnIfDeepLinked(cameFromDeepLink);
     } catch (err) {
       Alert.alert("Error", err instanceof ApiError ? err.message : "Failed to record expense.");
     } finally {
@@ -296,6 +310,7 @@ export default function MoreScreen() {
     if (hasChanges && !(await confirmDiscard())) return;
     setIsExpenseModal(false);
     setBillPhotoUri(null);
+    returnIfDeepLinked(params.openExpense === "1");
   };
 
   // Purchase Form State
@@ -544,6 +559,7 @@ export default function MoreScreen() {
 
       Alert.alert("Success", "Purchase recorded successfully.");
       setIsPurchaseModal(false);
+      const cameFromDeepLink = params.openPurchase === "1";
       setPurchaseQuantity("");
       setPurchasePrice("");
       setPurchaseRef("");
@@ -552,6 +568,7 @@ export default function MoreScreen() {
       setPurchaseQtyMode("unit");
       setBillPhotoUri(null);
       fetchSetupData();
+      returnIfDeepLinked(cameFromDeepLink);
     } catch (err) {
       Alert.alert("Error", err instanceof ApiError ? err.message : "Failed to record purchase bill.");
     } finally {
@@ -569,6 +586,7 @@ export default function MoreScreen() {
     if (hasChanges && !(await confirmDiscard())) return;
     setIsPurchaseModal(false);
     setBillPhotoUri(null);
+    returnIfDeepLinked(params.openPurchase === "1");
   };
 
   const handleCreateWarehouse = async () => {
@@ -605,6 +623,7 @@ export default function MoreScreen() {
     if (hasChanges && !(await confirmDiscard())) return;
     setIsTransferModal(false);
     setTransferPhotoUri(null);
+    returnIfDeepLinked(params.openTransfer === "1");
   };
 
   const handleStockTransfer = async () => {
@@ -631,11 +650,13 @@ export default function MoreScreen() {
 
       Alert.alert("Success", "Stock transferred successfully.");
       setIsTransferModal(false);
+      const cameFromDeepLink = params.openTransfer === "1";
       setTransferProductId("");
       setTransferQuantity("");
       setTransferRef("");
       setTransferPhotoUri(null);
       fetchSetupData();
+      returnIfDeepLinked(cameFromDeepLink);
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to transfer stock.");
     } finally {
@@ -2779,7 +2800,10 @@ export default function MoreScreen() {
 
       {/* Quick PIN Setup Modal */}
       <Modal visible={isPinSetupModal} animationType="slide" transparent onRequestClose={closePinSetupModal}>
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1 justify-end bg-black/40"
+        >
           <View className="bg-background dark:bg-background-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
             <View className="flex-row justify-between items-center mb-6">
               <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
@@ -2833,7 +2857,7 @@ export default function MoreScreen() {
               )}
             </Pressable>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Add Staff Modal */}

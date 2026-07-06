@@ -11,6 +11,8 @@ import {
   StyleSheet,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -1278,7 +1280,10 @@ export default function InventoryScreen() {
 
       {/* Add/Edit Warehouse Location Modal */}
       <Modal visible={isAddingWarehouse} animationType="slide" transparent onRequestClose={closeAddWarehouse}>
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1 justify-end bg-black/40"
+        >
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
             <View className="flex-row justify-between items-center mb-6">
               <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
@@ -1322,7 +1327,7 @@ export default function InventoryScreen() {
               )}
             </Pressable>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Manage Locations Modal — edit/delete existing warehouses */}

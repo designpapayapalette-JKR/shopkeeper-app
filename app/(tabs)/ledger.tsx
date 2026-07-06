@@ -39,6 +39,8 @@ interface LedgerEntry {
   type: "debit" | "credit";
   amount: string;
   reference: string;
+  invoice_id?: string | null;
+  purchase_id?: string | null;
 }
 
 export default function LedgerScreen() {
@@ -662,9 +664,19 @@ export default function LedgerScreen() {
                   const isDebit = item.type === "debit";
                   const indicatorColor = isDebit ? "text-red-500 font-bold" : "text-green-500 font-bold";
                   const typeLabel = isDebit ? "Debit (+)" : "Credit (-)";
+                  const linkedInvoiceId = item.invoice_id;
+                  const linkedPurchaseId = item.purchase_id;
+                  const isLinked = !!linkedInvoiceId || !!linkedPurchaseId;
 
                   return (
-                    <View className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-3.5 shadow-sm">
+                    <Pressable
+                      disabled={!isLinked}
+                      onPress={() => {
+                        if (linkedInvoiceId) router.push(`/invoice-history?openInvoiceId=${linkedInvoiceId}` as any);
+                        else if (linkedPurchaseId) router.push(`/purchase-history?openPurchaseId=${linkedPurchaseId}` as any);
+                      }}
+                      className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-3.5 shadow-sm active:opacity-70"
+                    >
                       <View className="flex-row justify-between items-start">
                         <View className="flex-1 mr-2">
                           <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark">
@@ -673,6 +685,11 @@ export default function LedgerScreen() {
                           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">
                             Date: {item.date}
                           </Text>
+                          {isLinked && (
+                            <Text className="text-xs font-bold text-primary dark:text-primary-dark mt-1">
+                              Tap to view {linkedInvoiceId ? "invoice" : "purchase"} →
+                            </Text>
+                          )}
                         </View>
                         <View className="items-end">
                           <Text className={`text-lg ${indicatorColor}`}>
@@ -683,7 +700,7 @@ export default function LedgerScreen() {
                           </Text>
                         </View>
                       </View>
-                    </View>
+                    </Pressable>
                   );
                 }}
               />
