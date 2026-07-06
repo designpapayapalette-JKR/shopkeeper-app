@@ -9,17 +9,21 @@ import {
   TextInput,
 } from "react-native";
 import { PermissionsAndroid, Platform } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   scanBluetoothPrinters,
   scanUsbPrinters,
   connectToPrinter,
-  savePrinter,
-  clearSavedPrinter,
-  getSavedPrinter,
+  addPrinter,
+  removePrinter,
+  setDefaultPrinter,
+  getSavedPrinters,
   SavedPrinter,
   PrinterConnectionType,
+  PaperWidth,
 } from "../../src/lib/thermalPrinter";
 import { useTopInset } from "../../src/lib/useTopInset";
+import { useBottomInset } from "../../src/lib/useBottomInset";
 
 const TABS: { key: PrinterConnectionType; label: string }[] = [
   { key: "bluetooth", label: "Bluetooth" },
@@ -44,8 +48,9 @@ async function ensureBluetoothPermissions(): Promise<boolean> {
 
 export default function PrinterSettingsScreen() {
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const [activeTab, setActiveTab] = useState<PrinterConnectionType>("bluetooth");
-  const [savedPrinter, setSavedPrinter] = useState<SavedPrinter | null>(null);
+  const [printers, setPrinters] = useState<SavedPrinter[]>([]);
   const [scanning, setScanning] = useState(false);
   const [bleDevices, setBleDevices] = useState<{ device_name: string; inner_mac_address: string }[]>([]);
   const [usbDevices, setUsbDevices] = useState<{ device_name: string; vendor_id: string; product_id: string }[]>([]);
@@ -53,8 +58,13 @@ export default function PrinterSettingsScreen() {
   const [wifiHost, setWifiHost] = useState("");
   const [wifiPort, setWifiPort] = useState("9100");
 
+  // Paper width is asked once per new printer being added, not a global
+  // setting — a shop with both a 58mm counter printer and an 80mm godown
+  // printer needs each remembered separately.
+  const [pendingPaperWidth, setPendingPaperWidth] = useState<PaperWidth>("58");
+
   const loadSaved = useCallback(async () => {
-    setSavedPrinter(await getSavedPrinter());
+    setPrinters(await getSavedPrinters());
   }, []);
 
   useEffect(() => {
@@ -96,13 +106,14 @@ export default function PrinterSettingsScreen() {
     }
   };
 
-  const handleSelectPrinter = async (printer: SavedPrinter, key: string) => {
+  const handleAddPrinter = async (printer: Omit<SavedPrinter, "id" | "isDefault">, key: string) => {
     setConnectingKey(key);
     try {
-      await connectToPrinter(printer);
-      await savePrinter(printer);
-      setSavedPrinter(printer);
-      Alert.alert("Printer Paired", `${printer.name} is now your default receipt printer.`);
+      const withDefault = { ...printer, isDefault: printers.length === 0 };
+      await connectToPrinter(withDefault as SavedPrinter);
+      await addPrinter(withDefault);
+      await loadSaved();
+      Alert.alert("Printer Added", `${printer.name} (${printer.paperWidth}mm) has been saved.`);
     } catch (e: any) {
       Alert.alert("Connection Failed", e?.message || "Could not connect to this printer.");
     } finally {
@@ -116,46 +127,99 @@ export default function PrinterSettingsScreen() {
       return;
     }
     const port = parseInt(wifiPort, 10) || 9100;
-    const printer: SavedPrinter = {
-      type: "wifi",
-      name: `${wifiHost.trim()}:${port}`,
-      address: `${wifiHost.trim()}:${port}`,
-    };
-    await handleSelectPrinter(printer, printer.address);
+    const address = `${wifiHost.trim()}:${port}`;
+    await handleAddPrinter({ type: "wifi", name: address, address, paperWidth: pendingPaperWidth }, address);
   };
 
-  const handleForget = async () => {
-    await clearSavedPrinter();
-    setSavedPrinter(null);
+  const handleRemove = async (printer: SavedPrinter) => {
+    await removePrinter(printer.id);
+    await loadSaved();
   };
+
+  const handleSetDefault = async (printer: SavedPrinter) => {
+    await setDefaultPrinter(printer.id);
+    await loadSaved();
+  };
+
+  const PaperWidthPicker = () => (
+    <View className="mb-4">
+      <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+        Paper Width
+      </Text>
+      <View className="flex-row" style={{ gap: 8 }}>
+        {(["58", "80"] as const).map((w) => (
+          <Pressable
+            key={w}
+            onPress={() => setPendingPaperWidth(w)}
+            className={`flex-1 py-3 rounded-xl border items-center ${
+              pendingPaperWidth === w
+                ? "bg-primary border-primary dark:bg-primary-dark"
+                : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
+            }`}
+          >
+            <Text className={`text-sm font-bold ${pendingPaperWidth === w ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>
+              {w}mm
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: 40 + bottomInset }}>
       <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-1">
         Printer Settings
       </Text>
       <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-6">
-        Pair a thermal receipt printer over Bluetooth, USB, or Wi-Fi/LAN.
+        Pair one or more thermal receipt printers over Bluetooth, USB, or Wi-Fi/LAN — useful if you print from more than one counter or roll width.
       </Text>
 
-      {savedPrinter && (
-        <View className="bg-primary/10 dark:bg-primary-dark/15 rounded-2xl p-4 mb-6 border border-primary/20 flex-row justify-between items-center">
-          <View className="flex-1 mr-2">
-            <Text className="text-sm font-bold text-primary uppercase tracking-wider mb-1">
-              Currently Paired
-            </Text>
-            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
-              {savedPrinter.name}
-            </Text>
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark uppercase mt-0.5">
-              {savedPrinter.type}
-            </Text>
-          </View>
-          <Pressable onPress={handleForget} className="px-4 py-2 rounded-xl bg-error/10">
-            <Text className="text-error font-bold text-sm">Forget</Text>
-          </Pressable>
+      {printers.length > 0 && (
+        <View className="mb-6" style={{ gap: 8 }}>
+          <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-widest">
+            Saved Printers
+          </Text>
+          {printers.map((p) => (
+            <View
+              key={p.id}
+              className={`rounded-2xl p-4 border flex-row justify-between items-center ${
+                p.isDefault ? "bg-primary/10 dark:bg-primary-dark/15 border-primary/20" : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
+              }`}
+            >
+              <View className="flex-1 mr-2">
+                <View className="flex-row items-center" style={{ gap: 6 }}>
+                  <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
+                    {p.name}
+                  </Text>
+                  {p.isDefault && (
+                    <View className="bg-primary px-2 py-0.5 rounded-md">
+                      <Text className="text-white text-xs font-bold uppercase">Default</Text>
+                    </View>
+                  )}
+                </View>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark uppercase mt-0.5">
+                  {p.type} · {p.paperWidth}mm
+                </Text>
+              </View>
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                {!p.isDefault && (
+                  <Pressable onPress={() => handleSetDefault(p)} className="px-3 py-2 rounded-xl bg-primary/10">
+                    <Text className="text-primary font-bold text-xs uppercase">Set Default</Text>
+                  </Pressable>
+                )}
+                <Pressable onPress={() => handleRemove(p)} className="w-9 h-9 rounded-full bg-error/10 items-center justify-center">
+                  <MaterialCommunityIcons name="trash-can-outline" size={16} color="#D64545" />
+                </Pressable>
+              </View>
+            </View>
+          ))}
         </View>
       )}
+
+      <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-widest mb-3">
+        Add a Printer
+      </Text>
 
       <View className="flex-row mb-6" style={{ gap: 8 }}>
         {TABS.map((tab) => (
@@ -179,6 +243,8 @@ export default function PrinterSettingsScreen() {
         ))}
       </View>
 
+      <PaperWidthPicker />
+
       {activeTab === "bluetooth" && (
         <View>
           <Pressable
@@ -195,8 +261,8 @@ export default function PrinterSettingsScreen() {
             <Pressable
               key={d.inner_mac_address}
               onPress={() =>
-                handleSelectPrinter(
-                  { type: "bluetooth", name: d.device_name || d.inner_mac_address, address: d.inner_mac_address },
+                handleAddPrinter(
+                  { type: "bluetooth", name: d.device_name || d.inner_mac_address, address: d.inner_mac_address, paperWidth: pendingPaperWidth },
                   d.inner_mac_address
                 )
               }
@@ -207,7 +273,7 @@ export default function PrinterSettingsScreen() {
                 <Text className="font-bold text-on-surface dark:text-text-primary-dark">{d.device_name || "Unnamed Printer"}</Text>
                 <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{d.inner_mac_address}</Text>
               </View>
-              {connectingKey === d.inner_mac_address ? <ActivityIndicator size="small" color="#0F7A5F" /> : <Text className="text-primary font-bold">Connect</Text>}
+              {connectingKey === d.inner_mac_address ? <ActivityIndicator size="small" color="#0F7A5F" /> : <Text className="text-primary font-bold">Add</Text>}
             </Pressable>
           ))}
         </View>
@@ -231,8 +297,8 @@ export default function PrinterSettingsScreen() {
               <Pressable
                 key={key}
                 onPress={() =>
-                  handleSelectPrinter(
-                    { type: "usb", name: d.device_name || `USB Printer (${key})`, address: key },
+                  handleAddPrinter(
+                    { type: "usb", name: d.device_name || `USB Printer (${key})`, address: key, paperWidth: pendingPaperWidth },
                     key
                   )
                 }
@@ -243,7 +309,7 @@ export default function PrinterSettingsScreen() {
                   <Text className="font-bold text-on-surface dark:text-text-primary-dark">{d.device_name || "USB Printer"}</Text>
                   <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Vendor {d.vendor_id} · Product {d.product_id}</Text>
                 </View>
-                {connectingKey === key ? <ActivityIndicator size="small" color="#0F7A5F" /> : <Text className="text-primary font-bold">Connect</Text>}
+                {connectingKey === key ? <ActivityIndicator size="small" color="#0F7A5F" /> : <Text className="text-primary font-bold">Add</Text>}
               </Pressable>
             );
           })}
