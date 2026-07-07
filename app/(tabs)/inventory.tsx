@@ -116,6 +116,12 @@ export default function InventoryScreen() {
 
   useEffect(fetchWarehouses, [user]);
 
+  const resetWarehouseForm = () => {
+    setEditingWarehouseId(null);
+    setNewWarehouseName("");
+    setNewWarehouseLocation("");
+  };
+
   const closeAddWarehouse = async () => {
     const original = editingWarehouseId ? warehouses.find((w) => w.id === editingWarehouseId) : null;
     const hasChanges = editingWarehouseId
@@ -131,7 +137,7 @@ export default function InventoryScreen() {
       if (!ok) return;
     }
     setIsAddingWarehouse(false);
-    setEditingWarehouseId(null);
+    resetWarehouseForm();
   };
 
   const openAddWarehouse = () => {
@@ -165,9 +171,7 @@ export default function InventoryScreen() {
         await api.post("/warehouses", payload);
       }
       setIsAddingWarehouse(false);
-      setEditingWarehouseId(null);
-      setNewWarehouseName("");
-      setNewWarehouseLocation("");
+      resetWarehouseForm();
       fetchWarehouses();
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to save location.");
@@ -358,22 +362,7 @@ export default function InventoryScreen() {
       await api.post("/products", payload);
       Alert.alert("Success", "Product added successfully.");
 
-      // Reset form
-      setNewProductName("");
-      setNewProductSku("");
-      setNewProductBarcode("");
-      setNewProductHsn("");
-      setNewProductTax("18.00");
-      setNewProductPrice("");
-      setNewProductCost("");
-      setNewProductStock("");
-      setNewProductReorderLevel("");
-      setNewProductUnit("pcs");
-      setNewProductPackUnit("");
-      setNewProductPackSize("");
-      setNewProductParentId(null);
-      setNewProductVariantLabel("");
-      setParentPickerSearch("");
+      resetAddProductForm();
       setIsAdding(false);
       setProductPhotoUri(null);
 
@@ -383,6 +372,24 @@ export default function InventoryScreen() {
     } finally {
       setAddLoading(false);
     }
+  };
+
+  const resetAddProductForm = () => {
+    setNewProductName("");
+    setNewProductSku("");
+    setNewProductBarcode("");
+    setNewProductHsn("");
+    setNewProductTax("18.00");
+    setNewProductPrice("");
+    setNewProductCost("");
+    setNewProductStock("");
+    setNewProductReorderLevel("");
+    setNewProductUnit("pcs");
+    setNewProductPackUnit("");
+    setNewProductPackSize("");
+    setNewProductParentId(null);
+    setNewProductVariantLabel("");
+    setParentPickerSearch("");
   };
 
   const closeAddProduct = async () => {
@@ -412,6 +419,7 @@ export default function InventoryScreen() {
     }
     setIsAdding(false);
     setProductPhotoUri(null);
+    resetAddProductForm();
   };
 
   const openEditModal = (p: Product) => {
@@ -436,13 +444,21 @@ export default function InventoryScreen() {
         tax_rate: editProductTax || undefined,
       });
       Alert.alert("Success", "Product updated successfully.");
-      setEditingProduct(null);
+      resetEditProductForm();
       fetchProducts();
     } catch (e: any) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to update product.");
     } finally {
       setEditLoading(false);
     }
+  };
+
+  const resetEditProductForm = () => {
+    setEditingProduct(null);
+    setEditProductName("");
+    setEditProductPrice("");
+    setEditProductCost("");
+    setEditProductTax("");
   };
 
   const closeEditProduct = async () => {
@@ -462,7 +478,7 @@ export default function InventoryScreen() {
         if (!ok) return;
       }
     }
-    setEditingProduct(null);
+    resetEditProductForm();
   };
 
   const handleQuickStockAdjustment = async (product: Product, delta: number) => {

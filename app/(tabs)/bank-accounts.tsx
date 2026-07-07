@@ -60,6 +60,14 @@ export default function BankAccountsScreen() {
     load();
   }, [load]);
 
+  const resetAddForm = () => {
+    setName("");
+    setBankName("");
+    setAccountNumber("");
+    setIfsc("");
+    setOpeningBalance("");
+  };
+
   const closeAdd = async () => {
     const hasChanges =
       name.trim() !== "" ||
@@ -77,6 +85,7 @@ export default function BankAccountsScreen() {
       if (!ok) return;
     }
     setIsAdding(false);
+    resetAddForm();
   };
 
   const handleAdd = async () => {
@@ -97,11 +106,7 @@ export default function BankAccountsScreen() {
       });
       Alert.alert("Success", "Bank account added.");
       setIsAdding(false);
-      setName("");
-      setBankName("");
-      setAccountNumber("");
-      setIfsc("");
-      setOpeningBalance("");
+      resetAddForm();
       load();
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add bank account.");

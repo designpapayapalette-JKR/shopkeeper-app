@@ -205,6 +205,18 @@ export default function MoreScreen() {
     }
   };
   
+  const resetBusinessProfileForm = () => {
+    setBizName("");
+    setBizGstin("");
+    setBizState("");
+    setBizAddress("");
+    setBizPhone("");
+    setBizBankName("");
+    setBizBankAccountNumber("");
+    setBizBankIfsc("");
+    setBizUpiId("");
+  };
+
   const closeBusinessProfileModal = async () => {
     const hasChanges =
       bizName !== (activeCompany?.name ?? "") ||
@@ -218,6 +230,7 @@ export default function MoreScreen() {
       bizUpiId !== (activeCompany?.upi_id ?? "");
     if (hasChanges && !(await confirmDiscard())) return;
     setIsBusinessProfileModal(false);
+    resetBusinessProfileForm();
   };
 
   // Lists
@@ -302,9 +315,7 @@ export default function MoreScreen() {
       Alert.alert("Success", "Expense recorded successfully.");
       setIsExpenseModal(false);
       const cameFromDeepLink = params.openExpense === "1";
-      setExpenseAmount("");
-      setExpenseNotes("");
-      setExpenseCategory("other");
+      resetExpenseForm();
       setBillPhotoUri(null);
       returnIfDeepLinked(cameFromDeepLink);
     } catch (err) {
@@ -314,10 +325,17 @@ export default function MoreScreen() {
     }
   };
 
+  const resetExpenseForm = () => {
+    setExpenseAmount("");
+    setExpenseNotes("");
+    setExpenseCategory("other");
+  };
+
   const closeExpenseModal = async () => {
     const hasChanges = expenseAmount.trim() !== "" || expenseNotes.trim() !== "" || expenseCategory !== "other";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsExpenseModal(false);
+    resetExpenseForm();
     setBillPhotoUri(null);
     returnIfDeepLinked(params.openExpense === "1");
   };
@@ -369,13 +387,17 @@ export default function MoreScreen() {
       // form) filters the newly created supplier out of the chip list, and
       // its selection appears to have silently vanished.
       setSupplierSearch(created.data.name);
-      setQuickSupplierName("");
-      setQuickSupplierPhone("");
+      resetQuickSupplierForm();
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add supplier.");
     } finally {
       setQuickAddSupplierLoading(false);
     }
+  };
+
+  const resetQuickSupplierForm = () => {
+    setQuickSupplierName("");
+    setQuickSupplierPhone("");
   };
 
   const handleQuickAddProduct = async () => {
@@ -396,13 +418,17 @@ export default function MoreScreen() {
       // Same reasoning as handleQuickAddSupplier above — keep the search box
       // in sync with the newly created product so its chip stays visible.
       setProductPickerSearch(created.data.name);
-      setQuickProductName("");
-      setQuickProductPrice("");
+      resetQuickProductForm();
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add product.");
     } finally {
       setQuickAddProductLoading(false);
     }
+  };
+
+  const resetQuickProductForm = () => {
+    setQuickProductName("");
+    setQuickProductPrice("");
   };
 
   // Warehouse Form State
@@ -569,12 +595,7 @@ export default function MoreScreen() {
       Alert.alert("Success", "Purchase recorded successfully.");
       setIsPurchaseModal(false);
       const cameFromDeepLink = params.openPurchase === "1";
-      setPurchaseQuantity("");
-      setPurchasePrice("");
-      setPurchaseRef("");
-      setSelectedProductId("");
-      setSelectedSupplierId("");
-      setPurchaseQtyMode("unit");
+      resetPurchaseForm();
       setBillPhotoUri(null);
       fetchSetupData();
       returnIfDeepLinked(cameFromDeepLink);
@@ -583,6 +604,15 @@ export default function MoreScreen() {
     } finally {
       setSubmitLoading(false);
     }
+  };
+
+  const resetPurchaseForm = () => {
+    setPurchaseQuantity("");
+    setPurchasePrice("");
+    setPurchaseRef("");
+    setSelectedProductId("");
+    setSelectedSupplierId("");
+    setPurchaseQtyMode("unit");
   };
 
   const closePurchaseModal = async () => {
@@ -594,6 +624,7 @@ export default function MoreScreen() {
       purchaseRef.trim() !== "";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsPurchaseModal(false);
+    resetPurchaseForm();
     setBillPhotoUri(null);
     returnIfDeepLinked(params.openPurchase === "1");
   };
@@ -609,8 +640,7 @@ export default function MoreScreen() {
     try {
       await api.post("/warehouses", { name: newWhName, location: newWhLoc || undefined });
       Alert.alert("Success", "Warehouse created successfully.");
-      setNewWhName("");
-      setNewWhLoc("");
+      resetWarehouseModalForm();
       setIsWarehouseModal(false);
       fetchSetupData();
     } catch (e) {
@@ -620,10 +650,22 @@ export default function MoreScreen() {
     }
   };
 
+  const resetWarehouseModalForm = () => {
+    setNewWhName("");
+    setNewWhLoc("");
+  };
+
   const closeWarehouseModal = async () => {
     const hasChanges = newWhName.trim() !== "" || newWhLoc.trim() !== "";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsWarehouseModal(false);
+    resetWarehouseModalForm();
+  };
+
+  const resetTransferForm = () => {
+    setTransferProductId("");
+    setTransferQuantity("");
+    setTransferRef("");
   };
 
   const closeTransferModal = async () => {
@@ -631,6 +673,7 @@ export default function MoreScreen() {
       transferProductId !== "" || transferQuantity.trim() !== "" || transferRef.trim() !== "";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsTransferModal(false);
+    resetTransferForm();
     setTransferPhotoUri(null);
     returnIfDeepLinked(params.openTransfer === "1");
   };
@@ -660,9 +703,7 @@ export default function MoreScreen() {
       Alert.alert("Success", "Stock transferred successfully.");
       setIsTransferModal(false);
       const cameFromDeepLink = params.openTransfer === "1";
-      setTransferProductId("");
-      setTransferQuantity("");
-      setTransferRef("");
+      resetTransferForm();
       setTransferPhotoUri(null);
       fetchSetupData();
       returnIfDeepLinked(cameFromDeepLink);
@@ -694,16 +735,34 @@ export default function MoreScreen() {
     }
   };
 
+  const resetAttendanceForm = () => {
+    setAttendanceMap((prev) => {
+      const reset: { [userId: string]: "present" | "absent" } = {};
+      Object.keys(prev).forEach((staffId) => {
+        reset[staffId] = "present";
+      });
+      return reset;
+    });
+  };
+
   const closeAttendanceModal = async () => {
     const hasChanges = Object.values(attendanceMap).some((status) => status === "absent");
     if (hasChanges && !(await confirmDiscard())) return;
     setIsAttendanceModal(false);
+    resetAttendanceForm();
+  };
+
+  const resetSalaryForm = () => {
+    setSalaryAmount("");
+    setSalaryRef("");
+    setSelectedStaffId("");
   };
 
   const closeSalaryModal = async () => {
     const hasChanges = selectedStaffId !== "" || salaryAmount.trim() !== "" || salaryRef.trim() !== "";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsSalaryModal(false);
+    resetSalaryForm();
   };
 
   const handleRecordSalary = async () => {
@@ -723,15 +782,21 @@ export default function MoreScreen() {
         reference: salaryRef || "Salary Settlement",
       });
       Alert.alert("Success", "Salary slip created successfully.");
-      setSalaryAmount("");
-      setSalaryRef("");
-      setSelectedStaffId("");
+      resetSalaryForm();
       setIsSalaryModal(false);
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to submit salary details.");
     } finally {
       setSalarySubmitting(false);
     }
+  };
+
+  const resetChallanForm = () => {
+    setVehicleNumber("");
+    setDriverName("");
+    setDriverPhone("");
+    setDestination("");
+    setSelectedInvoiceId("");
   };
 
   const closeCreateChallanModal = async () => {
@@ -743,6 +808,7 @@ export default function MoreScreen() {
       destination.trim() !== "";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsCreateChallanModal(false);
+    resetChallanForm();
   };
 
   const handleCreateChallan = async () => {
@@ -766,11 +832,7 @@ export default function MoreScreen() {
 
       Alert.alert("Success", `Challan ${res.data.challan_number} generated successfully.`);
       setIsCreateChallanModal(false);
-      setVehicleNumber("");
-      setDriverName("");
-      setDriverPhone("");
-      setDestination("");
-      setSelectedInvoiceId("");
+      resetChallanForm();
       fetchChallansList();
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to create challan.");
@@ -798,6 +860,15 @@ export default function MoreScreen() {
     setAttendanceMap((prev) => ({ ...prev, [staffId]: status }));
   };
 
+  const resetAddStaffForm = () => {
+    setNewStaffFirstName("");
+    setNewStaffLastName("");
+    setNewStaffEmail("");
+    setNewStaffPhone("");
+    setNewStaffPassword("");
+    setNewStaffRole(STAFF_ROLES[0].id);
+  };
+
   const closeAddStaffModal = async () => {
     const hasChanges =
       newStaffFirstName.trim() !== "" ||
@@ -806,6 +877,7 @@ export default function MoreScreen() {
       newStaffPassword.trim() !== "";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsAddingStaff(false);
+    resetAddStaffForm();
   };
 
   const handleAddStaff = async () => {
@@ -831,11 +903,7 @@ export default function MoreScreen() {
       const createdEmail = newStaffEmail;
       const createdPassword = newStaffPassword;
       const createdRole = newStaffRole;
-      setNewStaffFirstName("");
-      setNewStaffLastName("");
-      setNewStaffEmail("");
-      setNewStaffPhone("");
-      setNewStaffPassword("");
+      resetAddStaffForm();
       fetchSetupData();
 
       // Employees can only ever be created this way — there's no
@@ -868,10 +936,17 @@ export default function MoreScreen() {
     }
   };
 
+  const resetDispatchTaskForm = () => {
+    setTaskTitle("");
+    setTaskDescription("");
+    setTaskAssignedTo("");
+  };
+
   const closeDispatchTaskModal = async () => {
     const hasChanges = taskTitle.trim() !== "" || taskDescription.trim() !== "" || taskAssignedTo !== "";
     if (hasChanges && !(await confirmDiscard())) return;
     setIsDispatchTaskModal(false);
+    resetDispatchTaskForm();
   };
 
   const handleDispatchTask = async () => {
@@ -890,9 +965,7 @@ export default function MoreScreen() {
       });
       Alert.alert("Success", "Task dispatched to the agent successfully.");
       setIsDispatchTaskModal(false);
-      setTaskTitle("");
-      setTaskDescription("");
-      setTaskAssignedTo("");
+      resetDispatchTaskForm();
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to dispatch task.");
     } finally {
@@ -1525,7 +1598,7 @@ export default function MoreScreen() {
                       className="text-sm font-medium px-2 py-3 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
                     />
                     <View className="flex-row" style={{ gap: 8 }}>
-                      <Pressable onPress={() => setIsQuickAddSupplier(false)} className="flex-1 py-2.5 rounded-lg border border-gray-200 dark:border-zinc-800 items-center">
+                      <Pressable onPress={() => { setIsQuickAddSupplier(false); resetQuickSupplierForm(); }} className="flex-1 py-2.5 rounded-lg border border-gray-200 dark:border-zinc-800 items-center">
                         <Text className="text-sm font-bold text-text-secondary">Cancel</Text>
                       </Pressable>
                       <Pressable onPress={handleQuickAddSupplier} disabled={quickAddSupplierLoading} className="flex-1 py-2.5 rounded-lg bg-primary items-center">
@@ -1597,7 +1670,7 @@ export default function MoreScreen() {
                       className="text-sm font-medium px-2 py-3 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
                     />
                     <View className="flex-row" style={{ gap: 8 }}>
-                      <Pressable onPress={() => setIsQuickAddProduct(false)} className="flex-1 py-2.5 rounded-lg border border-gray-200 dark:border-zinc-800 items-center">
+                      <Pressable onPress={() => { setIsQuickAddProduct(false); resetQuickProductForm(); }} className="flex-1 py-2.5 rounded-lg border border-gray-200 dark:border-zinc-800 items-center">
                         <Text className="text-sm font-bold text-text-secondary">Cancel</Text>
                       </Pressable>
                       <Pressable onPress={handleQuickAddProduct} disabled={quickAddProductLoading} className="flex-1 py-2.5 rounded-lg bg-primary items-center">

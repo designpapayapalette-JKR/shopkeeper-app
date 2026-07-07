@@ -206,15 +206,19 @@ export default function PosScreen() {
       setIsAddingCustomer(false);
       setIsSelectingParty(false); // Close selection modal
 
-      setNewCustomerName("");
-      setNewCustomerPhone("");
-      setNewCustomerState("");
+      resetAddCustomerForm();
       Alert.alert("Success", "Customer added and selected.");
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add customer.");
     } finally {
       setAddCustomerLoading(false);
     }
+  };
+
+  const resetAddCustomerForm = () => {
+    setNewCustomerName("");
+    setNewCustomerPhone("");
+    setNewCustomerState("");
   };
 
   const closeAddCustomer = async () => {
@@ -230,6 +234,14 @@ export default function PosScreen() {
       if (!ok) return;
     }
     setIsAddingCustomer(false);
+    resetAddCustomerForm();
+  };
+
+  const resetAddProductForm = () => {
+    setNewProductName("");
+    setNewProductPrice("");
+    setNewProductTax("18.00");
+    setNewProductStock("");
   };
 
   const closeAddProduct = async () => {
@@ -248,6 +260,7 @@ export default function PosScreen() {
       if (!ok) return;
     }
     setIsAddingProduct(false);
+    resetAddProductForm();
   };
 
   const handleAddProduct = async () => {
@@ -273,10 +286,7 @@ export default function PosScreen() {
       addToCart(newProduct);
       setIsAddingProduct(false);
       setProductSearch("");
-      setNewProductName("");
-      setNewProductPrice("");
-      setNewProductTax("18.00");
-      setNewProductStock("");
+      resetAddProductForm();
       Alert.alert("Success", "Product added and placed in the cart.");
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add product.");
