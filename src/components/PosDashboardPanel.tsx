@@ -96,6 +96,13 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
   const [voidingId, setVoidingId] = useState<string | null>(null);
   const [autoOpenedId, setAutoOpenedId] = useState<string | null>(null);
 
+  // Invoice Preview modal — tapping an invoice now shows a real read-only
+  // preview first; Print/Share are actions taken from inside the preview,
+  // instead of firing an Alert chooser the instant you tap the row.
+  const [previewDetail, setPreviewDetail] = useState<InvoiceDetail | null>(null);
+  const [previewFormat, setPreviewFormat] = useState<"tally" | "thermal">("thermal");
+  const [previewBusy, setPreviewBusy] = useState<"print" | "share" | null>(null);
+
   // Return / Credit Note modal state
   const [returnDetail, setReturnDetail] = useState<InvoiceDetail | null>(null);
   const [returnQuantities, setReturnQuantities] = useState<Record<string, string>>({});
@@ -225,68 +232,61 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
       setOpeningId(invoice.id);
       try {
         const res = await api.get<{ data: InvoiceDetail }>(`/invoices/${invoice.id}/detail`);
-        const detail = res.data;
-
-        const offerPrintOrShare = (formatLabel: string, format: "tally" | "thermal") => {
-          const thermalPageSize =
-            format === "thermal"
-              ? { width: thermalPageWidthPt(defaultPaperWidth), height: estimateThermalPageHeightPt(detail.items.length, !!activeCompany?.upi_id) }
-              : undefined;
-          Alert.alert(formatLabel, `Invoice ${detail.invoice_number} — what would you like to do?`, [
-            {
-              text: "Print",
-              onPress: async () => {
-                try {
-                  if (format === "thermal") {
-                    const saved = await getDefaultPrinter();
-                    if (saved) {
-                      try {
-                        await printToSavedPrinter(buildReceiptDataFromDetail(detail), saved);
-                        return;
-                      } catch {
-                        Alert.alert("Printer Unreachable", `Could not reach ${saved.name}. Falling back to the system print dialog.`);
-                      }
-                    }
-                  }
-                  await Print.printAsync({ html: buildHtmlFromDetail(detail, format), ...thermalPageSize });
-                } catch (e: any) {
-                  Alert.alert("Print Error", e.message || "Could not print invoice.");
-                }
-              },
-            },
-            {
-              text: "Share",
-              onPress: async () => {
-                try {
-                  await shareInvoiceFile(buildHtmlFromDetail(detail, format), `Invoice ${detail.invoice_number}`, thermalPageSize);
-                } catch (e: any) {
-                  Alert.alert("Share Error", e.message || "Could not share invoice.");
-                }
-              },
-            },
-            { text: "Cancel", style: "cancel" },
-          ]);
-        };
-
-        // Tally-style is only meaningful for GST invoices — a retail/estimate
-        // bill only ever had a thermal receipt, so skip straight to it.
-        if (detail.type === "gst") {
-          Alert.alert("Reprint Invoice", `Invoice ${detail.invoice_number} — choose a format.`, [
-            { text: "Tally Style Invoice", onPress: () => offerPrintOrShare("Tally Style Invoice", "tally") },
-            { text: "Thermal Receipt", onPress: () => offerPrintOrShare("Thermal Receipt", "thermal") },
-            { text: "Cancel", style: "cancel" },
-          ]);
-        } else {
-          offerPrintOrShare("Thermal Receipt", "thermal");
-        }
+        setPreviewFormat("thermal");
+        setPreviewDetail(res.data);
       } catch (e) {
         Alert.alert("Error", "Could not load this invoice's details.");
       } finally {
         setOpeningId(null);
       }
     },
-    [activeCompany, defaultPaperWidth]
+    []
   );
+
+  const closePreview = () => setPreviewDetail(null);
+
+  const handlePrintPreview = async () => {
+    if (!previewDetail) return;
+    setPreviewBusy("print");
+    try {
+      if (previewFormat === "thermal") {
+        const saved = await getDefaultPrinter();
+        if (saved) {
+          try {
+            await printToSavedPrinter(buildReceiptDataFromDetail(previewDetail), saved);
+            return;
+          } catch {
+            Alert.alert("Printer Unreachable", `Could not reach ${saved.name}. Falling back to the system print dialog.`);
+          }
+        }
+      }
+      const thermalPageSize =
+        previewFormat === "thermal"
+          ? { width: thermalPageWidthPt(defaultPaperWidth), height: estimateThermalPageHeightPt(previewDetail.items.length, !!activeCompany?.upi_id) }
+          : undefined;
+      await Print.printAsync({ html: buildHtmlFromDetail(previewDetail, previewFormat), ...thermalPageSize });
+    } catch (e: any) {
+      Alert.alert("Print Error", e.message || "Could not print invoice.");
+    } finally {
+      setPreviewBusy(null);
+    }
+  };
+
+  const handleSharePreview = async () => {
+    if (!previewDetail) return;
+    setPreviewBusy("share");
+    try {
+      const thermalPageSize =
+        previewFormat === "thermal"
+          ? { width: thermalPageWidthPt(defaultPaperWidth), height: estimateThermalPageHeightPt(previewDetail.items.length, !!activeCompany?.upi_id) }
+          : undefined;
+      await shareInvoiceFile(buildHtmlFromDetail(previewDetail, previewFormat), `Invoice ${previewDetail.invoice_number}`, thermalPageSize);
+    } catch (e: any) {
+      Alert.alert("Share Error", e.message || "Could not share invoice.");
+    } finally {
+      setPreviewBusy(null);
+    }
+  };
 
   const handleVoidInvoice = async (invoice: InvoiceSummary) => {
     const ok = await confirm({
@@ -663,6 +663,160 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
             </>
           )}
         </ScrollView>
+      </Modal>
+
+      {/* Invoice Preview — tapping an invoice used to fire an Alert asking
+          Print/Share immediately with no way to actually see it first. Now
+          it opens a real read-only preview, and Print/Share are actions
+          taken from inside it. */}
+      <Modal visible={previewDetail !== null} animationType="slide" onRequestClose={closePreview}>
+        <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+          <View className="flex-row justify-between items-center px-6 mb-4">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Invoice</Text>
+            <Pressable onPress={closePreview} className="w-11 h-11 items-center justify-center">
+              <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+            </Pressable>
+          </View>
+
+          {previewDetail && (
+            <>
+              <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 24 }}>
+                <View className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-4">
+                  <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">
+                    {previewDetail.invoice_number}
+                  </Text>
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                    {new Date(previewDetail.date).toLocaleDateString()} · {previewDetail.type.toUpperCase()}
+                  </Text>
+                  <Text className="text-base font-semibold text-on-surface dark:text-text-primary-dark mt-2">
+                    {previewDetail.party.name}
+                  </Text>
+                  {!!previewDetail.party.phone && (
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{previewDetail.party.phone}</Text>
+                  )}
+                  {!!previewDetail.party.gstin && (
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">GSTIN: {previewDetail.party.gstin}</Text>
+                  )}
+                </View>
+
+                {previewDetail.items.map((item, idx) => (
+                  <View
+                    key={`${item.product.id}-${idx}`}
+                    className="flex-row justify-between items-center bg-surface dark:bg-surface-dark p-3 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2"
+                  >
+                    <View className="flex-1 mr-3">
+                      <Text className="font-bold text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
+                        {parseFloat(item.quantity).toFixed(0)} × ₹{parseFloat(item.price).toFixed(2)}
+                        {parseFloat(item.tax_rate) > 0 ? ` · ${item.tax_rate}% GST` : ""}
+                      </Text>
+                    </View>
+                    <Text className="font-bold text-on-surface dark:text-text-primary-dark">
+                      ₹{parseFloat(item.total).toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+
+                <View className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mt-2" style={{ gap: 4 }}>
+                  <View className="flex-row justify-between">
+                    <Text className="text-on-surface-variant dark:text-text-secondary-dark">Subtotal</Text>
+                    <Text className="text-on-surface dark:text-text-primary-dark">₹{parseFloat(previewDetail.subtotal).toFixed(2)}</Text>
+                  </View>
+                  {parseFloat(previewDetail.discount_total || "0") > 0 && (
+                    <View className="flex-row justify-between">
+                      <Text className="text-on-surface-variant dark:text-text-secondary-dark">Discount</Text>
+                      <Text className="text-on-surface dark:text-text-primary-dark">−₹{parseFloat(previewDetail.discount_total).toFixed(2)}</Text>
+                    </View>
+                  )}
+                  {previewDetail.type === "gst" && (
+                    <>
+                      {parseFloat(previewDetail.cgst_total || "0") > 0 && (
+                        <View className="flex-row justify-between">
+                          <Text className="text-on-surface-variant dark:text-text-secondary-dark">CGST</Text>
+                          <Text className="text-on-surface dark:text-text-primary-dark">₹{parseFloat(previewDetail.cgst_total).toFixed(2)}</Text>
+                        </View>
+                      )}
+                      {parseFloat(previewDetail.sgst_total || "0") > 0 && (
+                        <View className="flex-row justify-between">
+                          <Text className="text-on-surface-variant dark:text-text-secondary-dark">SGST</Text>
+                          <Text className="text-on-surface dark:text-text-primary-dark">₹{parseFloat(previewDetail.sgst_total).toFixed(2)}</Text>
+                        </View>
+                      )}
+                      {parseFloat(previewDetail.igst_total || "0") > 0 && (
+                        <View className="flex-row justify-between">
+                          <Text className="text-on-surface-variant dark:text-text-secondary-dark">IGST</Text>
+                          <Text className="text-on-surface dark:text-text-primary-dark">₹{parseFloat(previewDetail.igst_total).toFixed(2)}</Text>
+                        </View>
+                      )}
+                    </>
+                  )}
+                  {!!previewDetail.extra_charge_label && parseFloat(previewDetail.extra_charge_total || "0") > 0 && (
+                    <View className="flex-row justify-between">
+                      <Text className="text-on-surface-variant dark:text-text-secondary-dark">{previewDetail.extra_charge_label}</Text>
+                      <Text className="text-on-surface dark:text-text-primary-dark">₹{parseFloat(previewDetail.extra_charge_total!).toFixed(2)}</Text>
+                    </View>
+                  )}
+                  <View className="flex-row justify-between border-t border-gray-100 dark:border-zinc-800 pt-2 mt-1">
+                    <Text className="font-bold text-lg text-on-surface dark:text-text-primary-dark">Total</Text>
+                    <Text className="font-bold text-lg text-primary dark:text-primary-dark">₹{parseFloat(previewDetail.grand_total).toFixed(2)}</Text>
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View className="px-6" style={{ paddingBottom: bottomInset + 12, gap: 10 }}>
+                {/* Tally-style only makes sense for GST invoices — a retail/
+                    estimate bill only ever had a thermal receipt. */}
+                {previewDetail.type === "gst" && (
+                  <View className="flex-row bg-surface dark:bg-surface-dark rounded-xl border border-gray-100 dark:border-zinc-800 p-1">
+                    {(["thermal", "tally"] as const).map((f) => (
+                      <Pressable
+                        key={f}
+                        onPress={() => setPreviewFormat(f)}
+                        className={`flex-1 py-2 rounded-lg items-center ${previewFormat === f ? "bg-primary dark:bg-primary-dark" : ""}`}
+                      >
+                        <Text className={`font-semibold text-sm ${previewFormat === f ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>
+                          {f === "thermal" ? "Thermal Receipt" : "Tally Style"}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+                <View className="flex-row" style={{ gap: 10 }}>
+                  <Pressable
+                    onPress={handlePrintPreview}
+                    disabled={previewBusy !== null}
+                    className="flex-1 bg-primary dark:bg-primary-dark py-3.5 rounded-xl items-center flex-row justify-center"
+                    style={{ gap: 8 }}
+                  >
+                    {previewBusy === "print" ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <>
+                        <MaterialCommunityIcons name="printer-outline" size={18} color="#ffffff" />
+                        <Text className="text-white font-bold text-base">Print</Text>
+                      </>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={handleSharePreview}
+                    disabled={previewBusy !== null}
+                    className="flex-1 bg-surface dark:bg-surface-dark border border-gray-200 dark:border-zinc-700 py-3.5 rounded-xl items-center flex-row justify-center"
+                    style={{ gap: 8 }}
+                  >
+                    {previewBusy === "share" ? (
+                      <ActivityIndicator color="#0F7A5F" />
+                    ) : (
+                      <>
+                        <MaterialCommunityIcons name="share-variant-outline" size={18} color="#0F7A5F" />
+                        <Text className="text-primary dark:text-primary-dark font-bold text-base">Share</Text>
+                      </>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            </>
+          )}
+        </View>
       </Modal>
     </View>
   );
