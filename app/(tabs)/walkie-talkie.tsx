@@ -20,10 +20,16 @@ interface Channel {
   icon: string;
 }
 
-const CHANNELS: Channel[] = [
-  { id: "company-main", name: "Company Channel", description: "Talk to your whole team", icon: "radio-tower" },
-  { id: "field-ops", name: "Field Ops", description: "Field agents & delivery team", icon: "truck-delivery" },
-];
+// A single unified channel for the whole company — owner, managers, staff,
+// and field agents all land in the same room (there used to be a second
+// "Field Ops" channel, which actually split the team instead of connecting
+// it, defeating the point of a shared walkie-talkie).
+const TEAM_CHANNEL: Channel = {
+  id: "company-main",
+  name: "Team Channel",
+  description: "Everyone in your company — staff, field agents & you",
+  icon: "radio-tower",
+};
 
 const CONNECTION_META: Record<ConnectionState, { label: string; color: string; dot: string }> = {
   disconnected: { label: "Disconnected", color: "text-on-surface-variant", dot: "bg-gray-400" },
@@ -160,45 +166,40 @@ export default function WalkieTalkieScreen() {
       </View>
 
       <View className="px-6 mb-6">
-        <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm font-bold uppercase tracking-widest mb-3">
-          Channels
-        </Text>
-        <View style={{ gap: 12 }}>
-          {CHANNELS.map((ch) => {
-            const isActive = activeChannel?.id === ch.id;
-            return (
-              <Pressable
-                key={ch.id}
-                onPress={() => (isActive ? handleLeaveChannel() : handleJoinChannel(ch))}
-                disabled={connectionState === "connecting" || (!!activeChannel && !isActive)}
-                className={`rounded-2xl p-4 border flex-row items-center ${
-                  isActive ? "bg-green-500/10 border-green-500/30" : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
-                } active:opacity-80`}
-              >
-                <View className={`w-11 h-11 rounded-2xl justify-center items-center mr-3 ${isActive ? "bg-green-500/20" : "bg-primary/10"}`}>
-                  <MaterialCommunityIcons name={ch.icon as any} size={22} color={isActive ? "#16A34A" : "#0F7A5F"} />
+        {(() => {
+          const ch = TEAM_CHANNEL;
+          const isActive = activeChannel?.id === ch.id;
+          return (
+            <Pressable
+              onPress={() => (isActive ? handleLeaveChannel() : handleJoinChannel(ch))}
+              disabled={connectionState === "connecting"}
+              className={`rounded-2xl p-4 border flex-row items-center ${
+                isActive ? "bg-green-500/10 border-green-500/30" : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
+              } active:opacity-80`}
+            >
+              <View className={`w-11 h-11 rounded-2xl justify-center items-center mr-3 ${isActive ? "bg-green-500/20" : "bg-primary/10"}`}>
+                <MaterialCommunityIcons name={ch.icon as any} size={22} color={isActive ? "#16A34A" : "#0F7A5F"} />
+              </View>
+              <View className="flex-1">
+                <Text className={`font-bold text-base ${isActive ? "text-green-700 dark:text-green-400" : "text-on-surface dark:text-text-primary-dark"}`}>
+                  {ch.name}
+                </Text>
+                <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm mt-0.5">{ch.description}</Text>
+              </View>
+              {isActive && connectionState === "connecting" ? (
+                <View className="bg-amber-400/20 px-2 py-1 rounded-lg">
+                  <Text className="text-amber-600 text-sm font-bold">Joining…</Text>
                 </View>
-                <View className="flex-1">
-                  <Text className={`font-bold text-base ${isActive ? "text-green-700 dark:text-green-400" : "text-on-surface dark:text-text-primary-dark"}`}>
-                    {ch.name}
-                  </Text>
-                  <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm mt-0.5">{ch.description}</Text>
+              ) : isActive ? (
+                <View className="bg-green-500/20 px-2 py-1 rounded-lg">
+                  <Text className="text-green-700 dark:text-green-400 text-sm font-bold">● LIVE</Text>
                 </View>
-                {isActive && connectionState === "connecting" ? (
-                  <View className="bg-amber-400/20 px-2 py-1 rounded-lg">
-                    <Text className="text-amber-600 text-sm font-bold">Joining…</Text>
-                  </View>
-                ) : isActive ? (
-                  <View className="bg-green-500/20 px-2 py-1 rounded-lg">
-                    <Text className="text-green-700 dark:text-green-400 text-sm font-bold">● LIVE</Text>
-                  </View>
-                ) : (
-                  <Text className="text-primary dark:text-primary-dark text-sm font-semibold">Join →</Text>
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
+              ) : (
+                <Text className="text-primary dark:text-primary-dark text-sm font-semibold">Join →</Text>
+              )}
+            </Pressable>
+          );
+        })()}
       </View>
 
       <View className="px-6 items-center mb-8">
