@@ -39,6 +39,15 @@ const STAFF_ROLES = [
   { id: "field_agent", name: "Field Agent" },
 ];
 
+// Managers run the shop itself (POS/inventory/ledger) and log into this same
+// owner-facing app; staff and field agents only get attendance/tasks/salary,
+// which live in the separate Employee App (agent-app) — see the backend's
+// attendance.ts/salaries.ts grouping "staff" with "field_agent".
+const AGENT_APP_DOWNLOAD_URL =
+  "https://github.com/designpapayapalette-JKR/agent-app/releases/download/beta-latest/agent-app-latest.apk";
+const APP_DOWNLOAD_URL =
+  "https://github.com/designpapayapalette-JKR/shopkeeper-app/releases/download/beta-latest/shopkeeper-app-latest.apk";
+
 interface Supplier {
   id: string;
   name: string;
@@ -821,6 +830,7 @@ export default function MoreScreen() {
       const createdName = newStaffFirstName;
       const createdEmail = newStaffEmail;
       const createdPassword = newStaffPassword;
+      const createdRole = newStaffRole;
       setNewStaffFirstName("");
       setNewStaffLastName("");
       setNewStaffEmail("");
@@ -839,7 +849,10 @@ export default function MoreScreen() {
           confirmLabel: "Send via WhatsApp",
         });
         if (ok) {
-          const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the Shopkeeper Employee App.\n\nDownload the app and log in with:\nEmail: ${createdEmail}\nPassword: ${createdPassword}\n\nPlease change your password after logging in.`;
+          const isFieldRole = createdRole === "staff" || createdRole === "field_agent";
+          const appName = isFieldRole ? "Employee App" : "Shopkeeper App";
+          const downloadUrl = isFieldRole ? AGENT_APP_DOWNLOAD_URL : APP_DOWNLOAD_URL;
+          const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the ${appName}.\n\n1. Download the app: ${downloadUrl}\n2. Log in with:\nEmail: ${createdEmail}\nPassword: ${createdPassword}\n\nPlease change your password after logging in.`;
           const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${createdPhone.replace(/\D/g, "")}`;
           const supported = await Linking.canOpenURL(url);
           if (supported) await Linking.openURL(url);
