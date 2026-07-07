@@ -8,6 +8,7 @@ import {
   Alert,
   TextInput,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { api } from "../../src/lib/api";
 import { rowsToCsv, shareCsv } from "../../src/lib/csvExport";
 import { useTopInset } from "../../src/lib/useTopInset";
@@ -86,7 +87,9 @@ interface DayBook {
 export default function GstReportsScreen() {
   const topInset = useTopInset();
   const { t } = useTerminology();
-  const [activeTab, setActiveTab] = useState<ReportTab>("hsn");
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const initialTab: ReportTab = params.tab === "daybook" || params.tab === "gst" ? (params.tab as ReportTab) : "hsn";
+  const [activeTab, setActiveTab] = useState<ReportTab>(initialTab);
   const [from, setFrom] = useState(monthStartStr());
   const [to, setTo] = useState(todayStr());
   const [dayBookDate, setDayBookDate] = useState(todayStr());

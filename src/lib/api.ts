@@ -178,3 +178,29 @@ export async function fetchMe(): Promise<any | null> {
 export async function hasStoredSession(): Promise<boolean> {
   return (await getAuthData()) !== null;
 }
+
+// Uploads a device photo (e.g. an expense receipt) to Cloudinary via the
+// backend's multipart endpoint and returns the durable URL to store on the
+// record — bypasses the JSON request() path since this is multipart/
+// form-data, not JSON.
+export async function uploadDocument(fileUri: string, category: string): Promise<string> {
+  const token = await getValidAccessToken();
+  const form = new FormData();
+  form.append("file", {
+    uri: fileUri,
+    name: `${category}-${Date.now()}.jpg`,
+    type: "image/jpeg",
+  } as any);
+  form.append("category", category);
+
+  const res = await fetch(`${apiUrl}/uploads/document`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: form,
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiError(res.status, json?.error?.toString() ?? `Upload failed (${res.status})`, json);
+  }
+  return json.data.url;
+}

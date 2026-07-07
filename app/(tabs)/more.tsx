@@ -18,7 +18,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth-context";
-import { api, ApiError } from "../../src/lib/api";
+import { api, ApiError, uploadDocument } from "../../src/lib/api";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../../src/lib/sharer";
 import { useTopInset } from "../../src/lib/useTopInset";
@@ -308,11 +308,20 @@ export default function MoreScreen() {
     }
     setExpenseSubmitting(true);
     try {
+      let attachment: string | undefined;
+      if (billPhotoUri) {
+        try {
+          attachment = await uploadDocument(billPhotoUri, "expense");
+        } catch (e) {
+          Alert.alert("Receipt Upload Failed", "The expense will be saved without the receipt photo.");
+        }
+      }
       await api.post("/expenses", {
         amount: parseFloat(expenseAmount),
         category: expenseCategory,
         date: new Date().toISOString(),
         notes: expenseNotes || undefined,
+        attachment,
       });
       Alert.alert("Success", "Expense recorded successfully.");
       setIsExpenseModal(false);
@@ -1111,6 +1120,40 @@ export default function MoreScreen() {
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
+          onPress={() => router.push("/expenses" as any)}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Expenses
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Day/week/month/year totals and every recorded claim with its receipt.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/gst-reports?tab=daybook" as any)}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Day Book
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Every sale, purchase, and payment for a single day, at a glance.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
           onPress={() => router.push("/activity-log" as any)}
           className="flex-row justify-between items-center py-3"
         >
@@ -1879,17 +1922,29 @@ export default function MoreScreen() {
             </Pressable>
           </View>
 
-          {billPhotoUri && (
+          {billPhotoUri ? (
             <View className="mb-6">
               <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                Photographed Receipt
+                Receipt Photo
               </Text>
               <Image
                 source={{ uri: billPhotoUri }}
                 style={{ width: "100%", height: 200, borderRadius: 16 }}
                 resizeMode="contain"
               />
+              <Pressable onPress={() => setBillPhotoUri(null)} className="mt-2 self-start">
+                <Text className="text-error font-semibold text-sm">Remove Photo</Text>
+              </Pressable>
             </View>
+          ) : (
+            <Pressable
+              onPress={() => router.push("/bill-scanner?category=expense" as any)}
+              className="mb-6 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-2xl p-5 items-center bg-surface dark:bg-zinc-900 active:opacity-80"
+            >
+              <MaterialCommunityIcons name="camera-plus-outline" size={28} color="#0F7A5F" />
+              <Text className="text-primary dark:text-primary-dark font-bold text-sm mt-2">Attach Bill Photo</Text>
+              <Text className="text-text-secondary text-xs mt-0.5">Optional — helps during approval</Text>
+            </Pressable>
           )}
 
           <View className="space-y-4">

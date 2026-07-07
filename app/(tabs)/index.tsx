@@ -534,10 +534,15 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 96 }}
       >
         {mode === "traditional" ? (
-          <View className="px-margin-mobile pt-lg" style={{ gap: 16 }}>
-            <Text className="font-headline-lg text-headline-lg text-on-surface dark:text-text-primary-dark">
-              Namaste, {user?.first_name ?? "Malik"}!
-            </Text>
+          <View className="px-margin-mobile pt-lg" style={{ gap: 18 }}>
+            <View>
+              <Text className="font-headline-lg text-headline-lg text-on-surface dark:text-text-primary-dark">
+                Namaste, {user?.first_name ?? "Malik"}!
+              </Text>
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+              </Text>
+            </View>
 
             {/* Big Quick Actions grid — the whole point of Traditional mode
                 is fewer decisions, bigger touch targets. */}
@@ -559,38 +564,62 @@ export default function DashboardScreen() {
               ))}
             </View>
 
-            {/* Two big standalone buttons — everything else (reports, low
-                stock, overdue reminders, etc.) is deliberately hidden in
-                this mode. */}
-            <Pressable
-              onPress={() => router.push("/invoice-history" as any)}
-              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-5 flex-row items-center active:opacity-80"
-              style={{ gap: 16 }}
-            >
-              <MaterialCommunityIcons name="cash-multiple" size={32} color="#0F7A5F" />
-              <View className="flex-1">
-                <Text className="font-bold text-lg text-on-surface dark:text-text-primary-dark">Aaj Ki Bikri</Text>
-                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
-                  {statsLoading ? "…" : `${formatCurrency(stats.salesToday)} · ${stats.invoicesToday} bill${stats.invoicesToday !== 1 ? "s" : ""}`}
-                </Text>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#9E9E9E" />
-            </Pressable>
-
-            <Pressable
-              onPress={() => router.push("/ledger" as any)}
-              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-5 flex-row items-center active:opacity-80"
-              style={{ gap: 16 }}
-            >
-              <MaterialCommunityIcons name="book-open-variant" size={32} color="#0F7A5F" />
-              <View className="flex-1">
-                <Text className="font-bold text-lg text-on-surface dark:text-text-primary-dark">Baaki Paisa (Balance)</Text>
-                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
-                  {statsLoading ? "…" : `${formatCurrency(stats.pendingReceivables)} lena hai`}
-                </Text>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#9E9E9E" />
-            </Pressable>
+            {/* Big standalone info rows — everything else (charts, low
+                stock, overdue reminders) is deliberately hidden in this
+                mode. Each gets its own accent color so the eye can scan
+                the list without reading every label. */}
+            {[
+              {
+                route: "/invoice-history",
+                icon: "cash-multiple" as const,
+                color: "#0F7A5F",
+                bg: "bg-primary/10",
+                title: "Aaj Ki Bikri",
+                subtitle: statsLoading ? "…" : `${formatCurrency(stats.salesToday)} · ${stats.invoicesToday} bill${stats.invoicesToday !== 1 ? "s" : ""}`,
+              },
+              {
+                route: "/ledger",
+                icon: "book-open-variant" as const,
+                color: "#B45309",
+                bg: "bg-secondary/10",
+                title: "Baaki Paisa (Balance)",
+                subtitle: statsLoading ? "…" : `${formatCurrency(stats.pendingReceivables)} lena hai`,
+              },
+              {
+                route: "/expenses",
+                icon: "wallet-outline" as const,
+                color: "#D64545",
+                bg: "bg-error/10",
+                title: "Kharcha (Expenses)",
+                subtitle: statsLoading ? "…" : `${formatCurrency(stats.cashOut)} aaj ka kharcha`,
+              },
+              {
+                route: "/gst-reports?tab=daybook",
+                icon: "notebook-outline" as const,
+                color: "#1E6FA6",
+                bg: "bg-info/10",
+                title: "Roznamcha (Day Book)",
+                subtitle: "Aaj ki poori entry ek jagah",
+              },
+            ].map((row) => (
+              <Pressable
+                key={row.route}
+                onPress={() => router.push(row.route as any)}
+                className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4 flex-row items-center active:opacity-80"
+                style={{ gap: 14 }}
+              >
+                <View className={`w-14 h-14 rounded-full ${row.bg} items-center justify-center`}>
+                  <MaterialCommunityIcons name={row.icon} size={26} color={row.color} />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-bold text-lg text-on-surface dark:text-text-primary-dark">{row.title}</Text>
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark" numberOfLines={1}>
+                    {row.subtitle}
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#9E9E9E" />
+              </Pressable>
+            ))}
           </View>
         ) : (
         <View className="px-margin-mobile pt-lg" style={{ gap: 24 }}>
