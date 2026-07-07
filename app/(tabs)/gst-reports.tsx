@@ -11,6 +11,7 @@ import {
 import { api } from "../../src/lib/api";
 import { rowsToCsv, shareCsv } from "../../src/lib/csvExport";
 import { useTopInset } from "../../src/lib/useTopInset";
+import { useTerminology } from "../../src/lib/terminology-context";
 
 // Note: shopkeeper-api returns camelCase, but src/lib/api.ts converts every
 // response body through toSnakeCase() before handing it back — so every
@@ -84,6 +85,7 @@ interface DayBook {
 
 export default function GstReportsScreen() {
   const topInset = useTopInset();
+  const { t } = useTerminology();
   const [activeTab, setActiveTab] = useState<ReportTab>("hsn");
   const [from, setFrom] = useState(monthStartStr());
   const [to, setTo] = useState(todayStr());
@@ -229,7 +231,7 @@ export default function GstReportsScreen() {
             }`}
           >
             <Text className={`text-sm font-bold text-center ${activeTab === tab.key ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>
-              {tab.label}
+              {tab.key === "daybook" ? t("dayBook") : tab.label}
             </Text>
           </Pressable>
         ))}
@@ -315,27 +317,120 @@ export default function GstReportsScreen() {
       )}
 
       {activeTab === "daybook" && dayBook && (
-        <View>
+        <View className="mt-2">
+          {/* Summary Card */}
           <View className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-4">
-            <View className="flex-row justify-between mb-1">
-              <Text className="text-on-surface-variant dark:text-text-secondary-dark">Total In</Text>
-              <Text className="font-bold text-success">₹{dayBook.total_in.toFixed(2)}</Text>
+            <View className="flex-row justify-between mb-1.5">
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm">Total Inflow</Text>
+              <Text className="font-bold text-success text-sm">₹{dayBook.total_in.toFixed(2)}</Text>
             </View>
-            <View className="flex-row justify-between mb-1">
-              <Text className="text-on-surface-variant dark:text-text-secondary-dark">Total Out</Text>
-              <Text className="font-bold text-error">₹{dayBook.total_out.toFixed(2)}</Text>
+            <View className="flex-row justify-between mb-1.5">
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm">Total Outflow</Text>
+              <Text className="font-bold text-error text-sm">₹{dayBook.total_out.toFixed(2)}</Text>
             </View>
-            <View className="flex-row justify-between">
-              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold">Net</Text>
-              <Text className="font-black text-on-surface dark:text-text-primary-dark">₹{dayBook.net.toFixed(2)}</Text>
+            <View className="flex-row justify-between pt-1.5 border-t border-gray-100 dark:border-zinc-800">
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-sm">Net Balance</Text>
+              <Text className={`font-black text-sm ${dayBook.net >= 0 ? "text-primary dark:text-primary-dark" : "text-error"}`}>₹{dayBook.net.toFixed(2)}</Text>
             </View>
           </View>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">
-            {dayBook.invoices.length} sales · {dayBook.purchases.length} purchases · {dayBook.payments_in.length + dayBook.payments_out.length} payments · {dayBook.expenses.length} expenses
-          </Text>
-          <Pressable onPress={handleExportDayBook} disabled={exporting} className="border border-primary py-3.5 rounded-xl items-center">
-            {exporting ? <ActivityIndicator color="#0F7A5F" /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
+
+          {/* Action buttons */}
+          <Pressable onPress={handleExportDayBook} disabled={exporting} className="border border-primary dark:border-primary-dark py-3.5 rounded-xl items-center mb-6">
+            {exporting ? <ActivityIndicator color="#0F7A5F" /> : <Text className="text-primary dark:text-primary-dark font-bold text-sm">Export & Share Day Book CSV</Text>}
           </Pressable>
+
+          {/* Detailed Lists */}
+          <View className="space-y-6">
+            {/* Sales Invoices */}
+            <View>
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Invoices Billed (Sales)</Text>
+              {dayBook.invoices.length === 0 ? (
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No sales recorded today.</Text>
+              ) : (
+                dayBook.invoices.map((i, idx) => (
+                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                    <View>
+                      <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{i.invoice_number}</Text>
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{i.party_name}</Text>
+                    </View>
+                    <Text className="font-bold text-emerald-600 text-sm">₹{i.grand_total.toFixed(2)}</Text>
+                  </View>
+                ))
+              )}
+            </View>
+
+            {/* Purchases */}
+            <View className="mt-4">
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Purchases Staged</Text>
+              {dayBook.purchases.length === 0 ? (
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No purchases recorded today.</Text>
+              ) : (
+                dayBook.purchases.map((p, idx) => (
+                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                    <View>
+                      <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{p.purchase_number}</Text>
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{p.supplier_name}</Text>
+                    </View>
+                    <Text className="font-bold text-error text-sm">₹{p.grand_total.toFixed(2)}</Text>
+                  </View>
+                ))
+              )}
+            </View>
+
+            {/* Payments Received */}
+            <View className="mt-4">
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Payments Received (Inbound)</Text>
+              {dayBook.payments_in.length === 0 ? (
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No inbound payments.</Text>
+              ) : (
+                dayBook.payments_in.map((pi, idx) => (
+                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                    <View>
+                      <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{pi.party_name}</Text>
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{pi.mode || "Payment"} {pi.reference ? `· ${pi.reference}` : ""}</Text>
+                    </View>
+                    <Text className="font-bold text-emerald-600 text-sm">₹{pi.amount.toFixed(2)}</Text>
+                  </View>
+                ))
+              )}
+            </View>
+
+            {/* Payments Outflow */}
+            <View className="mt-4">
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Payments Made (Outbound)</Text>
+              {dayBook.payments_out.length === 0 ? (
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No outbound payments.</Text>
+              ) : (
+                dayBook.payments_out.map((po, idx) => (
+                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                    <View>
+                      <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{po.party_name}</Text>
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{po.mode || "Payment"} {po.reference ? `· ${po.reference}` : ""}</Text>
+                    </View>
+                    <Text className="font-bold text-error text-sm">₹{po.amount.toFixed(2)}</Text>
+                  </View>
+                ))
+              )}
+            </View>
+
+            {/* Expenses */}
+            <View className="mt-4">
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Expenses Recorded</Text>
+              {dayBook.expenses.length === 0 ? (
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No expenses recorded today.</Text>
+              ) : (
+                dayBook.expenses.map((e, idx) => (
+                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                    <View className="flex-1 pr-2">
+                      <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm capitalize">{e.category}</Text>
+                      {e.notes ? <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{e.notes}</Text> : null}
+                    </View>
+                    <Text className="font-bold text-error text-sm">₹{e.amount.toFixed(2)}</Text>
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
         </View>
       )}
     </ScrollView>

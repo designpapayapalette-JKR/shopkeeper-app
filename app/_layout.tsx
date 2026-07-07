@@ -80,15 +80,19 @@ function NavigationGuard() {
   );
 }
 
+import { TerminologyProvider } from "../src/lib/terminology-context";
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <ConfirmDialogProvider>
-          <StatusBar style="auto" />
-          <NavigationGuard />
-        </ConfirmDialogProvider>
-      </AuthProvider>
+      <TerminologyProvider>
+        <AuthProvider>
+          <ConfirmDialogProvider>
+            <StatusBar style="auto" />
+            <NavigationGuard />
+          </ConfirmDialogProvider>
+        </AuthProvider>
+      </TerminologyProvider>
     </SafeAreaProvider>
   );
 }

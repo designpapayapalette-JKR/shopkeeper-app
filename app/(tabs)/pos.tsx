@@ -26,6 +26,7 @@ import { useConfirm } from "../../src/components/ConfirmDialog";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { enqueueSale, isNetworkFailure } from "../../src/lib/offlineQueue";
+import { useTerminology } from "../../src/lib/terminology-context";
 
 interface Product {
   id: string;
@@ -65,6 +66,7 @@ interface CartItem {
 
 export default function PosScreen() {
   const { user, activeCompany, activeBrand } = useAuth();
+  const { t } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
   const { width } = useWindowDimensions();
@@ -855,7 +857,7 @@ export default function PosScreen() {
                 color={invoiceType === opt.key ? "#FFFFFF" : "#6e7a74"}
               />
               <Text className={`text-xs font-bold mt-0.5 ${invoiceType === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
-                {opt.label}
+                {opt.key === "gst" ? t("gstBill") : opt.key === "estimate" ? t("estimate") : t("sales").split(" ")[0]}
               </Text>
             </Pressable>
           ))}

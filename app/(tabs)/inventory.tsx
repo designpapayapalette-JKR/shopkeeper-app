@@ -25,6 +25,7 @@ import { useBottomInset } from "../../src/lib/useBottomInset";
 import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
 import BulkUploadCard from "../../src/components/BulkUploadCard";
 import { GstRatePicker } from "../../src/components/GstRatePicker";
+import { useTerminology } from "../../src/lib/terminology-context";
 
 interface Product {
   id: string;
@@ -53,6 +54,7 @@ interface Warehouse {
 
 export default function InventoryScreen() {
   const { user, activeBrand } = useAuth();
+  const { t } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
   const topInset = useTopInset();
@@ -886,7 +888,7 @@ export default function InventoryScreen() {
                 {isDetailsExpanded && (
                   <View className="mt-2.5 pt-2.5 border-t border-outline-variant dark:border-outline" style={{ gap: 3 }}>
                     {item.sku && (
-                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">SKU: {item.sku}</Text>
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{t("sku")}: {item.sku}</Text>
                     )}
                     {item.barcode && (
                       <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Barcode: {item.barcode}</Text>
@@ -1011,12 +1013,12 @@ export default function InventoryScreen() {
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                SKU
+                {t("sku")}
               </Text>
               <TextInput
                 value={newProductSku}
                 onChangeText={setNewProductSku}
-                placeholder="Enter SKU reference"
+                placeholder={"Enter " + t("sku") + " reference"}
                 placeholderTextColor="#A0A0A0"
                 className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
               />

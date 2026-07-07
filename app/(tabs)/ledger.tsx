@@ -21,6 +21,7 @@ import { useBottomInset } from "../../src/lib/useBottomInset";
 import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
 import BulkUploadCard from "../../src/components/BulkUploadCard";
 import type { BankAccount } from "./bank-accounts";
+import { useTerminology } from "../../src/lib/terminology-context";
 
 interface Party {
   id: string;
@@ -45,6 +46,7 @@ interface LedgerEntry {
 
 export default function LedgerScreen() {
   const { user } = useAuth();
+  const { t } = useTerminology();
   const confirm = useConfirm();
   const router = useRouter();
   const topInset = useTopInset();
@@ -345,10 +347,10 @@ export default function LedgerScreen() {
       <View className="mb-6 flex-row items-center justify-between">
         <View>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
-            Party
+            {activeTab === "customer" ? t("receivables") : t("payables")}
           </Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark font-medium mt-0.5">
-            Manage parties & outstanding balances
+            Manage credit ledgers and outstanding balances
           </Text>
         </View>
         <Pressable

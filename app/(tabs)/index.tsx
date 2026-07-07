@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 import { shareLedgerReminder } from "../../src/lib/sharer";
 import { getQueueCount, syncQueuedSales } from "../../src/lib/offlineQueue";
+import { useTerminology } from "../../src/lib/terminology-context";
 
 interface DashboardStats {
   salesToday: number;
@@ -81,6 +82,7 @@ function timeAgo(iso: string): string {
 export default function DashboardScreen() {
   const { user, activeCompany, activeBrand, availableBrands, setActiveBrand, refreshCompany, logout } =
     useAuth();
+  const { t } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
   const topInset = useTopInset();
@@ -571,7 +573,7 @@ export default function DashboardScreen() {
                 <View className="p-md rounded-xl" style={{ width: "47%", backgroundColor: "#E4F6DC" }}>
                   <View className="flex-row justify-between items-start">
                     <Text className="font-label-md text-label-md uppercase tracking-wider" style={{ color: "#3E8E2F" }}>
-                      To Collect
+                      {t("receivables")}
                     </Text>
                     <MaterialCommunityIcons name="arrow-down-bold-circle" size={16} color="#3E8E2F" />
                   </View>
@@ -584,7 +586,7 @@ export default function DashboardScreen() {
                 <View className="p-md rounded-xl" style={{ width: "47%", backgroundColor: "#FBE1E6" }}>
                   <View className="flex-row justify-between items-start">
                     <Text className="font-label-md text-label-md uppercase tracking-wider" style={{ color: "#B0345C" }}>
-                      Cash Out Today
+                      {t("payables")}
                     </Text>
                     <MaterialCommunityIcons name="arrow-up-bold-circle" size={16} color="#B0345C" />
                   </View>
@@ -601,7 +603,7 @@ export default function DashboardScreen() {
                   <View className="flex-row justify-between items-start">
                     <View>
                       <Text className="font-label-md text-label-md uppercase tracking-wider" style={{ color: "#1E6FA6" }}>
-                        Net Sales Today
+                        {t("sales")}
                       </Text>
                       <Text className="font-display-lg text-display-lg mt-1" style={{ color: "#0E3E5C" }}>
                         {formatCurrency(stats.salesToday)}
