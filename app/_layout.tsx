@@ -1,12 +1,13 @@
 import "../global.css";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, AppState } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { colorScheme } from "nativewind";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
 import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
+import { syncQueuedSales } from "../src/lib/offlineQueue";
 
 // The app is light-theme only — several screens have incomplete `dark:`
 // class coverage (a card gets a dark background but its text stays the
@@ -19,6 +20,23 @@ function NavigationGuard() {
   const { isAuthenticated, isLoading, activeCompany } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const appState = useRef(AppState.currentState);
+
+  // A sale made while offline sits in local storage until this fires — on
+  // launch, and again every time the app comes back to the foreground
+  // (the moment connectivity most likely just returned, e.g. after
+  // switching from airplane mode or walking back into Wi-Fi range).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    syncQueuedSales().catch(() => {});
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (appState.current.match(/inactive|background/) && nextState === "active") {
+        syncQueuedSales().catch(() => {});
+      }
+      appState.current = nextState;
+    });
+    return () => subscription.remove();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isLoading) return;

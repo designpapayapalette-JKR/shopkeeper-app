@@ -25,6 +25,7 @@ import { api, ApiError } from "../../src/lib/api";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
+import { enqueueSale, isNetworkFailure } from "../../src/lib/offlineQueue";
 
 interface Product {
   id: string;
@@ -422,9 +423,7 @@ export default function PosScreen() {
 
       // The entire invoice + items + stock + ledger write happens atomically
       // server-side now — see shopkeeper-api/src/routes/pos.ts checkout.
-      const checkoutRes = await api.post<{
-        data: { invoice_number: string; cgst_total: string; sgst_total: string; igst_total: string };
-      }>("/pos/checkout", {
+      const checkoutPayload = {
         party_id: checkoutParty.id,
         brand_id: activeBrand?.id,
         warehouse_id: defaultWarehouseId,
@@ -440,7 +439,35 @@ export default function PosScreen() {
           price: parseFloat(item.product.price),
           tax_rate: shouldApplyTax ? effectiveTaxRate(item) : 0,
         })),
-      });
+      };
+
+      let checkoutRes: {
+        data: { invoice_number: string; cgst_total: string; sgst_total: string; igst_total: string };
+      };
+      try {
+        checkoutRes = await api.post<{
+          data: { invoice_number: string; cgst_total: string; sgst_total: string; igst_total: string };
+        }>("/pos/checkout", checkoutPayload);
+      } catch (checkoutError) {
+        if (isNetworkFailure(checkoutError) && invoiceType !== "estimate") {
+          // No invoice number is fabricated — GST requires the real one to
+          // come from the server's atomic, gap-free sequence. The sale is
+          // just held locally until connectivity returns.
+          await enqueueSale(checkoutPayload);
+          setCart([]);
+          setSelectedParty(null);
+          setIsCheckoutOpen(false);
+          setDiscount("");
+          setExtraCharge("");
+          setEstimateWithGst(false);
+          Alert.alert(
+            "Saved Offline",
+            "No internet connection — this sale has been saved on your phone and will sync automatically once you're back online. The receipt can be printed after it syncs."
+          );
+          return;
+        }
+        throw checkoutError;
+      }
 
       const invoiceNumber = checkoutRes.data.invoice_number;
       const gstSplit = {

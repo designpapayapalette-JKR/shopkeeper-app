@@ -39,7 +39,13 @@
           }
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "color": "#0F7A5F"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

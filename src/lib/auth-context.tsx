@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api, login as apiLogin, logout as apiLogout, registerCompany as apiRegisterCompany, fetchMe, hasStoredSession } from "./api";
 import { setPin, verifyPin, hasPin, setLastUserId, getLastUserId } from "./pin";
+import { registerForPushNotifications } from "./pushNotifications";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (me.company_id) {
             await fetchTenantData();
           }
+          registerForPushNotifications().catch(() => {});
         }
       } catch (error) {
         setIsAuthenticated(false);
@@ -119,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (me.company_id) {
         await fetchTenantData();
       }
+      registerForPushNotifications().catch(() => {});
     } catch (error) {
       setIsAuthenticated(false);
       setUser(null);
@@ -146,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (me.company_id) {
         await fetchTenantData();
       }
+      registerForPushNotifications().catch(() => {});
     } catch (error) {
       setIsAuthenticated(false);
       setUser(null);

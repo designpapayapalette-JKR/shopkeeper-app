@@ -17,6 +17,8 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useConfirm } from "../../src/components/ConfirmDialog";
+import { shareLedgerReminder } from "../../src/lib/sharer";
+import { getQueueCount, syncQueuedSales } from "../../src/lib/offlineQueue";
 
 interface DashboardStats {
   salesToday: number;
@@ -50,6 +52,13 @@ interface TopProduct {
   name: string;
   revenue: number;
   quantity: number;
+}
+
+interface OverdueParty {
+  id: string;
+  name: string;
+  phone: string | null;
+  current_balance: string;
 }
 
 const QUICK_ACTIONS = [
@@ -107,8 +116,11 @@ export default function DashboardScreen() {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [weekTrend, setWeekTrend] = useState<TrendDay[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [overdueParties, setOverdueParties] = useState<OverdueParty[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
+  const [syncingNow, setSyncingNow] = useState(false);
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const yesterdayStr = new Date(Date.now() - 86_400_000)
@@ -197,6 +209,11 @@ export default function DashboardScreen() {
         setWeekTrend(insightsRes.data.week_trend ?? []);
         setTopProducts(insightsRes.data.top_products ?? []);
       } catch (_) {}
+
+      try {
+        const overdueRes = await api.get<{ data: OverdueParty[] }>("/reminders/overdue");
+        setOverdueParties(overdueRes.data ?? []);
+      } catch (_) {}
     } catch (e) {
       console.error("Dashboard stats load failed:", e);
     } finally {
@@ -209,8 +226,36 @@ export default function DashboardScreen() {
     loadStats();
   }, [loadStats]);
 
+  const refreshPendingSyncCount = useCallback(() => {
+    getQueueCount()
+      .then(setPendingSyncCount)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    refreshPendingSyncCount();
+    // Sales queued while offline sync automatically on app foreground
+    // (see app/_layout.tsx), which can happen while this screen is mounted —
+    // re-check periodically so the badge doesn't go stale until the next
+    // manual pull-to-refresh.
+    const interval = setInterval(refreshPendingSyncCount, 15_000);
+    return () => clearInterval(interval);
+  }, [refreshPendingSyncCount]);
+
+  const handleSyncNow = async () => {
+    if (syncingNow) return;
+    setSyncingNow(true);
+    try {
+      await syncQueuedSales();
+    } finally {
+      refreshPendingSyncCount();
+      setSyncingNow(false);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
+    refreshPendingSyncCount();
     loadStats();
   };
 
@@ -412,6 +457,38 @@ export default function DashboardScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
+      )}
+
+      {/* Pending Sync banner — sales taken while offline sit queued on-device
+          until connectivity returns (see src/lib/offlineQueue.ts); surface the
+          count so a cashier isn't left wondering where a sale went. */}
+      {pendingSyncCount > 0 && (
+        <View className="bg-secondary/10 dark:bg-secondary-dark/10 border-b border-secondary/30 px-margin-mobile py-3 flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1 mr-3" style={{ gap: 10 }}>
+            <MaterialCommunityIcons name="cloud-off-outline" size={20} color="#835400" />
+            <View className="flex-1">
+              <Text className="font-bold text-sm text-secondary dark:text-secondary-dark">
+                {pendingSyncCount} sale{pendingSyncCount > 1 ? "s" : ""} pending sync
+              </Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                Recorded offline — will sync automatically once online
+              </Text>
+            </View>
+          </View>
+          <Pressable
+            onPress={handleSyncNow}
+            disabled={syncingNow}
+            className="px-3 py-1.5 rounded-lg bg-secondary/10 flex-row items-center"
+            style={{ gap: 6 }}
+          >
+            {syncingNow ? (
+              <ActivityIndicator size="small" color="#835400" />
+            ) : (
+              <MaterialCommunityIcons name="sync" size={16} color="#835400" />
+            )}
+            <Text className="text-xs font-bold text-secondary dark:text-secondary-dark">Sync now</Text>
+          </Pressable>
+        </View>
       )}
 
       {/* Brand filter pills (only if multiple brands) */}
@@ -657,6 +734,52 @@ export default function DashboardScreen() {
                     </View>
                   );
                 })}
+              </View>
+            </View>
+          )}
+
+          {/* ── Overdue Payment Reminders ── */}
+          {overdueParties.length > 0 && (
+            <View style={{ gap: 8 }}>
+              <View className="flex-row justify-between items-center">
+                <Text className="font-headline-sm text-headline-sm text-on-surface dark:text-text-primary-dark">
+                  Overdue Payments
+                </Text>
+                <View className="bg-amber-500/10 px-2 py-0.5 rounded-full flex-row items-center" style={{ gap: 4 }}>
+                  <View className="w-2 h-2 bg-amber-500 rounded-full" />
+                  <Text className="text-amber-700 dark:text-amber-400 font-label-md text-label-md">
+                    {overdueParties.length} customer{overdueParties.length !== 1 ? "s" : ""}
+                  </Text>
+                </View>
+              </View>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline overflow-hidden">
+                {overdueParties.slice(0, 5).map((party, idx) => (
+                  <View
+                    key={party.id}
+                    className={`p-md flex-row items-center justify-between ${idx > 0 ? "border-t border-outline-variant dark:border-outline" : ""}`}
+                  >
+                    <View className="flex-1 mr-2">
+                      <Text className="font-body-md text-body-md font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
+                        {party.name}
+                      </Text>
+                      <Text className="font-caption text-caption text-error mt-0.5">
+                        ₹{parseFloat(party.current_balance).toFixed(2)} overdue
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={() => {
+                        shareLedgerReminder(party.name, party.phone ?? "", parseFloat(party.current_balance), false);
+                        api.post(`/reminders/${party.id}/mark-sent`).catch(() => {});
+                        setOverdueParties((prev) => prev.filter((p) => p.id !== party.id));
+                      }}
+                      className="bg-primary/10 px-3 py-2 rounded-lg flex-row items-center"
+                      style={{ gap: 4 }}
+                    >
+                      <MaterialCommunityIcons name="whatsapp" size={14} color="#0F7A5F" />
+                      <Text className="text-xs font-bold text-primary dark:text-primary-dark">Remind</Text>
+                    </Pressable>
+                  </View>
+                ))}
               </View>
             </View>
           )}
