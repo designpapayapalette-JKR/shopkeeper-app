@@ -80,32 +80,17 @@ function timeAgo(iso: string): string {
 }
 
 export default function DashboardScreen() {
-  const { user, activeCompany, activeBrand, availableBrands, setActiveBrand, refreshCompany, logout } =
+  const { user, activeCompany, activeBrand, availableBrands, setActiveBrand, logout } =
     useAuth();
-  const { t } = useTerminology();
+  const { t, mode, setMode } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const insets = useSafeAreaInsets();
-  const [switchingMode, setSwitchingMode] = useState(false);
   const [isScanHubOpen, setIsScanHubOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isBrandSwitcherOpen, setIsBrandSwitcherOpen] = useState(false);
-  const businessMode: "retail" | "b2b" = activeCompany?.business_mode === "b2b" ? "b2b" : "retail";
-
-  const handleSwitchMode = async (mode: "retail" | "b2b") => {
-    if (mode === businessMode || switchingMode) return;
-    setSwitchingMode(true);
-    try {
-      await api.patch("/companies/me", { business_mode: mode });
-      await refreshCompany();
-    } catch (e) {
-      console.error("Failed to switch business mode:", e);
-    } finally {
-      setSwitchingMode(false);
-    }
-  };
 
   const [stats, setStats] = useState<DashboardStats>({
     salesToday: 0,
@@ -328,30 +313,29 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Business Mode — compact switch instead of a full-width segmented
-          control, so it doesn't push the rest of the dashboard down. */}
+      {/* Terminology Mode — Traditional swaps the dashboard for a big-button,
+          quick-actions-only layout for shopkeepers who want the simplest
+          possible screen; Modern keeps the full stats dashboard. */}
       <Pressable
-        onPress={() => handleSwitchMode(businessMode === "retail" ? "b2b" : "retail")}
-        disabled={switchingMode}
+        onPress={() => setMode(mode === "traditional" ? "modern" : "traditional")}
         className="bg-surface-container-highest dark:bg-surface-dark border-b border-outline-variant dark:border-outline px-margin-mobile py-2 flex-row items-center justify-between"
       >
         <View className="flex-row items-center flex-1 mr-2" style={{ gap: 8 }}>
           <MaterialCommunityIcons
-            name={businessMode === "retail" ? "storefront-outline" : "file-document-outline"}
+            name={mode === "traditional" ? "account-voice" : "view-dashboard-outline"}
             size={16}
             color="#0F7A5F"
           />
           <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
-            {businessMode === "retail" ? "Retail Mode" : "B2B Mode"}
+            {mode === "traditional" ? "Traditional Mode" : "Modern Mode"}
           </Text>
           <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark flex-1" numberOfLines={1}>
-            {businessMode === "retail" ? "Non-GST, party optional" : "GST only, full party required"}
+            {mode === "traditional" ? "Simple screen, big buttons" : "Full dashboard & reports"}
           </Text>
         </View>
         <Switch
-          value={businessMode === "b2b"}
-          onValueChange={(v) => handleSwitchMode(v ? "b2b" : "retail")}
-          disabled={switchingMode}
+          value={mode === "traditional"}
+          onValueChange={(v) => setMode(v ? "traditional" : "modern")}
           trackColor={{ false: "#D1D5DB", true: "#0F7A5F" }}
           thumbColor="#FFFFFF"
         />
@@ -549,6 +533,66 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 96 }}
       >
+        {mode === "traditional" ? (
+          <View className="px-margin-mobile pt-lg" style={{ gap: 16 }}>
+            <Text className="font-headline-lg text-headline-lg text-on-surface dark:text-text-primary-dark">
+              Namaste, {user?.first_name ?? "Malik"}!
+            </Text>
+
+            {/* Big Quick Actions grid — the whole point of Traditional mode
+                is fewer decisions, bigger touch targets. */}
+            <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+              {QUICK_ACTIONS.map((action) => (
+                <Pressable
+                  key={action.id}
+                  onPress={() => (action.id === "scan" ? setIsScanHubOpen(true) : router.push(action.route as any))}
+                  className={`items-center justify-center rounded-2xl active:scale-95 ${
+                    action.primary ? "bg-primary dark:bg-primary-dark shadow-md" : "bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline"
+                  }`}
+                  style={{ width: "47%", aspectRatio: 1, gap: 8 }}
+                >
+                  <MaterialCommunityIcons name={action.icon} size={40} color={action.primary ? "#ffffff" : "#005f49"} />
+                  <Text className={`font-bold text-base ${action.primary ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>
+                    {action.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Two big standalone buttons — everything else (reports, low
+                stock, overdue reminders, etc.) is deliberately hidden in
+                this mode. */}
+            <Pressable
+              onPress={() => router.push("/invoice-history" as any)}
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-5 flex-row items-center active:opacity-80"
+              style={{ gap: 16 }}
+            >
+              <MaterialCommunityIcons name="cash-multiple" size={32} color="#0F7A5F" />
+              <View className="flex-1">
+                <Text className="font-bold text-lg text-on-surface dark:text-text-primary-dark">Aaj Ki Bikri</Text>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
+                  {statsLoading ? "…" : `${formatCurrency(stats.salesToday)} · ${stats.invoicesToday} bill${stats.invoicesToday !== 1 ? "s" : ""}`}
+                </Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#9E9E9E" />
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/ledger" as any)}
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-5 flex-row items-center active:opacity-80"
+              style={{ gap: 16 }}
+            >
+              <MaterialCommunityIcons name="book-open-variant" size={32} color="#0F7A5F" />
+              <View className="flex-1">
+                <Text className="font-bold text-lg text-on-surface dark:text-text-primary-dark">Baaki Paisa (Balance)</Text>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
+                  {statsLoading ? "…" : `${formatCurrency(stats.pendingReceivables)} lena hai`}
+                </Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#9E9E9E" />
+            </Pressable>
+          </View>
+        ) : (
         <View className="px-margin-mobile pt-lg" style={{ gap: 24 }}>
           {/* ── Today's Snapshot ── */}
           <View style={{ gap: 8 }}>
@@ -918,6 +962,7 @@ export default function DashboardScreen() {
             )}
           </View>
         </View>
+        )}
       </ScrollView>
 
       {/* Scan & Record Hub — camera/scan actions only. Non-camera shortcuts
