@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, Pressable, Image, Alert, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { listScans, deleteScan, ScanRecord, ScanCategory } from "../../src/lib/scanCapture";
+import { useTopInset } from "../src/lib/useTopInset";
+import { listScans, deleteScan, ScanRecord, ScanCategory } from "../src/lib/scanCapture";
 
 const TABS: { key: ScanCategory | "all"; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { key: "all", label: "All", icon: "image-multiple-outline" },
@@ -138,3 +138,4 @@ export default function ScannedDocumentsScreen() {
     </View>
   );
 }
+

@@ -978,7 +978,7 @@ export default function InventoryScreen() {
 
       {/* Add Product Modal Form */}
       <Modal visible={isAdding} animationType="slide" onRequestClose={closeAddProduct}>
-        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Add New Product
           </Text>
@@ -1241,7 +1241,7 @@ export default function InventoryScreen() {
 
       {/* Edit Product Modal */}
       <Modal visible={!!editingProduct} animationType="slide" onRequestClose={closeEditProduct}>
-        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Edit Product
           </Text>
@@ -1299,7 +1299,7 @@ export default function InventoryScreen() {
       {/* Add/Edit Warehouse Location Modal */}
       <Modal visible={isAddingWarehouse} animationType="slide" transparent onRequestClose={closeAddWarehouse}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="flex-1 justify-end bg-black/40"
         >
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>

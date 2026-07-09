@@ -17,13 +17,13 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "../../src/lib/auth-context";
-import { api, ApiError, uploadDocument } from "../../src/lib/api";
-import { useConfirm } from "../../src/components/ConfirmDialog";
-import { shareLedgerReminder, shareChallan } from "../../src/lib/sharer";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
-import { useTerminology } from "../../src/lib/terminology-context";
+import { useAuth } from "../src/lib/auth-context";
+import { api, ApiError, uploadDocument } from "../src/lib/api";
+import { useConfirm } from "../src/components/ConfirmDialog";
+import { shareLedgerReminder, shareChallan } from "../src/lib/sharer";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
+import { useTerminology } from "../src/lib/terminology-context";
 
 // Not meant to be memorable — it's shared with the new employee over
 // WhatsApp and they're expected to change it after first login.
@@ -2992,7 +2992,7 @@ export default function MoreScreen() {
       {/* Quick PIN Setup Modal */}
       <Modal visible={isPinSetupModal} animationType="slide" transparent onRequestClose={closePinSetupModal}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="flex-1 justify-end bg-black/40"
         >
           <View className="bg-background dark:bg-background-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
@@ -3287,3 +3287,4 @@ export default function MoreScreen() {
     </ScrollView>
   );
 }
+

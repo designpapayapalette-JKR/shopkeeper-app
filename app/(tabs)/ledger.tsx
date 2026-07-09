@@ -20,7 +20,7 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
 import BulkUploadCard from "../../src/components/BulkUploadCard";
-import type { BankAccount } from "./bank-accounts";
+import type { BankAccount } from "../bank-accounts";
 import { useTerminology } from "../../src/lib/terminology-context";
 
 interface Party {
@@ -860,7 +860,7 @@ export default function LedgerScreen() {
 
       {/* Add Party Modal Form */}
       <Modal visible={isAddingParty || editingParty !== null} animationType="slide" onRequestClose={closePartyForm}>
-        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               {editingParty ? "Edit Party" : `Add New ${activeTab === "customer" ? "Customer" : "Supplier"}`}

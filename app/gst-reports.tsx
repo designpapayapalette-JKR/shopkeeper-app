@@ -9,10 +9,10 @@ import {
   TextInput,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { api } from "../../src/lib/api";
-import { rowsToCsv, shareCsv } from "../../src/lib/csvExport";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useTerminology } from "../../src/lib/terminology-context";
+import { api } from "../src/lib/api";
+import { rowsToCsv, shareCsv } from "../src/lib/csvExport";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useTerminology } from "../src/lib/terminology-context";
 
 // Note: shopkeeper-api returns camelCase, but src/lib/api.ts converts every
 // response body through toSnakeCase() before handing it back — so every
@@ -439,3 +439,4 @@ export default function GstReportsScreen() {
     </ScrollView>
   );
 }
+

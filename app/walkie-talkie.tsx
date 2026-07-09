@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { Text, View, ScrollView, Pressable, Alert, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "../../src/lib/auth-context";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { WalkieChannel, WalkiePeer } from "../../src/lib/walkieRtc";
+import { useAuth } from "../src/lib/auth-context";
+import { useTopInset } from "../src/lib/useTopInset";
+import { WalkieChannel, WalkiePeer } from "../src/lib/walkieRtc";
 
 // Owner/manager side of the same push-to-talk feature the Employee App
 // already has — previously only field staff could use walkie-talkie among
@@ -298,3 +298,4 @@ export default function WalkieTalkieScreen() {
     </ScrollView>
   );
 }
+

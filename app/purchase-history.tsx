@@ -12,10 +12,10 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
-import { api, ApiError } from "../../src/lib/api";
-import { useConfirm } from "../../src/components/ConfirmDialog";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
+import { api, ApiError } from "../src/lib/api";
+import { useConfirm } from "../src/components/ConfirmDialog";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
 
 interface PurchaseItem {
   quantity: string;
@@ -256,3 +256,4 @@ export default function PurchaseHistoryScreen() {
     </View>
   );
 }
+

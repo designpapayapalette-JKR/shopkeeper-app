@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, Pressable, ActivityIndicator, Image, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
-import { api } from "../../src/lib/api";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
+import { api } from "../src/lib/api";
 
 interface ExpenseRecord {
   id: string;
@@ -164,3 +164,4 @@ export default function ExpensesScreen() {
     </View>
   );
 }
+

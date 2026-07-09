@@ -98,22 +98,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* Reachable only via the Dashboard header's Profile menu now — not a
-          bottom tab, to keep the main tab bar to the day-to-day screens. */}
-      <Tabs.Screen name="more" options={{ href: null }} />
-      <Tabs.Screen name="activity-log" options={{ href: null }} />
-      <Tabs.Screen name="recycle-bin" options={{ href: null }} />
-      <Tabs.Screen name="invoice-history" options={{ href: null }} />
-      <Tabs.Screen name="printer-settings" options={{ href: null }} />
-      <Tabs.Screen name="purchase-history" options={{ href: null }} />
-      <Tabs.Screen name="gst-reports" options={{ href: null }} />
-      <Tabs.Screen name="bank-accounts" options={{ href: null }} />
-      <Tabs.Screen name="bill-scanner" options={{ href: null }} />
-      <Tabs.Screen name="scanned-documents" options={{ href: null }} />
-      <Tabs.Screen name="unified-ledger" options={{ href: null }} />
-      <Tabs.Screen name="onboarding" options={{ href: null }} />
-      <Tabs.Screen name="walkie-talkie" options={{ href: null }} />
-      <Tabs.Screen name="expenses" options={{ href: null }} />
     </Tabs>
   );
 }

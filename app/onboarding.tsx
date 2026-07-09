@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "../../src/lib/auth-context";
-import { api, ApiError } from "../../src/lib/api";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
+import { useAuth } from "../src/lib/auth-context";
+import { api, ApiError } from "../src/lib/api";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
 
 const STAFF_ROLES = [
   { id: "manager", name: "Manager" },
@@ -323,3 +323,4 @@ export default function OnboardingScreen() {
     </View>
   );
 }
+

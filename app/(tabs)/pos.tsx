@@ -1082,7 +1082,7 @@ export default function PosScreen() {
           {/* Right — checkout panel */}
           <View className="w-[42%] border-l border-outline-variant dark:border-outline px-4 pt-2">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-4">Cart</Text>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
               {CheckoutPanel}
             </ScrollView>
           </View>
@@ -1192,7 +1192,7 @@ export default function PosScreen() {
                 <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
               </Pressable>
             </View>
-            <ScrollView className="flex-1 px-5 pt-5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
+            <ScrollView className="flex-1 px-5 pt-5" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
               {CheckoutPanel}
             </ScrollView>
           </View>

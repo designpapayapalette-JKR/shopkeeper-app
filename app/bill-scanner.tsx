@@ -3,8 +3,8 @@ import { View, Text, Pressable, Image, ActivityIndicator, Alert, StyleSheet } fr
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { saveScan, ScanCategory } from "../../src/lib/scanCapture";
+import { useTopInset } from "../src/lib/useTopInset";
+import { saveScan, ScanCategory } from "../src/lib/scanCapture";
 
 const CATEGORY_META: Record<ScanCategory, { title: string; destination: (uri: string) => string }> = {
   purchase: {
@@ -139,3 +139,4 @@ export default function BillScannerScreen() {
     </View>
   );
 }
+

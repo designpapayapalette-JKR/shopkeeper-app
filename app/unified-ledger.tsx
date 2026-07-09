@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { api } from "../../src/lib/api";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
-import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
+import { api } from "../src/lib/api";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
+import { getAvatarColor, getInitial } from "../src/lib/avatarColor";
 
 interface UnifiedEntry {
   id: string;
@@ -160,3 +160,4 @@ export default function UnifiedLedgerScreen() {
     </View>
   );
 }
+

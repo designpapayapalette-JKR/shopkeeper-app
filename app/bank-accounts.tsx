@@ -11,11 +11,11 @@ import {
   ScrollView,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { api, ApiError } from "../../src/lib/api";
-import { useConfirm } from "../../src/components/ConfirmDialog";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
-import BulkUploadCard from "../../src/components/BulkUploadCard";
+import { api, ApiError } from "../src/lib/api";
+import { useConfirm } from "../src/components/ConfirmDialog";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
+import BulkUploadCard from "../src/components/BulkUploadCard";
 
 export interface BankAccount {
   id: string;
@@ -291,3 +291,4 @@ export default function BankAccountsScreen() {
     </View>
   );
 }
+

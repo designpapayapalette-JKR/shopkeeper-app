@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useTopInset } from "../../src/lib/useTopInset";
-import PosDashboardPanel from "../../src/components/PosDashboardPanel";
+import { useTopInset } from "../src/lib/useTopInset";
+import PosDashboardPanel from "../src/components/PosDashboardPanel";
 
 // Standalone route wrapper around the shared POS dashboard panel — reached
 // from Recent Activity / Activity Log deep-links (?openInvoiceId=...) and
@@ -19,3 +19,4 @@ export default function InvoiceHistoryScreen() {
     </View>
   );
 }
+

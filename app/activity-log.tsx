@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable, RefreshControl, Modal, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "../../src/lib/auth-context";
-import { api } from "../../src/lib/api";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
+import { useAuth } from "../src/lib/auth-context";
+import { api } from "../src/lib/api";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
 
 interface LogEntry {
   id: string;
@@ -256,3 +256,4 @@ export default function ActivityLogScreen() {
     </View>
   );
 }
+

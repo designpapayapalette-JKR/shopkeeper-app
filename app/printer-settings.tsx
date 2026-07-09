@@ -21,9 +21,9 @@ import {
   SavedPrinter,
   PrinterConnectionType,
   PaperWidth,
-} from "../../src/lib/thermalPrinter";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
+} from "../src/lib/thermalPrinter";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
 
 const TABS: { key: PrinterConnectionType; label: string }[] = [
   { key: "bluetooth", label: "Bluetooth" },
@@ -355,3 +355,4 @@ export default function PrinterSettingsScreen() {
     </ScrollView>
   );
 }
+

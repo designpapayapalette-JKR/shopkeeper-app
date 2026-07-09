@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "../../src/lib/auth-context";
-import { api } from "../../src/lib/api";
-import { useConfirm } from "../../src/components/ConfirmDialog";
-import { useTopInset } from "../../src/lib/useTopInset";
+import { useAuth } from "../src/lib/auth-context";
+import { api } from "../src/lib/api";
+import { useConfirm } from "../src/components/ConfirmDialog";
+import { useTopInset } from "../src/lib/useTopInset";
 
 type Kind = "products" | "parties" | "invoices";
 
@@ -158,3 +158,4 @@ export default function RecycleBinScreen() {
     </View>
   );
 }
+
