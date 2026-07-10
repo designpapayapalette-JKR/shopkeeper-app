@@ -1391,6 +1391,51 @@ export default function MoreScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
         </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/aging-report" as any)}
+          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-3"
+        >
+          <View className="flex-1 pr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Aging Report
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Receivables/payables by aging buckets (0-30, 31-60, 61-90, 90+ days).
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/pnl-report" as any)}
+          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-3"
+        >
+          <View className="flex-1 pr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              P&L Statement
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Revenue, COGS, expenses and net profit with date range.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/payment-history" as any)}
+          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-3"
+        >
+          <View className="flex-1 pr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Payment History
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Browse all payments received and made with filters.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
       </View>
 
       {/* Inventory & Logistics Operations */}

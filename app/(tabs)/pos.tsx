@@ -814,6 +814,13 @@ export default function PosScreen() {
                 </Text>
               </View>
             )}
+            {selectedParty.credit_limit != null && (
+              <View className="px-2 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
+                <Text className="text-[10px] font-bold text-yellow-700 dark:text-yellow-400">
+                  Limit: ₹{Number(selectedParty.credit_limit).toFixed(0)}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </Pressable>
@@ -1173,6 +1180,11 @@ export default function PosScreen() {
                     {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
                       <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-500" : "text-green-600"}`}>
                         ₹{Math.abs(parseFloat(selectedParty.current_balance)).toFixed(0)}
+                      </Text>
+                    )}
+                    {selectedParty.credit_limit != null && (
+                      <Text className="text-[10px] font-bold text-yellow-600">
+                        L:₹{Number(selectedParty.credit_limit).toFixed(0)}
                       </Text>
                     )}
                   </Pressable>

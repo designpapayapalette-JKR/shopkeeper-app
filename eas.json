@@ -17,7 +17,12 @@
         "EXPO_PUBLIC_API_URL": "http://192.168.29.95:8056"
       }
     },
-    "production": {}
+    "production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
   },
   "submit": {
     "production": {}

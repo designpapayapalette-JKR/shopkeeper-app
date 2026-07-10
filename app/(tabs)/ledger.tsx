@@ -76,6 +76,7 @@ export default function LedgerScreen() {
   const [newPartyGstin, setNewPartyGstin] = useState("");
   const [newPartyCategory, setNewPartyCategory] = useState<"b2b" | "b2c">("b2c");
   const [newPartyBalance, setNewPartyBalance] = useState("");
+  const [newPartyCreditLimit, setNewPartyCreditLimit] = useState("");
   const [addPartyLoading, setAddPartyLoading] = useState(false);
 
   // Record Payment Modal State
@@ -260,6 +261,7 @@ export default function LedgerScreen() {
           phone: newPartyPhone || undefined,
           gstin: newPartyGstin || undefined,
           category: newPartyCategory,
+          credit_limit: newPartyCreditLimit ? parseFloat(newPartyCreditLimit) : null,
         });
         Alert.alert("Success", "Party details updated.");
       } else {
@@ -273,6 +275,7 @@ export default function LedgerScreen() {
           type: activeTab,
           current_balance: balance,
           opening_balance: balance,
+          credit_limit: newPartyCreditLimit ? parseFloat(newPartyCreditLimit) : null,
         });
         Alert.alert("Success", `${activeTab === "customer" ? "Customer" : "Supplier"} added successfully.`);
       }
@@ -980,6 +983,20 @@ export default function LedgerScreen() {
                 />
               </View>
             )}
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Credit Limit (INR)
+              </Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-2">Leave empty for unlimited credit</Text>
+              <TextInput
+                value={newPartyCreditLimit}
+                onChangeText={setNewPartyCreditLimit}
+                placeholder="Unlimited"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="numeric"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
           </View>
 
           {/* Form Actions */}

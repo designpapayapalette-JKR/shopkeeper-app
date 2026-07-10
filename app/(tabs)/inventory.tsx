@@ -695,6 +695,14 @@ export default function InventoryScreen() {
           <MaterialCommunityIcons name="alert-circle-outline" size={15} color={lowStockOnly ? "#fff" : "#D64545"} />
           <Text className={`text-sm font-bold ${lowStockOnly ? "text-white" : "text-error"}`}>Low Stock</Text>
         </Pressable>
+        <Pressable
+          onPress={() => router.push("/reorder-suggestions" as any)}
+          className="flex-row items-center px-3.5 py-2.5 rounded-xl border bg-primary border-primary"
+          style={{ gap: 5 }}
+        >
+          <MaterialCommunityIcons name="cart-outline" size={15} color="#fff" />
+          <Text className="text-sm font-bold text-white">Reorder</Text>
+        </Pressable>
       </View>
 
       {/* Sort Menu */}
