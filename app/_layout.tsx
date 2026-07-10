@@ -8,6 +8,10 @@ import { colorScheme } from "nativewind";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
 import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
 import { syncQueuedSales } from "../src/lib/offlineQueue";
+import { startConnectivityMonitoring } from "../src/lib/connectivity";
+
+// Start connectivity monitoring at app level
+startConnectivityMonitoring();
 
 // The app is light-theme only — several screens have incomplete `dark:`
 // class coverage (a card gets a dark background but its text stays the

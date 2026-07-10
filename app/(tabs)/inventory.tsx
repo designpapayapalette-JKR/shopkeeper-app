@@ -13,6 +13,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -35,6 +36,7 @@ interface Product {
   hsn_code: string;
   tax_rate: string;
   price: string;
+  mrp?: string;
   cost: string;
   status: string;
   stock_quantity: string;
@@ -59,6 +61,8 @@ export default function InventoryScreen() {
   const confirm = useConfirm();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -261,6 +265,7 @@ export default function InventoryScreen() {
   const [newProductHsn, setNewProductHsn] = useState("");
   const [newProductTax, setNewProductTax] = useState("18.00");
   const [newProductPrice, setNewProductPrice] = useState("");
+  const [newProductMrp, setNewProductMrp] = useState("");
   const [newProductCost, setNewProductCost] = useState("");
   const [newProductStock, setNewProductStock] = useState("");
   const [newProductReorderLevel, setNewProductReorderLevel] = useState("");
@@ -276,6 +281,7 @@ export default function InventoryScreen() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editProductName, setEditProductName] = useState("");
   const [editProductPrice, setEditProductPrice] = useState("");
+  const [editProductMrp, setEditProductMrp] = useState("");
   const [editProductCost, setEditProductCost] = useState("");
   const [editProductTax, setEditProductTax] = useState("");
   const [editLoading, setEditLoading] = useState(false);
@@ -351,6 +357,7 @@ export default function InventoryScreen() {
         hsn_code: newProductHsn || undefined,
         tax_rate: parseFloat(newProductTax) || 0.0,
         price: parseFloat(newProductPrice) || 0.0,
+        mrp: newProductMrp ? parseFloat(newProductMrp) : undefined,
         cost: parseFloat(newProductCost) || 0.0,
         stock_quantity: parseFloat(newProductStock) || 0,
         reorder_level: newProductReorderLevel ? parseFloat(newProductReorderLevel) : null,
@@ -388,6 +395,7 @@ export default function InventoryScreen() {
     setNewProductHsn("");
     setNewProductTax("18.00");
     setNewProductPrice("");
+    setNewProductMrp("");
     setNewProductCost("");
     setNewProductStock("");
     setNewProductReorderLevel("");
@@ -406,6 +414,7 @@ export default function InventoryScreen() {
       newProductBarcode.trim() !== "" ||
       newProductHsn.trim() !== "" ||
       newProductPrice.trim() !== "" ||
+      newProductMrp.trim() !== "" ||
       newProductCost.trim() !== "" ||
       newProductStock.trim() !== "" ||
       newProductReorderLevel.trim() !== "" ||
@@ -433,6 +442,7 @@ export default function InventoryScreen() {
     setEditingProduct(p);
     setEditProductName(p.name);
     setEditProductPrice(p.price);
+    setEditProductMrp(p.mrp || "");
     setEditProductCost(p.cost || "");
     setEditProductTax(p.tax_rate || "18.00");
   };
@@ -447,6 +457,7 @@ export default function InventoryScreen() {
       await api.patch(`/products/${editingProduct.id}`, {
         name: editProductName,
         price: editProductPrice,
+        mrp: editProductMrp ? parseFloat(editProductMrp) : null,
         cost: editProductCost || undefined,
         tax_rate: editProductTax || undefined,
       });
@@ -464,6 +475,7 @@ export default function InventoryScreen() {
     setEditingProduct(null);
     setEditProductName("");
     setEditProductPrice("");
+    setEditProductMrp("");
     setEditProductCost("");
     setEditProductTax("");
   };
@@ -473,6 +485,7 @@ export default function InventoryScreen() {
       const hasChanges =
         editProductName !== editingProduct.name ||
         editProductPrice !== editingProduct.price ||
+        editProductMrp !== (editingProduct.mrp || "") ||
         editProductCost !== (editingProduct.cost || "") ||
         editProductTax !== (editingProduct.tax_rate || "18.00");
       if (hasChanges) {
@@ -864,14 +877,36 @@ export default function InventoryScreen() {
                           : `${activeWarehouseId ? `${qty} units here` : `${qty} units`}${activeWarehouseId ? ` · ${totalQty} total` : ""}`}
                       </Text>
                     </View>
+                    {isTablet && item.sku && (
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                        SKU: {item.sku}
+                      </Text>
+                    )}
                   </Pressable>
                   <View className="items-end mr-2">
-                    <Text className="text-base font-bold text-primary dark:text-primary-dark">
-                      ₹{parseFloat(item.price).toFixed(0)}
-                    </Text>
+                    <View className="flex-row items-center" style={{ gap: 4 }}>
+                      {item.mrp && parseFloat(item.mrp) > 0 && (
+                        <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark line-through">
+                          ₹{parseFloat(item.mrp).toFixed(0)}
+                        </Text>
+                      )}
+                      <Text className="text-base font-bold text-primary dark:text-primary-dark">
+                        ₹{parseFloat(item.price).toFixed(0)}
+                      </Text>
+                    </View>
+                    {item.mrp && parseFloat(item.mrp) > parseFloat(item.price) && (
+                      <Text className="text-xs text-green-600 dark:text-green-400 font-semibold">
+                        Save ₹{(parseFloat(item.mrp) - parseFloat(item.price)).toFixed(0)}
+                      </Text>
+                    )}
                     <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                       GST {item.tax_rate}%
                     </Text>
+                    {isTablet && (
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                        Cost: ₹{parseFloat(item.cost || "0").toFixed(0)}
+                      </Text>
+                    )}
                   </View>
                   <Pressable
                     onPress={() => handleDeleteProduct(item)}
@@ -973,6 +1008,7 @@ export default function InventoryScreen() {
               { header: "sku", example: "AAT-5KG", required: false },
               { header: "barcode", example: "8901058851716", required: false },
               { header: "hsn_code", example: "1101", required: false },
+              { header: "mrp", example: "299.00", required: false },
               { header: "price", example: "285.00", required: true },
               { header: "cost", example: "260.00", required: false },
               { header: "tax_rate", example: "5", required: false },
@@ -986,6 +1022,7 @@ export default function InventoryScreen() {
                 sku: row.sku?.trim() || undefined,
                 barcode: row.barcode?.trim() || undefined,
                 hsn_code: row.hsn_code?.trim() || undefined,
+                mrp: row.mrp ? parseFloat(row.mrp) : undefined,
                 price: parseFloat(row.price),
                 cost: row.cost ? parseFloat(row.cost) : undefined,
                 tax_rate: row.tax_rate ? parseFloat(row.tax_rate) : undefined,
@@ -1106,6 +1143,23 @@ export default function InventoryScreen() {
                 GST Rate (%)
               </Text>
               <GstRatePicker value={newProductTax} onChange={setNewProductTax} />
+            </View>
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                MRP (INR)
+              </Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-1">
+                Maximum Retail Price — printed on the product package
+              </Text>
+              <TextInput
+                value={newProductMrp}
+                onChangeText={setNewProductMrp}
+                placeholder="0.00"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="numeric"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
             </View>
 
             <View className="mt-4">
@@ -1302,6 +1356,17 @@ export default function InventoryScreen() {
               <TextInput
                 value={editProductName}
                 onChangeText={setEditProductName}
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">MRP (₹)</Text>
+              <TextInput
+                value={editProductMrp}
+                onChangeText={setEditProductMrp}
+                keyboardType="numeric"
+                placeholder="Leave blank for none"
+                placeholderTextColor="#A0A0A0"
                 className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>

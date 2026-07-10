@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Modal,
   Switch,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -88,6 +89,8 @@ export default function DashboardScreen() {
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
   const [isScanHubOpen, setIsScanHubOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isBrandSwitcherOpen, setIsBrandSwitcherOpen] = useState(false);
@@ -643,7 +646,7 @@ export default function DashboardScreen() {
             ) : (
               <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                 {/* To Collect */}
-                <View className="p-md rounded-xl" style={{ width: "47%", backgroundColor: "#E4F6DC" }}>
+                <View className="p-md rounded-xl" style={{ width: isTablet ? "24%" : "47%", backgroundColor: "#E4F6DC" }}>
                   <View className="flex-row justify-between items-start">
                     <Text className="font-label-md text-label-md uppercase tracking-wider" style={{ color: "#3E8E2F" }}>
                       {t("receivables")}
@@ -656,7 +659,7 @@ export default function DashboardScreen() {
                 </View>
 
                 {/* Cash Out */}
-                <View className="p-md rounded-xl" style={{ width: "47%", backgroundColor: "#FBE1E6" }}>
+                <View className="p-md rounded-xl" style={{ width: isTablet ? "24%" : "47%", backgroundColor: "#FBE1E6" }}>
                   <View className="flex-row justify-between items-start">
                     <Text className="font-label-md text-label-md uppercase tracking-wider" style={{ color: "#B0345C" }}>
                       {t("payables")}
@@ -668,17 +671,30 @@ export default function DashboardScreen() {
                   </Text>
                 </View>
 
-                {/* Net Sales — full width */}
+                {/* Invoices Today */}
+                <View className="p-md rounded-xl" style={{ width: isTablet ? "24%" : "47%", backgroundColor: "#F5F0E1" }}>
+                  <View className="flex-row justify-between items-start">
+                    <Text className="font-label-md text-label-md uppercase tracking-wider" style={{ color: "#8B6914" }}>
+                      Invoices
+                    </Text>
+                    <MaterialCommunityIcons name="file-document-outline" size={16} color="#8B6914" />
+                  </View>
+                  <Text className="font-headline-md text-headline-md mt-1" style={{ color: "#5C4510" }}>
+                    {stats.invoicesToday}
+                  </Text>
+                </View>
+
+                {/* Net Sales */}
                 <View
                   className="p-md rounded-xl shadow-sm"
-                  style={{ width: "100%", backgroundColor: "#E1F0FB" }}
+                  style={{ width: isTablet ? "24%" : "100%", backgroundColor: "#E1F0FB" }}
                 >
                   <View className="flex-row justify-between items-start">
                     <View>
                       <Text className="font-label-md text-label-md uppercase tracking-wider" style={{ color: "#1E6FA6" }}>
                         {t("sales")}
                       </Text>
-                      <Text className="font-display-lg text-display-lg mt-1" style={{ color: "#0E3E5C" }}>
+                      <Text className="font-headline-md text-headline-md mt-1" style={{ color: "#0E3E5C" }}>
                         {formatCurrency(stats.salesToday)}
                       </Text>
                     </View>
@@ -717,9 +733,9 @@ export default function DashboardScreen() {
             <Text className="font-headline-sm text-headline-sm text-on-surface dark:text-text-primary-dark">
               Quick Actions
             </Text>
-            <View className="flex-row" style={{ gap: 16 }}>
+            <View className={`${isTablet ? "flex-row flex-wrap" : "flex-row"}`} style={{ gap: 12 }}>
               {QUICK_ACTIONS.map((action) => (
-                <View key={action.id} className="flex-1 items-center" style={{ gap: 4 }}>
+                <View key={action.id} className={isTablet ? "items-center" : "flex-1 items-center"} style={{ gap: 4, width: isTablet ? "18%" : undefined }}>
                   <Pressable
                     onPress={() => (action.id === "scan" ? setIsScanHubOpen(true) : router.push(action.route as any))}
                     className={`w-full aspect-square rounded-xl items-center justify-center active:scale-90 ${

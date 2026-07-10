@@ -1534,6 +1534,23 @@ export default function MoreScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
         </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-4" />
+
+        <Pressable
+          onPress={() => router.push("/barcode-generator" as any)}
+          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
+        >
+          <View className="flex-1 pr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Barcode Generator
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Generate EAN-13 barcodes for products — single or bulk
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
       </View>
 
       {/* Staff Operations */}

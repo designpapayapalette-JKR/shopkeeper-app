@@ -29,6 +29,9 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { enqueueSale, isNetworkFailure } from "../../src/lib/offlineQueue";
 import { useTerminology } from "../../src/lib/terminology-context";
+import { useKeepAwake } from "expo-keep-awake";
+import { writeCache, readCache, getCacheKey } from "../../src/lib/apiCache";
+import { getIsConnected, subscribeToConnectivity } from "../../src/lib/connectivity";
 
 interface Product {
   id: string;
@@ -37,6 +40,7 @@ interface Product {
   barcode: string;
   hsn_code?: string;
   price: string;
+  mrp?: string;
   tax_rate: string;
   stock_quantity?: string;
 }
@@ -50,6 +54,7 @@ interface Party {
   gstin?: string | null;
   category?: "b2b" | "b2c";
   current_balance?: string;
+  credit_limit?: string | null;
 }
 
 interface Warehouse {
@@ -74,8 +79,11 @@ export default function PosScreen() {
   const { t } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
-  const { width } = useWindowDimensions();
+  const confirmDelete = useConfirm();
+  const { width, height } = useWindowDimensions();
   const isTablet = width >= 768;
+  const isLandscape = width > height;
+  const isPosDevice = isLandscape && width >= 640;
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
 
@@ -133,7 +141,10 @@ export default function PosScreen() {
   const [partySearch, setPartySearch] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState("");
+  const [discountType, setDiscountType] = useState<"flat" | "percent">("flat");
   const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
+  const [isSplitPayment, setIsSplitPayment] = useState(false);
+  const [splitPayments, setSplitPayments] = useState<{ method: "cash" | "upi" | "credit"; amount: string }[]>([]);
   const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate">("retail");
   const businessMode: "retail" | "b2b" = activeCompany?.business_mode === "b2b" ? "b2b" : "retail";
   const [cashCustomerId, setCashCustomerId] = useState<string | null>(null);
@@ -146,6 +157,11 @@ export default function PosScreen() {
   // surcharge when the customer wants to buy on credit terms. Shown whenever
   // Credit is the selected payment mode, but usable for any bill type.
   const [extraCharge, setExtraCharge] = useState("");
+  // Due date — when selling on credit, the cashier picks a payment due
+  // period (7/15/30/45/60 days) which sets dueDate on the invoice for
+  // receivables tracking and aging reports.
+  const CREDIT_PERIODS = [7, 15, 30, 45, 60] as const;
+  const [creditPeriod, setCreditPeriod] = useState<number | null>(null);
 
   // Switching company-wide mode changes what a *new* bill defaults to.
   // Guarded by an empty cart so it never yanks the bill type out from under
@@ -173,6 +189,14 @@ export default function PosScreen() {
   const [newCustomerState, setNewCustomerState] = useState("");
   const [addCustomerLoading, setAddCustomerLoading] = useState(false);
 
+  // POS numpad state — tapping a cart item's quantity in landscape mode
+  // opens a numeric keypad for quick entry instead of +/- buttons.
+  const [qtyEditItemId, setQtyEditItemId] = useState<string | null>(null);
+  const [qtyEditValue, setQtyEditValue] = useState("");
+
+  // Keep screen awake during POS so it doesn't lock mid-sale.
+  useKeepAwake();
+
   // Quick Add Product State — lets a cashier add a brand-new SKU mid-bill
   // instead of having to abandon the sale, go to Inventory, add it, and
   // come back to POS to start over.
@@ -183,6 +207,288 @@ export default function PosScreen() {
   const [newProductStock, setNewProductStock] = useState("");
   const [addProductLoading, setAddProductLoading] = useState(false);
 
+  // Offline-aware state
+  const [isOffline, setIsOffline] = useState(!getIsConnected());
+
+  useEffect(() => {
+    const unsub = subscribeToConnectivity(setIsOffline);
+    return unsub;
+  }, []);
+
+  // Held Bills State
+  const [heldBills, setHeldBills] = useState<any[]>([]);
+  const [isHeldBillsOpen, setIsHeldBillsOpen] = useState(false);
+  const [holdBillLoading, setHoldBillLoading] = useState(false);
+  const [heldBillsLoading, setHeldBillsLoading] = useState(false);
+
+  const loadHeldBills = async () => {
+    setHeldBillsLoading(true);
+    try {
+      const res = await api.get<{ data: any[] }>("/pos/held-bills");
+      setHeldBills(res.data ?? []);
+    } catch (e) {
+      console.error("Failed to load held bills:", e);
+    } finally {
+      setHeldBillsLoading(false);
+    }
+  };
+
+  const handleHoldBill = async () => {
+    if (cart.length === 0) return;
+    setHoldBillLoading(true);
+    try {
+      await api.post("/pos/hold", {
+        label: `${selectedParty?.name || "Walk-in"} · ${cart.length} item${cart.length > 1 ? "s" : ""}`,
+        note: selectedParty?.name ? undefined : "Walk-in customer",
+        party_id: selectedParty?.id,
+        cart_data: {
+          items: cart.map((c) => ({
+            product_id: c.product.id,
+            quantity: c.quantity,
+            custom_tax_rate: c.customTaxRate,
+            discount: c.discount,
+          })),
+          discount: discount || undefined,
+          discount_type: discountType,
+          invoice_type: invoiceType,
+          payment_mode: paymentMode,
+          extra_charge: extraCharge || undefined,
+          estimate_with_gst: invoiceType === "estimate" ? estimateWithGst : undefined,
+        },
+      });
+      setCart([]);
+      setSelectedParty(null);
+      setDiscount("");
+      setDiscountType("flat");
+      setExtraCharge("");
+      setCreditPeriod(null);
+      setEstimateWithGst(false);
+      setIsSplitPayment(false);
+      setSplitPayments([]);
+      Alert.alert("Bill Parked", "The sale has been saved. You can resume it anytime from Held Bills.");
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to park bill.");
+    } finally {
+      setHoldBillLoading(false);
+    }
+  };
+
+  const handleResumeBill = async (bill: any) => {
+    const data = bill.cart_data;
+    const items = data.items ?? [];
+    if (items.length === 0) return;
+
+    // Look up products to restore in cart
+    const productIds = items.map((i: any) => i.product_id);
+    const productsToAdd = products.filter((p) => productIds.includes(p.id));
+    const restoredCart: CartItem[] = [];
+    for (const item of items) {
+      const product = productsToAdd.find((p) => p.id === item.product_id);
+      if (product) {
+        restoredCart.push({
+          product,
+          quantity: item.quantity,
+          customTaxRate: item.custom_tax_rate,
+          discount: item.discount || 0,
+        });
+      }
+    }
+
+    setCart(restoredCart);
+    setDiscount(data.discount || "");
+    setDiscountType(data.discount_type || "flat");
+    setInvoiceType(data.invoice_type || "retail");
+    setPaymentMode(data.payment_mode || "cash");
+    setExtraCharge(data.extra_charge || "");
+    setEstimateWithGst(data.estimate_with_gst || false);
+
+    // Set customer if linked
+    if (bill.party_id) {
+      const party = parties.find((p) => p.id === bill.party_id);
+      if (party) setSelectedParty(party);
+    }
+
+    // Delete the held bill after resuming
+    try {
+      await api.delete(`/pos/held-bills/${bill.id}`);
+    } catch { /* best-effort */ }
+
+    setHeldBills((prev) => prev.filter((b) => b.id !== bill.id));
+    Alert.alert("Bill Resumed", `"${bill.label}" has been restored to your cart.`);
+  };
+
+  const handleDeleteHeldBill = async (bill: any) => {
+    const ok = await confirmDelete({
+      title: "Discard parked bill?",
+      message: `"${bill.label}" will be permanently removed.`,
+      confirmLabel: "Discard",
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await api.delete(`/pos/held-bills/${bill.id}`);
+      setHeldBills((prev) => prev.filter((b) => b.id !== bill.id));
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to delete.");
+    }
+  };
+
+  // ── Numpad handlers — for quick quantity entry on POS touch screens ──
+  const openQtyEdit = (itemId: string, currentQty: number) => {
+    setQtyEditItemId(itemId);
+    setQtyEditValue(String(currentQty));
+  };
+
+  const applyQtyEdit = () => {
+    if (!qtyEditItemId) return;
+    const qty = Math.max(1, parseInt(qtyEditValue, 10) || 1);
+    setCart((prev) =>
+      prev.map((item) =>
+        item.product.id === qtyEditItemId ? { ...item, quantity: qty } : item
+      )
+    );
+    setQtyEditItemId(null);
+    setQtyEditValue("");
+  };
+
+  const cancelQtyEdit = () => {
+    setQtyEditItemId(null);
+    setQtyEditValue("");
+  };
+
+  const handleNumpadDigit = (digit: string) => {
+    setQtyEditValue((prev) => {
+      if (digit === "backspace") return prev.slice(0, -1) || "0";
+      if (digit === "clear") return "0";
+      const next = prev === "0" ? digit : prev + digit;
+      return next.slice(0, 6); // max 6 digits
+    });
+  };
+
+  const renderNumpad = () => {
+    if (!qtyEditItemId) return null;
+    const editingItem = cart.find((c) => c.product.id === qtyEditItemId);
+    const keys = [
+      ["7", "8", "9"],
+      ["4", "5", "6"],
+      ["1", "2", "3"],
+      ["clear", "0", "backspace"],
+    ];
+    return (
+      <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-4 mt-3">
+        <View className="flex-row justify-between items-center mb-3">
+          <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest flex-1 mr-2" numberOfLines={1}>
+            {editingItem?.product.name || "Item"}
+          </Text>
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <Text className="text-2xl font-black text-primary dark:text-primary-dark">{qtyEditValue || "0"}</Text>
+            <Pressable onPress={cancelQtyEdit} className="w-8 h-8 rounded-full bg-surface-container items-center justify-center">
+              <MaterialCommunityIcons name="close" size={14} color="#6B7280" />
+            </Pressable>
+          </View>
+        </View>
+        {keys.map((row, ri) => (
+          <View key={ri} className="flex-row" style={{ gap: 6, marginBottom: 6 }}>
+            {row.map((key) => (
+              <Pressable
+                key={key}
+                onPress={() => key === "backspace" || key === "clear" ? handleNumpadDigit(key) : handleNumpadDigit(key)}
+                className="flex-1 h-12 rounded-xl items-center justify-center active:opacity-70"
+                style={{ backgroundColor: key === "clear" ? "#FEE2E2" : key === "backspace" ? "#F3F4F6" : "#E5E7EB" }}
+              >
+                {key === "backspace" ? (
+                  <MaterialCommunityIcons name="backspace-outline" size={20} color="#374151" />
+                ) : key === "clear" ? (
+                  <Text className="text-sm font-bold text-red-600">CLR</Text>
+                ) : (
+                  <Text className="text-xl font-black text-gray-800">{key}</Text>
+                )}
+              </Pressable>
+            ))}
+          </View>
+        ))}
+        <Pressable
+          onPress={applyQtyEdit}
+          className="bg-primary dark:bg-primary-dark py-3 rounded-xl items-center mt-1 active:opacity-90"
+        >
+          <Text className="text-white font-bold text-base">Apply</Text>
+        </Pressable>
+      </View>
+    );
+  };
+
+  // ── Landscape product grid — large touchable cards in 3 columns ──
+  const renderPosProductGrid = () => {
+    if (loading) {
+      return (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#0F7A5F" />
+        </View>
+      );
+    }
+    const items = filteredProducts;
+    if (items.length === 0) {
+      return (
+        <View className="flex-1 justify-center items-center py-20">
+          <Text className="text-on-surface-variant font-bold text-base text-center mb-3">No products found</Text>
+        </View>
+      );
+    }
+    // Render in rows of 3
+    const rows: Product[][] = [];
+    for (let i = 0; i < items.length; i += 3) {
+      rows.push(items.slice(i, i + 3));
+    }
+    return (
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
+        {rows.map((row, ri) => (
+          <View key={ri} className="flex-row" style={{ gap: 8, marginBottom: 8 }}>
+            {row.map((item) => {
+              const inCart = cart.find((c) => c.product.id === item.id);
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => addToCart(item)}
+                  className="flex-1 bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline overflow-hidden active:opacity-80"
+                  style={inCart ? { borderColor: "#0F7A5F", borderWidth: 2 } : undefined}
+                >
+                  <View className="p-3">
+                    <Text numberOfLines={2} className="font-bold text-sm text-on-surface dark:text-text-primary-dark leading-snug min-h-[2.5em]">
+                      {item.name}
+                    </Text>
+                    <View className="flex-row items-baseline mt-2" style={{ gap: 4 }}>
+                      {item.mrp && parseFloat(item.mrp) > 0 && (
+                        <Text className="text-xs text-on-surface-variant line-through">
+                          ₹{parseFloat(item.mrp).toFixed(0)}
+                        </Text>
+                      )}
+                      <Text className="font-black text-base text-primary dark:text-primary-dark">
+                        ₹{parseFloat(item.price).toFixed(0)}
+                      </Text>
+                    </View>
+                    {item.stock_quantity !== undefined && (
+                      <Text className="text-xs text-on-surface-variant mt-1">Stk: {item.stock_quantity}</Text>
+                    )}
+                  </View>
+                  {inCart && (
+                    <View className="bg-primary/10 dark:bg-primary-dark/10 px-2 py-1 flex-row items-center justify-center" style={{ gap: 4 }}>
+                      <MaterialCommunityIcons name="check-circle" size={12} color="#0F7A5F" />
+                      <Text className="text-xs font-bold text-primary dark:text-primary-dark">{inCart.quantity}</Text>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+            {/* Fill empty slots with invisible views to maintain alignment */}
+            {row.length < 3 && Array.from({ length: 3 - row.length }).map((_, i) => (
+              <View key={`fill-${i}`} className="flex-1" />
+            ))}
+          </View>
+        ))}
+      </ScrollView>
+    );
+  };
+
   const fetchData = async () => {
     if (!user?.company_id) return;
     setLoading(true);
@@ -192,10 +498,12 @@ export default function PosScreen() {
         params: { brandId: activeBrand?.id },
       });
       setProducts(pRes.data ?? []);
+      writeCache(getCacheKey("/products", { brandId: activeBrand?.id }), pRes.data ?? []);
 
       // Fetch parties (customers/clients)
       const ptRes = await api.get<{ data: Party[] }>("/parties", { params: { type: "customer" } });
       setParties(ptRes.data ?? []);
+      writeCache(getCacheKey("/parties", { type: "customer" }), ptRes.data ?? []);
 
       // Resolve (or auto-create) a default warehouse so sales can deduct stock
       // without forcing every shop through a warehouse-setup step first.
@@ -208,7 +516,11 @@ export default function PosScreen() {
         setDefaultWarehouseId(created.data.id);
       }
     } catch (error) {
-      console.error("Failed to fetch POS setup data:", error);
+      console.warn("Failed to fetch POS data, trying cache...", error);
+      const cachedProducts = await readCache<Product[]>(getCacheKey("/products", { brandId: activeBrand?.id }));
+      if (cachedProducts) setProducts(cachedProducts);
+      const cachedParties = await readCache<Party[]>(getCacheKey("/parties", { type: "customer" }));
+      if (cachedParties) setParties(cachedParties);
     } finally {
       setLoading(false);
     }
@@ -371,7 +683,11 @@ export default function PosScreen() {
 
   const getDiscountValue = () => {
     const val = parseFloat(discount || "0");
-    return val > 0 ? val : 0;
+    if (val <= 0) return 0;
+    if (discountType === "percent") {
+      return Math.round((getSubtotal() * val) / 100);
+    }
+    return val;
   };
 
   // Per-sale override wins over the product's stored default — lets a
@@ -469,16 +785,23 @@ export default function PosScreen() {
 
       // The entire invoice + items + stock + ledger write happens atomically
       // server-side now — see shopkeeper-api/src/routes/pos.ts checkout.
+      const hasCreditSplit = isSplitPayment && splitPayments.some((p) => p.method === "credit");
       const checkoutPayload = {
         party_id: checkoutParty.id,
         brand_id: activeBrand?.id,
         warehouse_id: defaultWarehouseId,
         type: invoiceType,
-        payment_mode: paymentMode,
+        payment_mode: isSplitPayment ? undefined : paymentMode,
+        payments: isSplitPayment
+          ? splitPayments
+              .filter((p) => (parseFloat(p.amount) || 0) > 0)
+              .map((p) => ({ method: p.method, amount: parseFloat(p.amount) }))
+          : undefined,
+        due_date: creditPeriod ? new Date(Date.now() + creditPeriod * 86400000).toISOString() : undefined,
         discount_total: discountVal,
         apply_gst: invoiceType === "estimate" ? estimateWithGst : undefined,
         extra_charge_total: extraChargeVal,
-        extra_charge_label: extraChargeVal > 0 && paymentMode === "credit" ? "Credit Charge" : undefined,
+        extra_charge_label: extraChargeVal > 0 && (hasCreditSplit || paymentMode === "credit") ? "Credit Charge" : undefined,
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
@@ -505,7 +828,11 @@ export default function PosScreen() {
           setSelectedParty(null);
           setIsCheckoutOpen(false);
           setDiscount("");
+          setDiscountType("flat");
           setExtraCharge("");
+          setIsSplitPayment(false);
+          setSplitPayments([]);
+          setCreditPeriod(null);
           setEstimateWithGst(false);
           Alert.alert(
             "Saved Offline",
@@ -530,7 +857,11 @@ export default function PosScreen() {
         setSelectedParty(null);
         setIsCheckoutOpen(false);
         setDiscount("");
+        setDiscountType("flat");
         setExtraCharge("");
+        setIsSplitPayment(false);
+        setSplitPayments([]);
+        setCreditPeriod(null);
         setEstimateWithGst(false);
       };
 
@@ -751,9 +1082,21 @@ export default function PosScreen() {
               ) : null}
             </View>
             <View className="items-end">
-              <Text className="font-black text-base text-primary dark:text-primary-dark">
-                ₹{parseFloat(item.price).toFixed(0)}
-              </Text>
+              <View className="flex-row items-center" style={{ gap: 4 }}>
+                {item.mrp && parseFloat(item.mrp) > 0 && (
+                  <Text className="text-xs text-on-surface-variant line-through">
+                    ₹{parseFloat(item.mrp).toFixed(0)}
+                  </Text>
+                )}
+                <Text className="font-black text-base text-primary dark:text-primary-dark">
+                  ₹{parseFloat(item.price).toFixed(0)}
+                </Text>
+              </View>
+              {item.mrp && parseFloat(item.mrp) > parseFloat(item.price) && (
+                <Text className="text-[10px] text-green-600 font-semibold">
+                  Save ₹{(parseFloat(item.mrp) - parseFloat(item.price)).toFixed(0)}
+                </Text>
+              )}
               {item.stock_quantity !== undefined && (
                 <Text className="text-xs text-on-surface-variant mt-0.5">
                   Stock: {item.stock_quantity}
@@ -840,7 +1183,12 @@ export default function PosScreen() {
               <View className="flex-row items-center">
                 <View className="flex-1 mr-2">
                   <Text numberOfLines={1} className="font-bold text-sm text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
-                  <Text className="text-xs text-on-surface-variant mt-0.5">₹{parseFloat(item.product.price).toFixed(2)} each</Text>
+                  <View className="flex-row items-center" style={{ gap: 3 }}>
+                    {item.product.mrp && parseFloat(item.product.mrp) > 0 && (
+                      <Text className="text-[10px] text-on-surface-variant line-through">₹{parseFloat(item.product.mrp).toFixed(0)}</Text>
+                    )}
+                    <Text className="text-xs text-on-surface-variant">₹{parseFloat(item.product.price).toFixed(2)} each</Text>
+                  </View>
                 </View>
                 <View className="flex-row items-center gap-2 mr-3">
                   <Pressable onPress={() => updateQuantity(item.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
@@ -955,38 +1303,128 @@ export default function PosScreen() {
           </Pressable>
         )}
 
-        {/* Payment Mode */}
-        <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Payment</Text>
-        <View className="flex-row gap-2 mb-4">
-          {([
-            { key: "cash",   label: "Cash",  icon: "cash" as const },
-            { key: "upi",    label: "UPI",   icon: "cellphone" as const },
-            { key: "credit", label: "Credit", icon: "book-account-outline" as const },
-          ] as const).map((opt) => (
+        {/* Payment Mode — single or split */}
+        <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">
+          Payment {isSplitPayment ? "(Split)" : ""}
+        </Text>
+        {isSplitPayment ? (
+          <View className="mb-4" style={{ gap: 8 }}>
+            {splitPayments.map((sp, idx) => (
+              <View key={idx} className="flex-row items-center" style={{ gap: 6 }}>
+                <Pressable
+                  onPress={() => {
+                    const cycle = { cash: "upi" as const, upi: "credit" as const, credit: "cash" as const };
+                    const updated = [...splitPayments];
+                    updated[idx] = { ...sp, method: cycle[sp.method] };
+                    setSplitPayments(updated);
+                  }}
+                  className="py-2 px-3 rounded-xl border border-outline-variant dark:border-outline flex-row items-center"
+                  style={{ gap: 4 }}
+                >
+                  <MaterialCommunityIcons
+                    name={sp.method === "cash" ? "cash" : sp.method === "upi" ? "cellphone" : "book-account-outline"}
+                    size={16}
+                    color="#0F7A5F"
+                  />
+                  <Text className="text-xs font-bold text-on-surface-variant capitalize">{sp.method}</Text>
+                  <MaterialCommunityIcons name="chevron-down" size={14} color="#6B7280" />
+                </Pressable>
+                <TextInput
+                  value={sp.amount}
+                  onChangeText={(val) => {
+                    const updated = [...splitPayments];
+                    updated[idx] = { ...sp, amount: val };
+                    setSplitPayments(updated);
+                  }}
+                  keyboardType="numeric"
+                  placeholder="0"
+                  placeholderTextColor="#A0A0A0"
+                  className="flex-1 border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-right text-base font-bold bg-background dark:bg-bg-dark text-on-surface dark:text-text-primary-dark"
+                />
+                {splitPayments.length > 1 && (
+                  <Pressable
+                    onPress={() => setSplitPayments(splitPayments.filter((_, i) => i !== idx))}
+                    className="w-8 h-8 rounded-full bg-error/10 items-center justify-center"
+                  >
+                    <MaterialCommunityIcons name="close" size={14} color="#D64545" />
+                  </Pressable>
+                )}
+              </View>
+            ))}
             <Pressable
-              key={opt.key}
-              onPress={() => setPaymentMode(opt.key)}
-              className={`flex-1 py-2.5 rounded-xl items-center border ${
-                paymentMode === opt.key
-                  ? "bg-primary dark:bg-primary-dark border-primary"
-                  : "border-outline-variant dark:border-outline"
-              }`}
+              onPress={() => setSplitPayments([...splitPayments, { method: "cash", amount: "" }])}
+              className="flex-row items-center justify-center py-2 rounded-xl border border-dashed border-outline-variant"
+              style={{ gap: 4 }}
             >
-              <MaterialCommunityIcons
-                name={opt.icon}
-                size={18}
-                color={paymentMode === opt.key ? "#FFFFFF" : "#6e7a74"}
-              />
-              <Text className={`text-xs font-bold mt-0.5 ${paymentMode === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
-                {opt.label}
+              <MaterialCommunityIcons name="plus" size={14} color="#0F7A5F" />
+              <Text className="text-xs font-bold text-primary">Add split payment</Text>
+            </Pressable>
+            <Text className="text-xs text-on-surface-variant text-right">
+              Total: ₹{splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0).toFixed(0)} / ₹{getTotal().toFixed(0)}
+            </Text>
+          </View>
+        ) : (
+          <View className="flex-row gap-2 mb-4">
+            {([
+              { key: "cash",   label: "Cash",  icon: "cash" as const },
+              { key: "upi",    label: "UPI",   icon: "cellphone" as const },
+              { key: "credit", label: "Credit", icon: "book-account-outline" as const },
+            ] as const).map((opt) => (
+              <Pressable
+                key={opt.key}
+                onPress={() => {
+                  setPaymentMode(opt.key);
+                  if (opt.key !== "credit") setCreditPeriod(null);
+                }}
+                className={`flex-1 py-2.5 rounded-xl items-center border ${
+                  paymentMode === opt.key
+                    ? "bg-primary dark:bg-primary-dark border-primary"
+                    : "border-outline-variant dark:border-outline"
+                }`}
+              >
+                <MaterialCommunityIcons
+                  name={opt.icon}
+                  size={18}
+                  color={paymentMode === opt.key ? "#FFFFFF" : "#6e7a74"}
+                />
+                <Text className={`text-xs font-bold mt-0.5 ${paymentMode === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+        <Pressable
+          onPress={() => {
+            setIsSplitPayment(!isSplitPayment);
+            if (!isSplitPayment) setSplitPayments([{ method: "cash", amount: "" }]);
+          }}
+          className="flex-row items-center mb-3"
+          style={{ gap: 4 }}
+        >
+          <MaterialCommunityIcons
+            name={isSplitPayment ? "toggle-switch" : "toggle-switch-off-outline"}
+            size={18}
+            color={isSplitPayment ? "#0F7A5F" : "#9E9E9E"}
+          />
+          <Text className={`text-xs font-semibold ${isSplitPayment ? "text-primary" : "text-on-surface-variant"}`}>
+            Split payment
+          </Text>
+        </Pressable>
+
+        {/* Discount — flat amount or percentage */}
+        <View className="flex-row justify-between items-center mb-3">
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Discount</Text>
+            <Pressable
+              onPress={() => setDiscountType(discountType === "flat" ? "percent" : "flat")}
+              className={`px-2 py-1 rounded-lg border ${discountType === "percent" ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline"}`}
+            >
+              <Text className={`text-xs font-bold ${discountType === "percent" ? "text-primary" : "text-on-surface-variant"}`}>
+                {discountType === "flat" ? "₹" : "%"}
               </Text>
             </Pressable>
-          ))}
-        </View>
-
-        {/* Discount */}
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Discount (₹)</Text>
+          </View>
           <TextInput
             value={discount}
             onChangeText={setDiscount}
@@ -1002,17 +1440,45 @@ export default function PosScreen() {
             offering credit — surfaced only when Credit is selected, but the
             field stays usable for any other one-off addition too. */}
         {paymentMode === "credit" && (
-          <View className="flex-row justify-between items-center">
-            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Credit Charge (₹)</Text>
-            <TextInput
-              value={extraCharge}
-              onChangeText={setExtraCharge}
-              keyboardType="numeric"
-              placeholder="0"
-              placeholderTextColor="#A0A0A0"
-              className="border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-right text-base font-bold w-24 bg-background dark:bg-bg-dark text-on-surface dark:text-text-primary-dark"
-            />
-          </View>
+          <>
+            {/* Credit Period — sets the due date for this invoice */}
+            <View className="mb-3">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Payment Due In</Text>
+              <View className="flex-row gap-2">
+                {CREDIT_PERIODS.map((days) => (
+                  <Pressable
+                    key={days}
+                    onPress={() => setCreditPeriod(creditPeriod === days ? null : days)}
+                    className={`py-2 px-3 rounded-xl border ${
+                      creditPeriod === days
+                        ? "bg-primary dark:bg-primary-dark border-primary"
+                        : "border-outline-variant dark:border-outline"
+                    }`}
+                  >
+                    <Text className={`text-xs font-bold ${creditPeriod === days ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                      {days} days
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              {creditPeriod && (
+                <Text className="text-xs text-on-surface-variant mt-1">
+                  Due by {new Date(Date.now() + creditPeriod * 86400000).toLocaleDateString()}
+                </Text>
+              )}
+            </View>
+            <View className="flex-row justify-between items-center mb-3">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">Credit Charge (₹)</Text>
+              <TextInput
+                value={extraCharge}
+                onChangeText={setExtraCharge}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#A0A0A0"
+                className="border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-right text-base font-bold w-24 bg-background dark:bg-bg-dark text-on-surface dark:text-text-primary-dark"
+              />
+            </View>
+          </>
         )}
       </View>
 
@@ -1046,6 +1512,25 @@ export default function PosScreen() {
           <Text className="text-2xl font-black text-primary dark:text-primary-dark">₹{getTotal().toFixed(2)}</Text>
         </View>
       </View>
+
+      {/* Hold Bill button */}
+      {cart.length > 0 && (
+        <Pressable
+          onPress={handleHoldBill}
+          disabled={holdBillLoading}
+          className="flex-row items-center justify-center py-3 rounded-2xl border border-outline-variant dark:border-outline mb-3 active:opacity-80"
+          style={{ gap: 6 }}
+        >
+          {holdBillLoading ? (
+            <ActivityIndicator size="small" color="#6B7280" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="pause-circle-outline" size={18} color="#6B7280" />
+              <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">Park Bill</Text>
+            </>
+          )}
+        </Pressable>
+      )}
 
       {/* Checkout button */}
       <Pressable
@@ -1086,6 +1571,12 @@ export default function PosScreen() {
 
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark">
+      {isOffline && (
+        <View className="bg-amber-500 px-4 py-2 flex-row items-center justify-center" style={{ gap: 6 }}>
+          <MaterialCommunityIcons name="wifi-off" size={14} color="white" />
+          <Text className="text-white text-xs font-bold">You're offline — showing cached data</Text>
+        </View>
+      )}
       {isTablet ? (
         /* ══════ TABLET: side-by-side layout ══════ */
         <View className="flex-1 flex-row" style={{ paddingTop: topInset }}>
@@ -1094,6 +1585,14 @@ export default function PosScreen() {
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Products</Text>
               <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Pressable
+                  onPress={() => { loadHeldBills(); setIsHeldBillsOpen(true); }}
+                  className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3 py-1.5 rounded-full"
+                  style={{ gap: 5 }}
+                >
+                  <MaterialCommunityIcons name="pause-circle-outline" size={14} color="#3e4944" />
+                  <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">Held</Text>
+                </Pressable>
                 <Pressable
                   onPress={() => setPosView("dashboard")}
                   className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3 py-1.5 rounded-full"
@@ -1122,7 +1621,9 @@ export default function PosScreen() {
                 <MaterialCommunityIcons name="barcode-scan" size={20} color="#0F7A5F" />
               </Pressable>
             </View>
-            {loading ? (
+            {isPosDevice ? (
+              renderPosProductGrid()
+            ) : loading ? (
               <View className="flex-1 justify-center items-center">
                 <ActivityIndicator size="large" color="#0F7A5F" />
               </View>
@@ -1156,6 +1657,7 @@ export default function PosScreen() {
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-4">Cart</Text>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
               {CheckoutPanel}
+              {isPosDevice && renderNumpad()}
             </ScrollView>
           </View>
         </View>
@@ -1167,6 +1669,12 @@ export default function PosScreen() {
             <View className="flex-row justify-between items-center">
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Sale</Text>
               <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Pressable
+                  onPress={() => { loadHeldBills(); setIsHeldBillsOpen(true); }}
+                  className="w-9 h-9 rounded-full bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
+                >
+                  <MaterialCommunityIcons name="pause-circle-outline" size={16} color="#3e4944" />
+                </Pressable>
                 <Pressable
                   onPress={() => setPosView("dashboard")}
                   className="w-9 h-9 rounded-full bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
@@ -1537,6 +2045,65 @@ export default function PosScreen() {
               <Text className="text-white font-bold text-base">Cancel Scan</Text>
             </Pressable>
           </View>
+        </View>
+      </Modal>
+
+      {/* Held Bills Modal */}
+      <Modal visible={isHeldBillsOpen} animationType="slide" onRequestClose={() => setIsHeldBillsOpen(false)}>
+        <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Parked Bills</Text>
+            <Pressable onPress={() => setIsHeldBillsOpen(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+            </Pressable>
+          </View>
+
+          {heldBillsLoading ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#0F7A5F" />
+            </View>
+          ) : heldBills.length === 0 ? (
+            <View className="flex-1 justify-center items-center">
+              <MaterialCommunityIcons name="pause-circle-outline" size={64} color="#D0D0D0" />
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark text-base mt-4">No parked bills</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={heldBills}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingBottom: 24 }}
+              ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+              renderItem={({ item }) => (
+                <View className="bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-4">
+                  <View className="flex-row justify-between items-start mb-2">
+                    <View className="flex-1 mr-3">
+                      <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{item.label}</Text>
+                      {item.note ? <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-1">{item.note}</Text> : null}
+                    </View>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
+                      {new Date(item.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </Text>
+                  </View>
+                  <View className="flex-row" style={{ gap: 8 }}>
+                    <Pressable
+                      onPress={() => { setIsHeldBillsOpen(false); handleResumeBill(item); }}
+                      className="flex-1 flex-row items-center justify-center bg-primary dark:bg-primary-dark py-3 rounded-xl active:opacity-90"
+                      style={{ gap: 5 }}
+                    >
+                      <MaterialCommunityIcons name="play-circle-outline" size={16} color="white" />
+                      <Text className="text-white font-bold text-sm">Resume</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleDeleteHeldBill(item)}
+                      className="w-12 h-11 rounded-xl border border-outline-variant dark:border-outline items-center justify-center active:opacity-80"
+                    >
+                      <MaterialCommunityIcons name="delete-outline" size={18} color="#EF4444" />
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+            />
+          )}
         </View>
       </Modal>
     </View>

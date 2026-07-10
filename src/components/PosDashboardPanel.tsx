@@ -114,6 +114,52 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
   const [summary, setSummary] = useState<PosSummary | null>(null);
   const [defaultPaperWidth, setDefaultPaperWidth] = useState<ThermalPaperWidth>("58");
 
+  // GSTR reports
+  const [isGstrOpen, setIsGstrOpen] = useState(false);
+  const [gstrLoading, setGstrLoading] = useState(false);
+  const [gstrData, setGstrData] = useState<{ gstr1?: any; gstr3b?: any }>({});
+  const [gstrMonth, setGstrMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  const fetchGstrReports = useCallback(async () => {
+    setGstrLoading(true);
+    try {
+      const [y, m] = gstrMonth.split("-");
+      const from = new Date(parseInt(y), parseInt(m) - 1, 1);
+      const to = new Date(parseInt(y), parseInt(m), 0, 23, 59, 59, 999);
+      const params = { from: from.toISOString(), to: to.toISOString() };
+      const [gstr1Res, gstr3bRes] = await Promise.all([
+        api.get<{ data: any }>("/reports/gstr-1", { params }),
+        api.get<{ data: any }>("/reports/gstr-3b", { params }),
+      ]);
+      setGstrData({ gstr1: gstr1Res.data, gstr3b: gstr3bRes.data });
+    } catch (e) {
+      console.error("Failed to load GSTR reports:", e);
+      Alert.alert("Error", "Could not load GST returns for this period.");
+    } finally {
+      setGstrLoading(false);
+    }
+  }, [gstrMonth]);
+
+  const handleExportGstr1 = async () => {
+    if (!gstrData.gstr1) return;
+    try {
+      const Sharing = await import("expo-sharing");
+      const { File, Paths } = await import("expo-file-system");
+      const json = JSON.stringify(gstrData.gstr1, null, 2);
+      const filename = `gstr1_${gstrMonth}.json`;
+      const file = new File(Paths.cache, filename);
+      if (file.exists) file.delete();
+      file.create();
+      file.write(json);
+      await Sharing.shareAsync(file.uri, { mimeType: "application/json", dialogTitle: `GSTR-1 ${gstrMonth}` });
+    } catch (e) {
+      Alert.alert("Error", "Failed to export GSTR-1 JSON.");
+    }
+  };
+
   useEffect(() => {
     getDefaultPrinter().then((p) => setDefaultPaperWidth(p?.paperWidth ?? "58"));
   }, []);
@@ -482,6 +528,16 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
             </Pressable>
           ))}
         </View>
+
+        {/* GST Returns — opens GSTR-1 / GSTR-3B reports for filing */}
+        <Pressable
+          onPress={() => { fetchGstrReports(); setIsGstrOpen(true); }}
+          className="flex-row items-center justify-center bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl py-3 active:opacity-80"
+          style={{ gap: 6 }}
+        >
+          <MaterialCommunityIcons name="file-document-edit-outline" size={16} color="#0F7A5F" />
+          <Text className="text-sm font-bold text-primary dark:text-primary-dark">GST Returns</Text>
+        </Pressable>
       </View>
 
       {loading ? (
@@ -815,6 +871,151 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
                 </View>
               </View>
             </>
+          )}
+        </View>
+      </Modal>
+
+      {/* ══════ GSTR Reports Modal ══════ */}
+      <Modal visible={isGstrOpen} animationType="slide" onRequestClose={() => setIsGstrOpen(false)}>
+        <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+          <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center">
+            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">GST Returns</Text>
+            <Pressable onPress={() => setIsGstrOpen(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+            </Pressable>
+          </View>
+
+          <View className="px-5 pt-4 pb-3">
+            <View className="bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 flex-row items-center" style={{ gap: 8 }}>
+              <MaterialCommunityIcons name="calendar-month" size={18} color="#0F7A5F" />
+              <TextInput
+                value={gstrMonth}
+                onChangeText={(t) => setGstrMonth(t)}
+                placeholder="YYYY-MM"
+                placeholderTextColor="#A0A0A0"
+                className="flex-1 text-base font-bold text-on-surface dark:text-text-primary-dark"
+              />
+              <Pressable onPress={fetchGstrReports} className="bg-primary dark:bg-primary-dark px-4 py-2 rounded-xl active:opacity-90">
+                {gstrLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="text-white font-bold text-sm">Load</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+
+          {gstrLoading ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#0F7A5F" />
+            </View>
+          ) : !gstrData.gstr1 && !gstrData.gstr3b ? (
+            <View className="flex-1 justify-center items-center px-5">
+              <MaterialCommunityIcons name="file-document-outline" size={64} color="#D0D0D0" />
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark text-base mt-4 text-center">Tap "Load" to generate GSTR-1 and GSTR-3B for this period.</Text>
+            </View>
+          ) : (
+            <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
+              {/* GSTR-3B Summary */}
+              {gstrData.gstr3b && (
+                <View className="bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4 mb-4">
+                  <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark mb-3">GSTR-3B Summary</Text>
+                  <View className="mb-3" style={{ gap: 8 }}>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">Invoices</Text>
+                      <Text className="text-sm font-bold text-on-surface">{gstrData.gstr3b.summary?.totalInvoices ?? 0}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">Credit Notes</Text>
+                      <Text className="text-sm font-bold text-on-surface">{gstrData.gstr3b.summary?.totalCreditNotes ?? 0}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">Outward Taxable Value</Text>
+                      <Text className="text-sm font-bold text-on-surface">₹{(gstrData.gstr3b.summary?.totalOutwardTxval ?? 0).toLocaleString("en-IN")}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">Outward Tax (CGST+SGST+IGST)</Text>
+                      <Text className="text-sm font-bold text-primary">₹{(gstrData.gstr3b.summary?.totalOutwardTax ?? 0).toLocaleString("en-IN")}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">ITC Available</Text>
+                      <Text className="text-sm font-bold text-green-600">₹{(gstrData.gstr3b.summary?.totalITC ?? 0).toLocaleString("en-IN")}</Text>
+                    </View>
+                  </View>
+                  {/* Tax rate breakdown */}
+                  {gstrData.gstr3b.sup_details?.osup_det && (
+                    <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-3">
+                      <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Tax Rate Breakup</Text>
+                      {gstrData.gstr3b.itc_elg?.itc_avl?.length > 0 ? (
+                        gstrData.gstr3b.itc_elg.itc_avl.map((b: any, i: number) => (
+                          <View key={i} className="flex-row justify-between py-1">
+                            <Text className="text-xs text-on-surface-variant">{b.rt}%</Text>
+                            <Text className="text-xs font-bold text-on-surface">₹{b.txval.toLocaleString("en-IN")}</Text>
+                          </View>
+                        ))
+                      ) : (
+                        <Text className="text-xs text-on-surface-variant">No ITC data</Text>
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* GSTR-1 Summary */}
+              {gstrData.gstr1 && (
+                <View className="bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4 mb-4">
+                  <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark mb-3">GSTR-1 Summary</Text>
+                  <View style={{ gap: 8 }}>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">B2B Invoices</Text>
+                      <Text className="text-sm font-bold text-on-surface">{gstrData.gstr1.b2b?.length ?? 0}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">B2C (Small) Invoices</Text>
+                      <Text className="text-sm font-bold text-on-surface">{gstrData.gstr1.b2cs?.length ?? 0}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">Credit Notes</Text>
+                      <Text className="text-sm font-bold text-on-surface">{gstrData.gstr1.cdnr?.length ?? 0}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">HSN Categories</Text>
+                      <Text className="text-sm font-bold text-on-surface">{gstrData.gstr1.hsn?.length ?? 0}</Text>
+                    </View>
+                    <View className="flex-row justify-between">
+                      <Text className="text-sm text-on-surface-variant">Gross Turnover</Text>
+                      <Text className="text-sm font-bold text-on-surface">₹{(gstrData.gstr1.gt ?? 0).toLocaleString("en-IN")}</Text>
+                    </View>
+                  </View>
+
+                  {/* HSN-wise table */}
+                  {gstrData.gstr1.hsn?.length > 0 && (
+                    <View className="mt-4 bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-3">
+                      <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">HSN-wise Summary</Text>
+                      {gstrData.gstr1.hsn.map((h: any, i: number) => (
+                        <View key={i} className="flex-row justify-between py-1 border-b border-outline-variant/30">
+                          <View className="flex-1">
+                            <Text className="text-xs font-bold text-on-surface">{h.hsn_sc}</Text>
+                            <Text className="text-[10px] text-on-surface-variant">{h.rt}% · {h.qty} qty</Text>
+                          </View>
+                          <Text className="text-xs font-bold text-on-surface">₹{h.txval.toLocaleString("en-IN")}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* Export buttons */}
+              <View style={{ gap: 10 }}>
+                {gstrData.gstr1 && (
+                  <Pressable onPress={handleExportGstr1} className="flex-row items-center justify-center bg-primary dark:bg-primary-dark py-4 rounded-2xl active:opacity-90" style={{ gap: 8 }}>
+                    <MaterialCommunityIcons name="file-export-outline" size={18} color="white" />
+                    <Text className="text-white font-bold text-base">Export GSTR-1 JSON</Text>
+                  </Pressable>
+                )}
+              </View>
+            </ScrollView>
           )}
         </View>
       </Modal>
