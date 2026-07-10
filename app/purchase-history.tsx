@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -46,26 +46,33 @@ export default function PurchaseHistoryScreen() {
   const [returnQuantities, setReturnQuantities] = useState<Record<string, string>>({});
   const [returnReason, setReturnReason] = useState("");
   const [submittingReturn, setSubmittingReturn] = useState(false);
+  const handledOpenPurchaseId = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<{ data: PurchaseRecord[] }>("/purchases");
       setPurchases(res.data ?? []);
-      if (params.openPurchaseId) {
-        const match = res.data?.find((p) => p.id === params.openPurchaseId);
-        if (match) openReturn(match);
-      }
     } catch (e) {
       console.error("Failed to load purchase history:", e);
+      Alert.alert("Error", "Could not load purchases. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [params.openPurchaseId]);
+  }, []);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!params.openPurchaseId) return;
+    if (handledOpenPurchaseId.current === params.openPurchaseId) return;
+    const match = purchases.find((p) => p.id === params.openPurchaseId);
+    if (!match) return;
+    handledOpenPurchaseId.current = params.openPurchaseId;
+    openReturn(match);
+  }, [params.openPurchaseId, purchases]);
 
   const filtered = purchases.filter((p) =>
     p.purchase_number.toLowerCase().includes(search.trim().toLowerCase())

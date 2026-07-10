@@ -10,8 +10,10 @@ import {
   Alert,
   FlatList,
   useWindowDimensions,
+  StyleSheet,
 } from "react-native";
 import * as Print from "expo-print";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { generateReceiptHtml, ReceiptData, thermalPageWidthPt, estimateThermalPageHeightPt, ThermalPaperWidth } from "../../src/lib/printer";
@@ -62,6 +64,9 @@ interface CartItem {
   // bill (e.g. the product master has the wrong slab, or a one-off
   // exemption applies) without editing the product's stored default.
   customTaxRate?: string;
+  // Per-item discount — a flat discount amount applied to this line item,
+  // complementary to the bill-level discountPercent.
+  discount?: number;
 }
 
 export default function PosScreen() {
@@ -89,10 +94,39 @@ export default function PosScreen() {
   const [gstEditProductId, setGstEditProductId] = useState<string | null>(null);
   const [gstEditValue, setGstEditValue] = useState("");
   const [defaultPaperWidth, setDefaultPaperWidth] = useState<ThermalPaperWidth>("58");
+  const [permission, requestPermission] = useCameraPermissions();
+  const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
     getDefaultPrinter().then((p) => setDefaultPaperWidth(p?.paperWidth ?? "58"));
   }, []);
+
+  const handleScanBarcode = async () => {
+    if (!permission) {
+      return;
+    }
+    if (!permission.granted) {
+      const perm = await requestPermission();
+      if (!perm.granted) {
+        Alert.alert("Permission Required", "Camera access is needed to scan barcodes.");
+        return;
+      }
+    }
+    setIsScanning(true);
+  };
+
+  const handleBarcodeScanned = ({ data }: { data: string }) => {
+    setIsScanning(false);
+    setProductSearch(data);
+    const match = products.find(
+      (p) => p.barcode === data || p.sku === data
+    );
+    if (match) {
+      addToCart(match);
+    } else {
+      Alert.alert("Not Found", `No product found with barcode: ${data}`);
+    }
+  };
 
   // Search & Cart State
   const [productSearch, setProductSearch] = useState("");
@@ -450,6 +484,7 @@ export default function PosScreen() {
           quantity: item.quantity,
           price: parseFloat(item.product.price),
           tax_rate: shouldApplyTax ? effectiveTaxRate(item) : 0,
+          discount: item.discount || 0,
         })),
       };
 
@@ -767,9 +802,18 @@ export default function PosScreen() {
           </View>
         </View>
         {selectedParty && (
-          <View className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg flex-row items-center" style={{ gap: 3 }}>
-            <MaterialCommunityIcons name="check-circle" size={12} color="#15803d" />
-            <Text className="text-green-700 dark:text-green-400 text-xs font-bold">Set</Text>
+          <View style={{ gap: 4 }}>
+            <View className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg flex-row items-center" style={{ gap: 3 }}>
+              <MaterialCommunityIcons name="check-circle" size={12} color="#15803d" />
+              <Text className="text-green-700 dark:text-green-400 text-xs font-bold">Set</Text>
+            </View>
+            {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
+              <View className={`px-2 py-1 rounded-lg ${parseFloat(selectedParty.current_balance) > 0 ? "bg-red-50 dark:bg-red-950/20" : "bg-green-50 dark:bg-green-950/20"}`}>
+                <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-600" : "text-green-600"}`}>
+                  ₹{Math.abs(parseFloat(selectedParty.current_balance)).toFixed(0)} {parseFloat(selectedParty.current_balance) > 0 ? "due" : "credit"}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </Pressable>
@@ -804,22 +848,40 @@ export default function PosScreen() {
                   ₹{(parseFloat(item.product.price) * item.quantity).toFixed(0)}
                 </Text>
               </View>
-              {shouldApplyTax && (
-                <Pressable
-                  onPress={() => {
-                    setGstEditProductId(item.product.id);
-                    setGstEditValue(item.customTaxRate ?? item.product.tax_rate ?? "18");
-                  }}
-                  className="flex-row items-center self-start bg-primary/10 px-2.5 py-1 rounded-lg mt-2"
-                  style={{ gap: 4 }}
-                >
-                  <MaterialCommunityIcons name="percent-outline" size={12} color="#0F7A5F" />
-                  <Text className="text-xs font-bold text-primary dark:text-primary-dark">
-                    GST {effectiveTaxRate(item)}% {item.customTaxRate ? "(custom)" : ""}
-                  </Text>
-                  <MaterialCommunityIcons name="pencil" size={11} color="#0F7A5F" />
-                </Pressable>
-              )}
+              <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
+                {shouldApplyTax && (
+                  <Pressable
+                    onPress={() => {
+                      setGstEditProductId(item.product.id);
+                      setGstEditValue(item.customTaxRate ?? item.product.tax_rate ?? "18");
+                    }}
+                    className="flex-row items-center bg-primary/10 px-2.5 py-1 rounded-lg"
+                    style={{ gap: 4 }}
+                  >
+                    <MaterialCommunityIcons name="percent-outline" size={12} color="#0F7A5F" />
+                    <Text className="text-xs font-bold text-primary dark:text-primary-dark">
+                      GST {effectiveTaxRate(item)}% {item.customTaxRate ? "(custom)" : ""}
+                    </Text>
+                    <MaterialCommunityIcons name="pencil" size={11} color="#0F7A5F" />
+                  </Pressable>
+                )}
+                <View className="flex-row items-center bg-surface-container rounded-lg" style={{ gap: 2 }}>
+                  <TextInput
+                    value={item.discount ? String(item.discount) : ""}
+                    onChangeText={(val) => {
+                      const discount = parseFloat(val) || 0;
+                      setCart((prev) => prev.map((c) =>
+                        c.product.id === item.product.id ? { ...c, discount } : c
+                      ));
+                    }}
+                    placeholder="Disc"
+                    placeholderTextColor="#9E9E9E"
+                    keyboardType="numeric"
+                    className="text-xs font-bold text-on-surface dark:text-text-primary-dark px-2 py-1 min-w-[40px]"
+                  />
+                  <Text className="text-[10px] text-on-surface-variant mr-1">off</Text>
+                </View>
+              </View>
             </View>
           ))}
         </View>
@@ -1049,6 +1111,9 @@ export default function PosScreen() {
                 onChangeText={setProductSearch}
                 className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
               />
+              <Pressable onPress={handleScanBarcode} className="ml-2 w-8 h-8 items-center justify-center">
+                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0F7A5F" />
+              </Pressable>
             </View>
             {loading ? (
               <View className="flex-1 justify-center items-center">
@@ -1105,6 +1170,11 @@ export default function PosScreen() {
                   <Pressable onPress={() => setIsSelectingParty(true)} className="bg-primary/10 dark:bg-primary-dark/10 px-3 py-1.5 rounded-full flex-row items-center" style={{ gap: 4 }}>
                     <MaterialCommunityIcons name="account" size={14} color="#005f49" />
                     <Text className="text-primary dark:text-primary-dark text-sm font-bold">{selectedParty.name}</Text>
+                    {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
+                      <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-500" : "text-green-600"}`}>
+                        ₹{Math.abs(parseFloat(selectedParty.current_balance)).toFixed(0)}
+                      </Text>
+                    )}
                   </Pressable>
                 )}
               </View>
@@ -1122,6 +1192,9 @@ export default function PosScreen() {
                 onChangeText={setProductSearch}
                 className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
               />
+              <Pressable onPress={handleScanBarcode} className="ml-2 w-8 h-8 items-center justify-center">
+                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0F7A5F" />
+              </Pressable>
             </View>
           </View>
 
@@ -1429,6 +1502,57 @@ export default function PosScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Barcode Scanner Modal */}
+      <Modal visible={isScanning} animationType="slide" onRequestClose={() => setIsScanning(false)}>
+        <View style={styles.scannerContainer}>
+          <CameraView
+            onBarcodeScanned={handleBarcodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr", "ean13", "ean8", "upc_a", "upc_e", "code128", "code39"],
+            }}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.scannerOverlay}>
+            <Text className="text-white text-lg font-bold mb-4 text-center">
+              Position Barcode Inside Guide
+            </Text>
+            <View style={styles.scannerBox} />
+            <Pressable
+              onPress={() => setIsScanning(false)}
+              className="bg-red-500 px-8 py-4 rounded-full mt-10"
+            >
+              <Text className="text-white font-bold text-base">Cancel Scan</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  scannerContainer: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "flex-end",
+  },
+  scannerOverlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  scannerBox: {
+    width: 250,
+    height: 180,
+    borderWidth: 2,
+    borderColor: "#22B58A",
+    backgroundColor: "transparent",
+    borderRadius: 16,
+  },
+});

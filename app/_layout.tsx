@@ -28,10 +28,14 @@ function NavigationGuard() {
   // switching from airplane mode or walking back into Wi-Fi range).
   useEffect(() => {
     if (!isAuthenticated) return;
-    syncQueuedSales().catch(() => {});
+    syncQueuedSales().catch((e) => {
+      console.error("[syncQueuedSales] Initial sync failed:", e);
+    });
     const subscription = AppState.addEventListener("change", (nextState) => {
       if (appState.current.match(/inactive|background/) && nextState === "active") {
-        syncQueuedSales().catch(() => {});
+        syncQueuedSales().catch((e) => {
+          console.error("[syncQueuedSales] Resume sync failed:", e);
+        });
       }
       appState.current = nextState;
     });

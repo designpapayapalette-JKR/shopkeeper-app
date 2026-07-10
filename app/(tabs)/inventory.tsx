@@ -113,7 +113,9 @@ export default function InventoryScreen() {
     api
       .get<{ data: Warehouse[] }>("/warehouses")
       .then((res) => setWarehouses(res.data ?? []))
-      .catch(() => {});
+      .catch((e) => {
+        console.error("[Inventory] Failed to load warehouses:", e);
+      });
   };
 
   useEffect(fetchWarehouses, [user]);
@@ -216,7 +218,10 @@ export default function InventoryScreen() {
         for (const row of res.data ?? []) map[row.product_id] = row.quantity;
         setWarehouseStock(map);
       })
-      .catch(() => setWarehouseStock({}))
+      .catch((e) => {
+        console.error("[Inventory] Failed to load warehouse stock:", e);
+        setWarehouseStock({});
+      })
       .finally(() => setWarehouseStockLoading(false));
   }, [activeWarehouseId]);
 
@@ -483,14 +488,48 @@ export default function InventoryScreen() {
     resetEditProductForm();
   };
 
-  const handleQuickStockAdjustment = async (product: Product, delta: number) => {
+  // Stock Adjustment Modal State
+  const [adjustTarget, setAdjustTarget] = useState<Product | null>(null);
+  const [adjustQuantity, setAdjustQuantity] = useState("");
+  const [adjustReason, setAdjustReason] = useState("");
+  const [adjustType, setAdjustType] = useState<"add" | "remove">("add");
+  const [adjustLoading, setAdjustLoading] = useState(false);
+
+  const handleStockAdjust = async () => {
+    if (!adjustTarget || !adjustQuantity || !adjustReason.trim()) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+    const qty = parseFloat(adjustQuantity);
+    if (isNaN(qty) || qty <= 0) {
+      Alert.alert("Error", "Quantity must be a positive number");
+      return;
+    }
+
+    setAdjustLoading(true);
     try {
-      const currentQty = parseFloat(product.stock_quantity || "0");
-      const newQty = Math.max(0, currentQty + delta);
-      await api.patch(`/products/${product.id}`, { stock_quantity: newQty });
-      setProducts(products.map(p => p.id === product.id ? { ...p, stock_quantity: String(newQty) } : p));
+      const quantity = adjustType === "add" ? qty : -qty;
+      const warehouseId = activeWarehouseId || (warehouses[0]?.id);
+      if (!warehouseId) {
+        Alert.alert("Error", "No warehouse found. Please create a warehouse first.");
+        setAdjustLoading(false);
+        return;
+      }
+      await api.post("/stock-movements/adjust", {
+        productId: adjustTarget.id,
+        warehouseId,
+        quantity,
+        reason: adjustReason.trim(),
+      });
+      Alert.alert("Success", `Stock ${adjustType === "add" ? "added" : "removed"} successfully`);
+      setAdjustTarget(null);
+      setAdjustQuantity("");
+      setAdjustReason("");
+      fetchProducts();
     } catch (e: any) {
-      Alert.alert("Error", "Failed to update stock");
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to adjust stock");
+    } finally {
+      setAdjustLoading(false);
     }
   };
 
@@ -842,15 +881,19 @@ export default function InventoryScreen() {
                 {/* Second row: quick stock +/-, variant toggle, details toggle — only what's actionable, nothing decorative */}
                 <View className="flex-row items-center mt-2.5 pt-2.5 border-t border-outline-variant dark:border-outline" style={{ gap: 8 }}>
                   {!activeWarehouseId && (
-                    <View className="flex-row items-center bg-surface-container dark:bg-surface-dark rounded-lg">
-                      <Pressable onPress={() => handleQuickStockAdjustment(item, -1)} className="w-7 h-7 items-center justify-center">
-                        <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
-                      </Pressable>
-                      <View className="w-px h-4 bg-outline-variant dark:bg-outline" />
-                      <Pressable onPress={() => handleQuickStockAdjustment(item, 1)} className="w-7 h-7 items-center justify-center">
-                        <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
-                      </Pressable>
-                    </View>
+                    <Pressable
+                      onPress={() => {
+                        setAdjustTarget(item);
+                        setAdjustType("add");
+                        setAdjustQuantity("");
+                        setAdjustReason("");
+                      }}
+                      className="flex-row items-center bg-primary/10 px-2.5 py-1.5 rounded-lg"
+                      style={{ gap: 3 }}
+                    >
+                      <MaterialCommunityIcons name="clipboard-edit-outline" size={14} color="#0F7A5F" />
+                      <Text className="text-sm font-bold text-primary">Adjust</Text>
+                    </Pressable>
                   )}
                   {variantCount > 0 && (
                     <Pressable
@@ -1344,6 +1387,93 @@ export default function InventoryScreen() {
                 </Text>
               )}
             </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Stock Adjustment Modal */}
+      <Modal visible={!!adjustTarget} animationType="slide" transparent onRequestClose={() => setAdjustTarget(null)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1 justify-end bg-black/40"
+        >
+          <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
+                Stock Adjustment
+              </Text>
+              <Pressable onPress={() => setAdjustTarget(null)} className="w-10 h-10 items-center justify-center">
+                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+
+            {adjustTarget && (
+              <>
+                <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mb-4">
+                  {adjustTarget.name}
+                </Text>
+
+                <View className="flex-row gap-3 mb-4">
+                  <Pressable
+                    onPress={() => setAdjustType("add")}
+                    className={`flex-1 py-3 rounded-xl items-center border-2 ${
+                      adjustType === "add" ? "border-green-500 bg-green-50 dark:bg-green-950/20" : "border-outline-variant dark:border-outline"
+                    }`}
+                  >
+                    <MaterialCommunityIcons name="plus" size={20} color={adjustType === "add" ? "#16a34a" : "#6B7280"} />
+                    <Text className={`text-sm font-bold mt-1 ${adjustType === "add" ? "text-green-600" : "text-text-secondary"}`}>Add Stock</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setAdjustType("remove")}
+                    className={`flex-1 py-3 rounded-xl items-center border-2 ${
+                      adjustType === "remove" ? "border-red-500 bg-red-50 dark:bg-red-950/20" : "border-outline-variant dark:border-outline"
+                    }`}
+                  >
+                    <MaterialCommunityIcons name="minus" size={20} color={adjustType === "remove" ? "#dc2626" : "#6B7280"} />
+                    <Text className={`text-sm font-bold mt-1 ${adjustType === "remove" ? "text-red-600" : "text-text-secondary"}`}>Remove Stock</Text>
+                  </Pressable>
+                </View>
+
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                  Quantity *
+                </Text>
+                <TextInput
+                  value={adjustQuantity}
+                  onChangeText={setAdjustQuantity}
+                  placeholder="Enter quantity"
+                  placeholderTextColor="#A0A0A0"
+                  keyboardType="numeric"
+                  className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium mb-4"
+                />
+
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                  Reason *
+                </Text>
+                <TextInput
+                  value={adjustReason}
+                  onChangeText={setAdjustReason}
+                  placeholder="e.g. Damaged goods, expired stock, inventory correction..."
+                  placeholderTextColor="#A0A0A0"
+                  multiline
+                  numberOfLines={3}
+                  className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium mb-6 min-h-[80px]"
+                />
+
+                <Pressable
+                  onPress={handleStockAdjust}
+                  disabled={adjustLoading}
+                  className={`py-4 rounded-xl items-center ${adjustType === "add" ? "bg-green-600" : "bg-red-600"}`}
+                >
+                  {adjustLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-white font-bold text-base">
+                      {adjustType === "add" ? "Add Stock" : "Remove Stock"}
+                    </Text>
+                  )}
+                </Pressable>
+              </>
+            )}
           </View>
         </KeyboardAvoidingView>
       </Modal>

@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, FlatList, Pressable, ActivityIndicator, Image, Modal } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, Image, Modal, Alert, TextInput, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
-import { api } from "../src/lib/api";
+import { api, ApiError } from "../src/lib/api";
 
 interface ExpenseRecord {
   id: string;
@@ -56,6 +56,35 @@ export default function ExpensesScreen() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [viewingUri, setViewingUri] = useState<string | null>(null);
+  const [editingExpense, setEditingExpense] = useState<ExpenseRecord | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editCategory, setEditCategory] = useState<ExpenseRecord["category"]>("other");
+  const [editNotes, setEditNotes] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+
+  const handleEditExpense = async () => {
+    if (!editingExpense) return;
+    const amountNum = parseFloat(editAmount);
+    if (!amountNum || amountNum <= 0) {
+      Alert.alert("Error", "Enter a valid amount");
+      return;
+    }
+    setEditLoading(true);
+    try {
+      await api.patch(`/expenses/${editingExpense.id}`, {
+        amount: amountNum,
+        category: editCategory,
+        notes: editNotes.trim() || undefined,
+      });
+      Alert.alert("Success", "Expense updated");
+      setEditingExpense(null);
+      load();
+    } catch (e: any) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to update expense");
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,6 +93,7 @@ export default function ExpensesScreen() {
       setExpenses(res.data ?? []);
     } catch (e) {
       console.error("Failed to load expenses:", e);
+      Alert.alert("Error", "Could not load expenses. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -134,6 +164,12 @@ export default function ExpensesScreen() {
           renderItem={({ item }) => (
             <Pressable
               onPress={() => item.attachment && setViewingUri(item.attachment)}
+              onLongPress={() => {
+                setEditingExpense(item);
+                setEditAmount(item.amount);
+                setEditCategory(item.category);
+                setEditNotes(item.notes || "");
+              }}
               className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4 flex-row items-center"
               style={{ gap: 12 }}
             >
@@ -155,6 +191,52 @@ export default function ExpensesScreen() {
           )}
         />
       )}
+
+      {/* Edit Expense Modal */}
+      <Modal visible={!!editingExpense} animationType="slide" transparent onRequestClose={() => setEditingExpense(null)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 justify-end bg-black/40">
+          <ScrollView className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Edit Expense</Text>
+              <Pressable onPress={() => setEditingExpense(null)} className="w-10 h-10 items-center justify-center">
+                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+
+            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Amount *</Text>
+            <TextInput
+              value={editAmount} onChangeText={setEditAmount}
+              keyboardType="numeric"
+              className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium mb-4"
+            />
+
+            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Category</Text>
+            <View className="flex-row gap-2 mb-4">
+              {(["travel", "fuel", "food", "other"] as const).map((c) => (
+                <Pressable
+                  key={c} onPress={() => setEditCategory(c)}
+                  className={`px-4 py-2.5 rounded-xl border-2 ${
+                    editCategory === c ? "border-primary bg-primary/10" : "border-outline-variant dark:border-outline"
+                  }`}
+                >
+                  <Text className={`text-sm font-bold capitalize ${editCategory === c ? "text-primary" : "text-on-surface dark:text-text-primary-dark"}`}>{c}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Notes</Text>
+            <TextInput
+              value={editNotes} onChangeText={setEditNotes}
+              multiline numberOfLines={2}
+              className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium mb-6"
+            />
+
+            <Pressable onPress={handleEditExpense} disabled={editLoading} className="bg-primary dark:bg-primary-dark py-4 rounded-xl items-center mb-4">
+              {editLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Save Changes</Text>}
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
 
       <Modal visible={viewingUri !== null} transparent animationType="fade" onRequestClose={() => setViewingUri(null)}>
         <Pressable className="flex-1 bg-black/90 items-center justify-center" onPress={() => setViewingUri(null)}>

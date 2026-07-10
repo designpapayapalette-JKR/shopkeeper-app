@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Text,
   View,
@@ -119,6 +119,18 @@ interface Party {
   current_balance: string;
 }
 
+interface BusinessProfileSnapshot {
+  bizName: string;
+  bizGstin: string;
+  bizState: string;
+  bizAddress: string;
+  bizPhone: string;
+  bizBankName: string;
+  bizBankAccountNumber: string;
+  bizBankIfsc: string;
+  bizUpiId: string;
+}
+
 export default function MoreScreen() {
   const { user, activeCompany, refreshCompany, setupQuickPin, pinLoginAvailable, logout } = useAuth();
   const { mode, lang, setMode, setLang } = useTerminology();
@@ -134,6 +146,8 @@ export default function MoreScreen() {
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const params = useLocalSearchParams<{ openPurchase?: string; openReport?: string; openExpense?: string; billPhotoUri?: string; openTransfer?: string; transferPhotoUri?: string }>();
+  const handledDeepLinksRef = useRef<Set<string>>(new Set());
+  const openedFromDeepLinkRef = useRef({ purchase: false, expense: false, transfer: false });
   const [billPhotoUri, setBillPhotoUri] = useState<string | null>(null);
   const [transferPhotoUri, setTransferPhotoUri] = useState<string | null>(null);
 
@@ -165,17 +179,30 @@ export default function MoreScreen() {
   const [bizBankIfsc, setBizBankIfsc] = useState("");
   const [bizUpiId, setBizUpiId] = useState("");
   const [bizSubmitting, setBizSubmitting] = useState(false);
+  const [businessProfileInitial, setBusinessProfileInitial] = useState<BusinessProfileSnapshot | null>(null);
 
   const openBusinessProfileModal = () => {
-    setBizName(activeCompany?.name ?? "");
-    setBizGstin(activeCompany?.gstin ?? "");
-    setBizState(activeCompany?.state ?? "");
-    setBizAddress(activeCompany?.address ?? "");
-    setBizPhone(activeCompany?.phone ?? "");
-    setBizBankName(activeCompany?.bank_name ?? "");
-    setBizBankAccountNumber(activeCompany?.bank_account_number ?? "");
-    setBizBankIfsc(activeCompany?.bank_ifsc ?? "");
-    setBizUpiId(activeCompany?.upi_id ?? "");
+    const initial: BusinessProfileSnapshot = {
+      bizName: activeCompany?.name ?? "",
+      bizGstin: activeCompany?.gstin ?? "",
+      bizState: activeCompany?.state ?? "",
+      bizAddress: activeCompany?.address ?? "",
+      bizPhone: activeCompany?.phone ?? "",
+      bizBankName: activeCompany?.bank_name ?? "",
+      bizBankAccountNumber: activeCompany?.bank_account_number ?? "",
+      bizBankIfsc: activeCompany?.bank_ifsc ?? "",
+      bizUpiId: activeCompany?.upi_id ?? "",
+    };
+    setBusinessProfileInitial(initial);
+    setBizName(initial.bizName);
+    setBizGstin(initial.bizGstin);
+    setBizState(initial.bizState);
+    setBizAddress(initial.bizAddress);
+    setBizPhone(initial.bizPhone);
+    setBizBankName(initial.bizBankName);
+    setBizBankAccountNumber(initial.bizBankAccountNumber);
+    setBizBankIfsc(initial.bizBankIfsc);
+    setBizUpiId(initial.bizUpiId);
     setIsBusinessProfileModal(true);
   };
 
@@ -199,6 +226,7 @@ export default function MoreScreen() {
       });
       await refreshCompany();
       Alert.alert("Saved", "Business profile updated. This appears on your Tally-style invoices.");
+      setBusinessProfileInitial(null);
       setIsBusinessProfileModal(false);
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to save business profile.");
@@ -220,17 +248,29 @@ export default function MoreScreen() {
   };
 
   const closeBusinessProfileModal = async () => {
+    const baseline = businessProfileInitial ?? {
+      bizName: activeCompany?.name ?? "",
+      bizGstin: activeCompany?.gstin ?? "",
+      bizState: activeCompany?.state ?? "",
+      bizAddress: activeCompany?.address ?? "",
+      bizPhone: activeCompany?.phone ?? "",
+      bizBankName: activeCompany?.bank_name ?? "",
+      bizBankAccountNumber: activeCompany?.bank_account_number ?? "",
+      bizBankIfsc: activeCompany?.bank_ifsc ?? "",
+      bizUpiId: activeCompany?.upi_id ?? "",
+    };
     const hasChanges =
-      bizName !== (activeCompany?.name ?? "") ||
-      bizGstin !== (activeCompany?.gstin ?? "") ||
-      bizState !== (activeCompany?.state ?? "") ||
-      bizAddress !== (activeCompany?.address ?? "") ||
-      bizPhone !== (activeCompany?.phone ?? "") ||
-      bizBankName !== (activeCompany?.bank_name ?? "") ||
-      bizBankAccountNumber !== (activeCompany?.bank_account_number ?? "") ||
-      bizBankIfsc !== (activeCompany?.bank_ifsc ?? "") ||
-      bizUpiId !== (activeCompany?.upi_id ?? "");
+      bizName !== baseline.bizName ||
+      bizGstin !== baseline.bizGstin ||
+      bizState !== baseline.bizState ||
+      bizAddress !== baseline.bizAddress ||
+      bizPhone !== baseline.bizPhone ||
+      bizBankName !== baseline.bizBankName ||
+      bizBankAccountNumber !== baseline.bizBankAccountNumber ||
+      bizBankIfsc !== baseline.bizBankIfsc ||
+      bizUpiId !== baseline.bizUpiId;
     if (hasChanges && !(await confirmDiscard())) return;
+    setBusinessProfileInitial(null);
     setIsBusinessProfileModal(false);
     resetBusinessProfileForm();
   };
@@ -283,12 +323,45 @@ export default function MoreScreen() {
   // Deep-link support: dashboard quick actions navigate here with a query
   // param to jump straight into a modal instead of landing on the plain list.
   useEffect(() => {
-    if (params.openPurchase === "1") setIsPurchaseModal(true);
-    if (params.openReport === "1") setIsSalesReportModal(true);
-    if (params.openExpense === "1") setIsExpenseModal(true);
-    if (params.billPhotoUri) setBillPhotoUri(decodeURIComponent(params.billPhotoUri));
-    if (params.openTransfer === "1") setIsTransferModal(true);
-    if (params.transferPhotoUri) setTransferPhotoUri(decodeURIComponent(params.transferPhotoUri));
+    const runOnce = (key: string, fn: () => void) => {
+      if (handledDeepLinksRef.current.has(key)) return;
+      handledDeepLinksRef.current.add(key);
+      fn();
+    };
+
+    if (params.openPurchase === "1") {
+      runOnce("openPurchase=1", () => {
+        openedFromDeepLinkRef.current.purchase = true;
+        setIsPurchaseModal(true);
+      });
+    }
+    if (params.openReport === "1") {
+      runOnce("openReport=1", () => {
+        setIsSalesReportModal(true);
+      });
+    }
+    if (params.openExpense === "1") {
+      runOnce("openExpense=1", () => {
+        openedFromDeepLinkRef.current.expense = true;
+        setIsExpenseModal(true);
+      });
+    }
+    if (params.billPhotoUri) {
+      runOnce(`billPhotoUri=${params.billPhotoUri}`, () => {
+        setBillPhotoUri(decodeURIComponent(params.billPhotoUri!));
+      });
+    }
+    if (params.openTransfer === "1") {
+      runOnce("openTransfer=1", () => {
+        openedFromDeepLinkRef.current.transfer = true;
+        setIsTransferModal(true);
+      });
+    }
+    if (params.transferPhotoUri) {
+      runOnce(`transferPhotoUri=${params.transferPhotoUri}`, () => {
+        setTransferPhotoUri(decodeURIComponent(params.transferPhotoUri!));
+      });
+    }
   }, [params.openPurchase, params.openReport, params.openExpense, params.billPhotoUri, params.openTransfer, params.transferPhotoUri]);
 
   // Quick Actions on the Dashboard (and the Scan Hub) open these modals by
@@ -325,7 +398,8 @@ export default function MoreScreen() {
       });
       Alert.alert("Success", "Expense recorded successfully.");
       setIsExpenseModal(false);
-      const cameFromDeepLink = params.openExpense === "1";
+      const cameFromDeepLink = openedFromDeepLinkRef.current.expense;
+      openedFromDeepLinkRef.current.expense = false;
       resetExpenseForm();
       setBillPhotoUri(null);
       returnIfDeepLinked(cameFromDeepLink);
@@ -348,7 +422,9 @@ export default function MoreScreen() {
     setIsExpenseModal(false);
     resetExpenseForm();
     setBillPhotoUri(null);
-    returnIfDeepLinked(params.openExpense === "1");
+    const cameFromDeepLink = openedFromDeepLinkRef.current.expense;
+    openedFromDeepLinkRef.current.expense = false;
+    returnIfDeepLinked(cameFromDeepLink);
   };
 
   // Purchase Form State
@@ -605,7 +681,8 @@ export default function MoreScreen() {
 
       Alert.alert("Success", "Purchase recorded successfully.");
       setIsPurchaseModal(false);
-      const cameFromDeepLink = params.openPurchase === "1";
+      const cameFromDeepLink = openedFromDeepLinkRef.current.purchase;
+      openedFromDeepLinkRef.current.purchase = false;
       resetPurchaseForm();
       setBillPhotoUri(null);
       fetchSetupData();
@@ -637,7 +714,9 @@ export default function MoreScreen() {
     setIsPurchaseModal(false);
     resetPurchaseForm();
     setBillPhotoUri(null);
-    returnIfDeepLinked(params.openPurchase === "1");
+    const cameFromDeepLink = openedFromDeepLinkRef.current.purchase;
+    openedFromDeepLinkRef.current.purchase = false;
+    returnIfDeepLinked(cameFromDeepLink);
   };
 
   const handleCreateWarehouse = async () => {
@@ -686,7 +765,9 @@ export default function MoreScreen() {
     setIsTransferModal(false);
     resetTransferForm();
     setTransferPhotoUri(null);
-    returnIfDeepLinked(params.openTransfer === "1");
+    const cameFromDeepLink = openedFromDeepLinkRef.current.transfer;
+    openedFromDeepLinkRef.current.transfer = false;
+    returnIfDeepLinked(cameFromDeepLink);
   };
 
   const handleStockTransfer = async () => {
@@ -713,7 +794,8 @@ export default function MoreScreen() {
 
       Alert.alert("Success", "Stock transferred successfully.");
       setIsTransferModal(false);
-      const cameFromDeepLink = params.openTransfer === "1";
+      const cameFromDeepLink = openedFromDeepLinkRef.current.transfer;
+      openedFromDeepLinkRef.current.transfer = false;
       resetTransferForm();
       setTransferPhotoUri(null);
       fetchSetupData();

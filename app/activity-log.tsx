@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, RefreshControl, Modal, ScrollView } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Pressable, RefreshControl, Modal, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../src/lib/auth-context";
@@ -107,12 +107,16 @@ export default function ActivityLogScreen() {
   const [detailEntry, setDetailEntry] = useState<LogEntry | null>(null);
 
   const load = useCallback(async () => {
-    if (!user?.company_id) return;
     try {
+      if (!user?.company_id) {
+        setEntries([]);
+        return;
+      }
       const res = await api.get<{ data: LogEntry[] }>("/activity-log");
       setEntries(res.data ?? []);
     } catch (e) {
       console.error("Failed to load activity log:", e);
+      Alert.alert("Error", "Could not load activity log. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);

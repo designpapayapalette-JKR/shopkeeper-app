@@ -90,7 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (me.company_id) {
             await fetchTenantData();
           }
-          registerForPushNotifications().catch(() => {});
+          registerForPushNotifications().catch((e) => {
+            console.warn("[Auth] Push registration failed during startup:", e);
+          });
         }
       } catch (error) {
         setIsAuthenticated(false);
@@ -121,7 +123,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (me.company_id) {
         await fetchTenantData();
       }
-      registerForPushNotifications().catch(() => {});
+      registerForPushNotifications().catch((e) => {
+        console.warn("[Auth] Push registration failed during login:", e);
+      });
     } catch (error) {
       setIsAuthenticated(false);
       setUser(null);
@@ -149,7 +153,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (me.company_id) {
         await fetchTenantData();
       }
-      registerForPushNotifications().catch(() => {});
+      registerForPushNotifications().catch((e) => {
+        console.warn("[Auth] Push registration failed during register:", e);
+      });
     } catch (error) {
       setIsAuthenticated(false);
       setUser(null);

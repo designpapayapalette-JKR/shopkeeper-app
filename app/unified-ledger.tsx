@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, TextInput } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Pressable, TextInput, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
@@ -32,8 +32,10 @@ export default function UnifiedLedgerScreen() {
     try {
       const res = await api.get<{ data: UnifiedEntry[] }>("/ledger/unified/all");
       setEntries(res.data);
-    } catch {
-      // best-effort — screen shows empty state below
+    } catch (e) {
+      console.error("Failed to load unified ledger:", e);
+      Alert.alert("Error", "Could not load ledger entries. Please try again.");
+      setEntries([]);
     } finally {
       setLoading(false);
     }

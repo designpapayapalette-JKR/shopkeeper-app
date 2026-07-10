@@ -15,6 +15,8 @@ interface AuthData {
   expiresAt: number;
 }
 
+let refreshInFlight: Promise<string | null> | null = null;
+
 async function getAuthData(): Promise<AuthData | null> {
   try {
     const raw = await SecureStore.getItemAsync(AUTH_STORAGE_KEY);
@@ -47,6 +49,9 @@ export class ApiError extends Error {
 }
 
 async function refreshAccessToken(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
   const auth = await getAuthData();
   if (!auth?.refreshToken) return null;
 
@@ -63,6 +68,13 @@ async function refreshAccessToken(): Promise<string | null> {
   const updated: AuthData = { ...auth, accessToken: json.accessToken, expiresAt: json.expiresAt };
   await setAuthData(updated);
   return updated.accessToken;
+  })();
+
+  try {
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
 }
 
 export async function getValidAccessToken(): Promise<string | null> {
@@ -103,13 +115,25 @@ async function request<T = unknown>(
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     method,
     // App code writes snake_case (matching the old Directus field names) —
     // convert to camelCase for this server.
     body: body !== undefined ? JSON.stringify(toCamelCase(body)) : undefined,
     headers,
   });
+
+  if (!options.skipAuth && res.status === 401) {
+    const refreshedToken = await refreshAccessToken();
+    if (refreshedToken) {
+      headers.Authorization = `Bearer ${refreshedToken}`;
+      res = await fetch(url, {
+        method,
+        body: body !== undefined ? JSON.stringify(toCamelCase(body)) : undefined,
+        headers,
+      });
+    }
+  }
 
   const json = await res.json().catch(() => null);
   if (!res.ok) {
@@ -184,7 +208,7 @@ export async function hasStoredSession(): Promise<boolean> {
 // record — bypasses the JSON request() path since this is multipart/
 // form-data, not JSON.
 export async function uploadDocument(fileUri: string, category: string): Promise<string> {
-  const token = await getValidAccessToken();
+  let token = await getValidAccessToken();
   const form = new FormData();
   form.append("file", {
     uri: fileUri,
@@ -193,11 +217,23 @@ export async function uploadDocument(fileUri: string, category: string): Promise
   } as any);
   form.append("category", category);
 
-  const res = await fetch(`${apiUrl}/uploads/document`, {
+  let res = await fetch(`${apiUrl}/uploads/document`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: form,
   });
+
+  if (res.status === 401) {
+    token = await refreshAccessToken();
+    if (token) {
+      res = await fetch(`${apiUrl}/uploads/document`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+    }
+  }
+
   const json = await res.json().catch(() => null);
   if (!res.ok) {
     throw new ApiError(res.status, json?.error?.toString() ?? `Upload failed (${res.status})`, json);

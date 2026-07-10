@@ -844,7 +844,9 @@ export default function DashboardScreen() {
                     <Pressable
                       onPress={() => {
                         shareLedgerReminder(party.name, party.phone ?? "", parseFloat(party.current_balance), false);
-                        api.post(`/reminders/${party.id}/mark-sent`).catch(() => {});
+                        api.post(`/reminders/${party.id}/mark-sent`).catch((e) => {
+                          console.warn("[Dashboard] Failed to mark reminder as sent:", e);
+                        });
                         setOverdueParties((prev) => prev.filter((p) => p.id !== party.id));
                       }}
                       className="bg-primary/10 px-3 py-2 rounded-lg flex-row items-center"
