@@ -135,7 +135,21 @@ async function request<T = unknown>(
     }
   }
 
-  const json = await res.json().catch(() => null);
+  const ct = res.headers.get("content-type") || "";
+  let json: any = null;
+  if (ct.includes("text/html") || ct.includes("text/plain")) {
+    const text = await res.text().catch(() => "");
+    if (text.includes("<!DOCTYPE") || text.includes("<html") || text.includes("Vercel")) {
+      throw new ApiError(
+        res.status,
+        `API returned HTML instead of JSON — "${apiUrl}" may point to a frontend server. Check your DNS or EXPO_PUBLIC_API_URL.`,
+        null
+      );
+    }
+    json = { error: text };
+  } else {
+    json = await res.json().catch(() => null);
+  }
   if (!res.ok) {
     throw new ApiError(res.status, json?.error?.toString() ?? `Request failed (${res.status})`, json);
   }
@@ -234,7 +248,17 @@ export async function uploadDocument(fileUri: string, category: string): Promise
     }
   }
 
-  const json = await res.json().catch(() => null);
+  const ct = res.headers.get("content-type") || "";
+  let json: any = null;
+  if (ct.includes("text/html") || ct.includes("text/plain")) {
+    const text = await res.text().catch(() => "");
+    if (text.includes("<!DOCTYPE") || text.includes("<html")) {
+      throw new ApiError(res.status, `API returned HTML — "${apiUrl}" DNS may point to a frontend server.`, null);
+    }
+    json = { error: text };
+  } else {
+    json = await res.json().catch(() => null);
+  }
   if (!res.ok) {
     throw new ApiError(res.status, json?.error?.toString() ?? `Upload failed (${res.status})`, json);
   }

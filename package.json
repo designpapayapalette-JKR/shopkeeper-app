@@ -53,6 +53,7 @@
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
+    "react-native-svg": "^15.15.5",
     "react-native-thermal-receipt-printer-image-qr": "^0.1.12",
     "react-native-web": "^0.21.2",
     "react-native-webrtc": "^124.0.7",

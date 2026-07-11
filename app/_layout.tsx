@@ -75,7 +75,7 @@ function NavigationGuard() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#030712" />
+        <ActivityIndicator size="large" color="#0F7A5F" />
       </View>
     );
   }
@@ -96,7 +96,7 @@ export default function RootLayout() {
       <TerminologyProvider>
         <AuthProvider>
           <ConfirmDialogProvider>
-            <StatusBar style="auto" />
+            <StatusBar style="dark" />
             <NavigationGuard />
           </ConfirmDialogProvider>
         </AuthProvider>
