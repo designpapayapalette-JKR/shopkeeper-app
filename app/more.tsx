@@ -129,6 +129,8 @@ interface BusinessProfileSnapshot {
   bizBankAccountNumber: string;
   bizBankIfsc: string;
   bizUpiId: string;
+  bizUpiPayeeName: string;
+  bizUpiQrUrl: string;
 }
 
 export default function MoreScreen() {
@@ -178,6 +180,8 @@ export default function MoreScreen() {
   const [bizBankAccountNumber, setBizBankAccountNumber] = useState("");
   const [bizBankIfsc, setBizBankIfsc] = useState("");
   const [bizUpiId, setBizUpiId] = useState("");
+  const [bizUpiPayeeName, setBizUpiPayeeName] = useState("");
+  const [bizUpiQrUrl, setBizUpiQrUrl] = useState("");
   const [bizSubmitting, setBizSubmitting] = useState(false);
   const [businessProfileInitial, setBusinessProfileInitial] = useState<BusinessProfileSnapshot | null>(null);
 
@@ -192,6 +196,8 @@ export default function MoreScreen() {
       bizBankAccountNumber: activeCompany?.bank_account_number ?? "",
       bizBankIfsc: activeCompany?.bank_ifsc ?? "",
       bizUpiId: activeCompany?.upi_id ?? "",
+      bizUpiPayeeName: activeCompany?.upi_payee_name ?? "",
+      bizUpiQrUrl: activeCompany?.upi_qr_url ?? "",
     };
     setBusinessProfileInitial(initial);
     setBizName(initial.bizName);
@@ -203,6 +209,8 @@ export default function MoreScreen() {
     setBizBankAccountNumber(initial.bizBankAccountNumber);
     setBizBankIfsc(initial.bizBankIfsc);
     setBizUpiId(initial.bizUpiId);
+    setBizUpiPayeeName(initial.bizUpiPayeeName);
+    setBizUpiQrUrl(initial.bizUpiQrUrl);
     setIsBusinessProfileModal(true);
   };
 
@@ -223,6 +231,7 @@ export default function MoreScreen() {
         bankAccountNumber: bizBankAccountNumber.trim() || undefined,
         bankIfsc: bizBankIfsc.trim() || undefined,
         upiId: bizUpiId.trim() || undefined,
+        upiPayeeName: bizUpiPayeeName.trim() || undefined,
       });
       await refreshCompany();
       Alert.alert("Saved", "Business profile updated. This appears on your Tally-style invoices.");
@@ -245,6 +254,8 @@ export default function MoreScreen() {
     setBizBankAccountNumber("");
     setBizBankIfsc("");
     setBizUpiId("");
+    setBizUpiPayeeName("");
+    setBizUpiQrUrl("");
   };
 
   const closeBusinessProfileModal = async () => {
@@ -258,6 +269,8 @@ export default function MoreScreen() {
       bizBankAccountNumber: activeCompany?.bank_account_number ?? "",
       bizBankIfsc: activeCompany?.bank_ifsc ?? "",
       bizUpiId: activeCompany?.upi_id ?? "",
+      bizUpiPayeeName: activeCompany?.upi_payee_name ?? "",
+      bizUpiQrUrl: activeCompany?.upi_qr_url ?? "",
     };
     const hasChanges =
       bizName !== baseline.bizName ||
@@ -268,7 +281,8 @@ export default function MoreScreen() {
       bizBankName !== baseline.bizBankName ||
       bizBankAccountNumber !== baseline.bizBankAccountNumber ||
       bizBankIfsc !== baseline.bizBankIfsc ||
-      bizUpiId !== baseline.bizUpiId;
+      bizUpiId !== baseline.bizUpiId ||
+      bizUpiPayeeName !== baseline.bizUpiPayeeName;
     if (hasChanges && !(await confirmDiscard())) return;
     setBusinessProfileInitial(null);
     setIsBusinessProfileModal(false);
@@ -3093,7 +3107,8 @@ export default function MoreScreen() {
               { label: "Bank Name", value: bizBankName, setter: setBizBankName, placeholder: "e.g. HDFC Bank" },
               { label: "Bank Account Number", value: bizBankAccountNumber, setter: setBizBankAccountNumber, placeholder: "Account number", keyboardType: "numeric" as const },
               { label: "Bank IFSC", value: bizBankIfsc, setter: setBizBankIfsc, placeholder: "IFSC code", autoCapitalize: "characters" as const },
-              { label: "UPI ID (for invoice QR)", value: bizUpiId, setter: setBizUpiId, placeholder: "e.g. shopname@okhdfcbank" },
+              { label: "UPI ID", value: bizUpiId, setter: setBizUpiId, placeholder: "e.g. shopname@okhdfcbank" },
+              { label: "UPI Payee Name (shown to customers)", value: bizUpiPayeeName, setter: setBizUpiPayeeName, placeholder: "Your Business Name" },
             ].map((field) => (
               <View className="mt-4" key={field.label}>
                 <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">

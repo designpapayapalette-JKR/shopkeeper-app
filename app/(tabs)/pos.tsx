@@ -11,6 +11,7 @@ import {
   FlatList,
   useWindowDimensions,
   StyleSheet,
+  Image,
 } from "react-native";
 import * as Print from "expo-print";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -1394,6 +1395,23 @@ export default function PosScreen() {
             ))}
           </View>
         )}
+        {paymentMode === "upi" && activeCompany?.upi_id && (
+          <View className="mb-4 p-4 rounded-xl items-center bg-surface dark:bg-zinc-800 border border-outline-variant dark:border-zinc-700">
+            <Text className="text-xs font-bold mb-2 text-primary">Scan to Pay via UPI</Text>
+            {activeCompany?.upi_qr_url ? (
+              <Image source={{ uri: activeCompany.upi_qr_url }} style={{ width: 140, height: 140 }} className="rounded-lg" />
+            ) : (
+              <View style={{ width: 140, height: 140 }} className="items-center justify-center rounded-lg bg-white border border-outline-variant">
+                <MaterialCommunityIcons name="qrcode" size={48} color="#0f7a5f" />
+                <Text className="text-[9px] text-center mt-1 px-2 text-on-surface-variant">Upload QR in Settings</Text>
+              </View>
+            )}
+            <Text className="text-sm font-mono font-bold mt-2 text-text-primary">{activeCompany.upi_id}</Text>
+            {activeCompany?.upi_payee_name && (
+              <Text className="text-xs text-text-secondary">{activeCompany.upi_payee_name}</Text>
+            )}
+          </View>
+        )}
         <Pressable
           onPress={() => {
             setIsSplitPayment(!isSplitPayment);
@@ -1582,6 +1600,10 @@ export default function PosScreen() {
         <View className="flex-1 flex-row" style={{ paddingTop: topInset }}>
           {/* Left — product catalogue */}
           <View className="w-[58%] px-4">
+            <View className="flex-row items-center gap-2 mb-1">
+              <View className="w-1.5 h-5 rounded-full bg-primary" />
+              <Text className="text-[10px] font-bold tracking-widest uppercase text-primary dark:text-primary-dark">Point of Sale</Text>
+            </View>
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Products</Text>
               <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -1666,6 +1688,10 @@ export default function PosScreen() {
         <View className="flex-1" style={{ paddingTop: topInset }}>
           {/* Header */}
           <View className="px-5 mb-4">
+            <View className="flex-row items-center gap-2 mb-2">
+              <View className="w-1.5 h-6 rounded-full bg-primary" />
+              <Text className="text-[10px] font-bold tracking-widest uppercase text-primary dark:text-primary-dark">Point of Sale</Text>
+            </View>
             <View className="flex-row justify-between items-center">
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Sale</Text>
               <View className="flex-row items-center" style={{ gap: 8 }}>
