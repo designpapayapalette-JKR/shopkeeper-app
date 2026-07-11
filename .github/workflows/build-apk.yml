@@ -42,6 +42,7 @@ jobs:
         working-directory: android
         env:
           GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=1g
+          EXPO_PUBLIC_API_URL: https://api.papayapalette.online
         run: ./gradlew assembleRelease
 
       - name: Rename APK

@@ -10,15 +10,11 @@ import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
 import { syncQueuedSales } from "../src/lib/offlineQueue";
 import { startConnectivityMonitoring } from "../src/lib/connectivity";
 
-// Start connectivity monitoring at app level
-startConnectivityMonitoring();
-
 // The app is light-theme only — several screens have incomplete `dark:`
 // class coverage (a card gets a dark background but its text stays the
 // light-mode color, making it unreadable), and auditing every screen for
 // that is a much bigger job than just not following the system theme.
 // Locking the scheme here overrides NativeWind's "media" (system) mode app-wide.
-colorScheme.set("light");
 
 function NavigationGuard() {
   const { isAuthenticated, isLoading, activeCompany } = useAuth();
@@ -91,6 +87,11 @@ function NavigationGuard() {
 import { TerminologyProvider } from "../src/lib/terminology-context";
 
 export default function RootLayout() {
+  useEffect(() => {
+    try { startConnectivityMonitoring(); } catch {}
+    try { colorScheme.set("light"); } catch {}
+  }, []);
+
   return (
     <SafeAreaProvider>
       <TerminologyProvider>

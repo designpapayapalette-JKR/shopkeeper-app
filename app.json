@@ -6,7 +6,7 @@
     "version": "0.1.0",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "backgroundColor": "#FAF9F6",
     "ios": {
       "supportsTablet": true,

@@ -1,11 +1,12 @@
 import * as SecureStore from "expo-secure-store";
 import { toCamelCase, toSnakeCase } from "./caseConvert";
 
-export const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
-if (!apiUrl) {
-  throw new Error("EXPO_PUBLIC_API_URL is not set — see .env.example");
-}
+// The CI build doesn't include the local .env file (it's gitignored), so
+// EXPO_PUBLIC_API_URL may be undefined at module-evaluation time. Instead of
+// a hard throw that crashes the entire bundle on launch, default to the
+// production URL. Callers should validate at point-of-use if needed.
+export const apiUrl =
+  process.env.EXPO_PUBLIC_API_URL || "https://api.papayapalette.online";
 
 const AUTH_STORAGE_KEY = "shopkeeper_auth_data";
 
