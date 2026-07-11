@@ -35,7 +35,7 @@ async function setAuthData(data: AuthData | null): Promise<void> {
       await SecureStore.setItemAsync(AUTH_STORAGE_KEY, JSON.stringify(data));
     }
   } catch (e) {
-    console.error(e);
+    console.warn("[api] SecureStore write failed — auth tokens not persisted:", e);
   }
 }
 
