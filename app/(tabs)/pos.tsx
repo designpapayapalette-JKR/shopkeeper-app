@@ -1663,6 +1663,11 @@ export default function PosScreen() {
             <View className="flex-row items-center gap-2 mb-1">
               <View className="w-1.5 h-5 rounded-full bg-primary" />
               <Text className="text-[10px] font-bold tracking-widest uppercase text-primary dark:text-primary-dark">Point of Sale</Text>
+              {businessMode === "b2b" && (
+                <View className="bg-primary/15 dark:bg-primary-dark/20 px-2 py-0.5 rounded-md">
+                  <Text className="text-[9px] font-black text-primary dark:text-primary-dark tracking-widest">B2B</Text>
+                </View>
+              )}
             </View>
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Products</Text>
@@ -1736,7 +1741,14 @@ export default function PosScreen() {
 
           {/* Right — checkout panel */}
           <View className="w-[42%] border-l border-outline-variant dark:border-outline px-4 pt-2">
-            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-4">Cart</Text>
+            <View className="flex-row items-center gap-2 mb-4">
+              <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Cart</Text>
+              {businessMode === "b2b" && (
+                <View className="bg-primary/15 dark:bg-primary-dark/20 px-2 py-0.5 rounded-md">
+                  <Text className="text-[9px] font-black text-primary dark:text-primary-dark tracking-widest">B2B</Text>
+                </View>
+              )}
+            </View>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
               {CheckoutPanel}
               {isPosDevice && renderNumpad()}
@@ -1751,6 +1763,11 @@ export default function PosScreen() {
             <View className="flex-row items-center gap-2 mb-2">
               <View className="w-1.5 h-6 rounded-full bg-primary" />
               <Text className="text-[10px] font-bold tracking-widest uppercase text-primary dark:text-primary-dark">Point of Sale</Text>
+              {businessMode === "b2b" && (
+                <View className="bg-primary/15 dark:bg-primary-dark/20 px-2 py-0.5 rounded-md">
+                  <Text className="text-[9px] font-black text-primary dark:text-primary-dark tracking-widest">B2B</Text>
+                </View>
+              )}
             </View>
             <View className="flex-row justify-between items-center">
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Sale</Text>
