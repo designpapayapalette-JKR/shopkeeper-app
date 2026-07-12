@@ -72,6 +72,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="b2b"
+        options={{
+          title: "B2B",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon active="briefcase-account" inactive="briefcase-account-outline" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="inventory"
         options={{
           title: "Inventory",
