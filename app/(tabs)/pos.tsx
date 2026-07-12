@@ -182,6 +182,8 @@ export default function PosScreen() {
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
   const [isSelectingParty, setIsSelectingParty] = useState(false);
   const [anonymousBilling, setAnonymousBilling] = useState(false);
+  const [quickCustomerName, setQuickCustomerName] = useState("");
+  const [quickCustomerLoading, setQuickCustomerLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // Add Customer State
@@ -565,6 +567,35 @@ export default function PosScreen() {
     }
   };
 
+  const handleQuickAddCustomer = async () => {
+    const name = quickCustomerName.trim();
+    if (!name) {
+      Alert.alert("Required", "Enter a customer name.");
+      return;
+    }
+    if (!user?.company_id) return;
+    setQuickCustomerLoading(true);
+    try {
+      const created = await api.post<{ data: Party }>("/parties", {
+        name,
+        type: "customer",
+        category: "b2b",
+        current_balance: 0,
+        opening_balance: 0,
+      });
+      const newCustomer = created.data;
+      setParties((prev) => [newCustomer, ...prev]);
+      setSelectedParty(newCustomer);
+      setIsSelectingParty(false);
+      setQuickCustomerName("");
+      Alert.alert("Success", `"${name}" added and selected.`);
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to add customer.");
+    } finally {
+      setQuickCustomerLoading(false);
+    }
+  };
+
   const resetAddCustomerForm = () => {
     setNewCustomerName("");
     setNewCustomerPhone("");
@@ -646,6 +677,10 @@ export default function PosScreen() {
   };
 
   const addToCart = (product: Product) => {
+    if (businessMode === "b2b" && !selectedParty && !anonymousBilling) {
+      setIsSelectingParty(true);
+      return;
+    }
     setCart((prevCart) => {
       const existing = prevCart.find((item) => item.product.id === product.id);
       if (existing) {
@@ -1852,6 +1887,38 @@ export default function PosScreen() {
               <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
             </Pressable>
           </View>
+
+          {/* Quick Add Anonymous Customer — B2B mode */}
+          {businessMode === "b2b" && (
+            <View className="px-5 pt-4 mb-2">
+              <View className="bg-primary/5 dark:bg-primary-dark/10 rounded-2xl border border-primary/30 dark:border-primary-dark/30 p-3">
+                <View className="flex-row items-center gap-2 mb-2">
+                  <MaterialCommunityIcons name="incognito" size={16} color="#0F7A5F" />
+                  <Text className="text-xs font-bold text-primary dark:text-primary-dark uppercase tracking-widest">Quick Anonymous Customer</Text>
+                </View>
+                <View className="flex-row gap-2">
+                  <TextInput
+                    value={quickCustomerName}
+                    onChangeText={setQuickCustomerName}
+                    placeholder="Enter customer name..."
+                    placeholderTextColor="#A0A0A0"
+                    className="flex-1 bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-base font-medium"
+                  />
+                  <Pressable
+                    onPress={handleQuickAddCustomer}
+                    disabled={quickCustomerLoading}
+                    className="bg-primary dark:bg-primary-dark px-4 rounded-xl items-center justify-center active:opacity-90"
+                  >
+                    {quickCustomerLoading ? (
+                      <ActivityIndicator color="white" size="small" />
+                    ) : (
+                      <MaterialCommunityIcons name="check" size={20} color="white" />
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          )}
 
           <View className="px-5 pt-4 flex-row gap-2 mb-2">
             <View className="flex-1 bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 flex-row items-center">
