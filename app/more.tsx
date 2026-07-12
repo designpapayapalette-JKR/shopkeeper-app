@@ -202,8 +202,11 @@ export default function MoreScreen() {
   ];
   const [enabledModules, setEnabledModules] = useState<string[]>([]);
   const [modulesLoading, setModulesLoading] = useState(false);
+  const [onboardingModule, setOnboardingModule] = useState<{ key: string; label: string; desc: string } | null>(null);
+  const [dismissedOnboarding, setDismissedOnboarding] = useState<Set<string>>(new Set());
 
   const toggleModule = async (key: string) => {
+    const wasDisabled = !enabledModules.includes(key);
     const updated = enabledModules.includes(key)
       ? enabledModules.filter((m) => m !== key)
       : [...enabledModules, key];
@@ -215,6 +218,10 @@ export default function MoreScreen() {
       console.error("Failed to update modules:", err);
     } finally {
       setModulesLoading(false);
+    }
+    if (wasDisabled && !dismissedOnboarding.has(key)) {
+      const mod = ALL_MODULES.find((m) => m.key === key);
+      if (mod) setOnboardingModule(mod);
     }
   };
 
@@ -3516,7 +3523,70 @@ export default function MoreScreen() {
           </View>
         </ScrollView>
       </Modal>
+
+      {/* Module Onboarding Modal */}
+      <Modal visible={!!onboardingModule} animationType="fade" transparent onRequestClose={() => setOnboardingModule(null)}>
+        <Pressable className="flex-1 justify-center items-center bg-black/40" onPress={() => setOnboardingModule(null)}>
+          <Pressable className="bg-background dark:bg-background-dark rounded-3xl mx-6 w-full max-w-sm overflow-hidden" onPress={() => {}}>
+            <View className="bg-primary/5 p-6 pb-4">
+              <View className="flex-row items-center gap-3 mb-2">
+                <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+                  <MaterialCommunityIcons name="lightbulb-on-outline" size={20} color="#0F7A5F" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[10px] font-black text-text-secondary uppercase tracking-wider">New Module Enabled</Text>
+                  <Text className="text-lg font-bold text-text-primary">{onboardingModule?.label}</Text>
+                </View>
+              </View>
+            </View>
+            <View className="p-6">
+              <Text className="text-sm text-text-secondary mb-4">{onboardingModule?.desc}</Text>
+              <View className="gap-3">
+                {onboardingModule && (tipsForModule(onboardingModule.key) || []).map((tip, i) => (
+                  <View key={i} className="flex-row items-start gap-2.5">
+                    <View className="w-5 h-5 rounded-full bg-primary/10 items-center justify-center shrink-0 mt-0.5">
+                      <Text className="text-primary font-bold text-[10px]">{i + 1}</Text>
+                    </View>
+                    <Text className="text-sm text-text-primary flex-1">{tip}</Text>
+                  </View>
+                ))}
+              </View>
+              <View className="flex-row items-center justify-between mt-6">
+                <Pressable onPress={() => {
+                  if (onboardingModule) {
+                    setDismissedOnboarding((prev) => new Set(prev).add(onboardingModule.key));
+                  }
+                  setOnboardingModule(null);
+                }}>
+                  <Text className="text-xs text-text-secondary underline">Don&apos;t show again</Text>
+                </Pressable>
+                <Pressable onPress={() => setOnboardingModule(null)} className="bg-primary px-6 py-2.5 rounded-xl">
+                  <Text className="text-white font-bold text-sm">Got it</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
+}
+
+function tipsForModule(key: string): string[] {
+  const tips: Record<string, string[]> = {
+    pos: ["Create retail invoices with GST or non-GST billing", "Accept cash, UPI, or credit payments", "Print thermal receipts via Bluetooth printer", "View daily sales summary on the dashboard"],
+    b2b: ["Create wholesale invoices with bulk pricing", "Track B2B customer categories and ledgers", "Generate GST-compliant B2B invoices with IGST/CGST/SGST", "View B2B order history in the Transaction History tab"],
+    inventory: ["Add products with name, price, HSN code, and stock quantity", "Generate and print barcode labels", "Track stock levels and get low-stock alerts", "Manage purchase intakes and stock transfers"],
+    warehouse: ["Create multiple warehouse locations", "Transfer stock between warehouses", "Track warehouse-wise stock levels", "Assign staff to specific warehouses"],
+    ledger: ["Maintain customer and supplier ledgers", "Track payments received and made", "View aging reports for outstanding balances", "Auto-update ledgers from POS invoices and purchases"],
+    staff: ["Add staff members with roles and permissions", "Set up POS PIN for staff login", "Assign staff to warehouses or duties", "Track staff activity in activity logs"],
+    attendance: ["Staff check-in and check-out with GPS location", "View daily attendance records", "Generate attendance reports for payroll", "Set work hours and track overtime"],
+    agents: ["Add field agents to your team", "Track agent location via GPS in real-time", "Assign delivery and collection tasks", "Uses the dedicated Agent App for field operations"],
+    challans: ["Create delivery challans for dispatched goods", "Track challan status (draft, dispatched, delivered)", "Generate e-way bill compatible challans", "Attach photos and notes to challans"],
+    payments: ["Record payments received from customers", "Record payments made to suppliers", "Track payment modes (cash, UPI, bank transfer, cheque)", "View payment history and outstanding amounts"],
+    expenses: ["Record operational expenses with photo receipts", "Categorize expenses (travel, fuel, food, etc.)", "Track expense trends over time", "Attach bill photos from camera or gallery"],
+    reports: ["View GSTR-1 and GSTR-3B summary reports", "Generate HSN-wise sales summary", "Access day book and ledger reports", "Export reports for compliance filing"],
+  };
+  return tips[key] || ["Explore the new module features from the navigation menu"];
 }
 
