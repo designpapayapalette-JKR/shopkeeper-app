@@ -181,6 +181,7 @@ export default function PosScreen() {
   // Party Selector State
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
   const [isSelectingParty, setIsSelectingParty] = useState(false);
+  const [anonymousBilling, setAnonymousBilling] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // Add Customer State
@@ -725,7 +726,7 @@ export default function PosScreen() {
   // existing strict requirement untouched.
   const resolveCheckoutParty = async (): Promise<Party | null> => {
     if (selectedParty) return selectedParty;
-    if (businessMode === "b2b") return null;
+    if (businessMode === "b2b" && !anonymousBilling) return null;
 
     if (cashCustomerId) {
       const cached = parties.find((p) => p.id === cashCustomerId);
@@ -1129,45 +1130,75 @@ export default function PosScreen() {
   // ─────────────────────────────────────────────
   const CheckoutPanel = (
     <>
-      {/* Customer row */}
+      {/* Anonymous Billing Toggle */}
       <Pressable
-        onPress={() => setIsSelectingParty(true)}
-        className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-dashed border-gray-300 dark:border-zinc-700 p-4 mb-5 flex-row justify-between items-center active:opacity-75"
+        onPress={() => {
+          setAnonymousBilling((v) => !v);
+          if (!anonymousBilling) setSelectedParty(null);
+        }}
+        className={`flex-row items-center justify-between px-4 py-3 rounded-2xl border mb-4 ${
+          anonymousBilling ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-surface-dark"
+        }`}
       >
-        <View className="flex-row items-center flex-1 mr-3">
-          <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mr-3">
-            <MaterialCommunityIcons name="account" size={20} color="#005f49" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Customer</Text>
-            <Text numberOfLines={1} className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-0.5">
-              {selectedParty ? selectedParty.name : "Tap to select →"}
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <MaterialCommunityIcons name="incognito" size={18} color={anonymousBilling ? "#0F7A5F" : "#6e7a74"} />
+          <View>
+            <Text className={`text-sm font-bold ${anonymousBilling ? "text-primary dark:text-primary-dark" : "text-on-surface dark:text-text-primary-dark"}`}>
+              Anonymous Billing
             </Text>
+            {anonymousBilling && (
+              <Text className="text-xs text-on-surface-variant mt-0.5">Bill as "Cash Customer" — no profile needed</Text>
+            )}
           </View>
         </View>
-        {selectedParty && (
-          <View style={{ gap: 4 }}>
-            <View className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg flex-row items-center" style={{ gap: 3 }}>
-              <MaterialCommunityIcons name="check-circle" size={12} color="#15803d" />
-              <Text className="text-green-700 dark:text-green-400 text-xs font-bold">Set</Text>
-            </View>
-            {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
-              <View className={`px-2 py-1 rounded-lg ${parseFloat(selectedParty.current_balance) > 0 ? "bg-red-50 dark:bg-red-950/20" : "bg-green-50 dark:bg-green-950/20"}`}>
-                <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-600" : "text-green-600"}`}>
-                  ₹{Math.abs(parseFloat(selectedParty.current_balance)).toFixed(0)} {parseFloat(selectedParty.current_balance) > 0 ? "due" : "credit"}
-                </Text>
-              </View>
-            )}
-            {selectedParty.credit_limit != null && (
-              <View className="px-2 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
-                <Text className="text-[10px] font-bold text-yellow-700 dark:text-yellow-400">
-                  Limit: ₹{Number(selectedParty.credit_limit).toFixed(0)}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
+        <MaterialCommunityIcons
+          name={anonymousBilling ? "toggle-switch" : "toggle-switch-off-outline"}
+          size={26}
+          color={anonymousBilling ? "#0F7A5F" : "#9E9E9E"}
+        />
       </Pressable>
+
+      {/* Customer row — hidden when anonymous billing is on */}
+      {!anonymousBilling && (
+        <Pressable
+          onPress={() => setIsSelectingParty(true)}
+          className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-dashed border-gray-300 dark:border-zinc-700 p-4 mb-5 flex-row justify-between items-center active:opacity-75"
+        >
+          <View className="flex-row items-center flex-1 mr-3">
+            <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mr-3">
+              <MaterialCommunityIcons name="account" size={20} color="#005f49" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Customer</Text>
+              <Text numberOfLines={1} className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-0.5">
+                {selectedParty ? selectedParty.name : "Tap to select →"}
+              </Text>
+            </View>
+          </View>
+          {selectedParty && (
+            <View style={{ gap: 4 }}>
+              <View className="bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg flex-row items-center" style={{ gap: 3 }}>
+                <MaterialCommunityIcons name="check-circle" size={12} color="#15803d" />
+                <Text className="text-green-700 dark:text-green-400 text-xs font-bold">Set</Text>
+              </View>
+              {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
+                <View className={`px-2 py-1 rounded-lg ${parseFloat(selectedParty.current_balance) > 0 ? "bg-red-50 dark:bg-red-950/20" : "bg-green-50 dark:bg-green-950/20"}`}>
+                  <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-600" : "text-green-600"}`}>
+                    ₹{Math.abs(parseFloat(selectedParty.current_balance)).toFixed(0)} {parseFloat(selectedParty.current_balance) > 0 ? "due" : "credit"}
+                  </Text>
+                </View>
+              )}
+              {selectedParty.credit_limit != null && (
+                <View className="px-2 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
+                  <Text className="text-[10px] font-bold text-yellow-700 dark:text-yellow-400">
+                    Limit: ₹{Number(selectedParty.credit_limit).toFixed(0)}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </Pressable>
+      )}
 
       {/* Cart items */}
       {cart.length === 0 ? (
@@ -1248,17 +1279,11 @@ export default function PosScreen() {
         {/* Bill Type */}
         <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Bill Type</Text>
         <View className="flex-row gap-2 mb-4">
-          {(businessMode === "b2b"
-            ? ([
-                { key: "gst",      label: "GST",       icon: "file-document-outline" },
-                { key: "estimate", label: "Estimate",  icon: "note-edit-outline" },
-              ] as const)
-            : ([
-                { key: "retail",   label: "Retail",   icon: "storefront-outline" },
-                { key: "gst",      label: "GST",       icon: "file-document-outline" },
-                { key: "estimate", label: "Estimate",  icon: "note-edit-outline" },
-              ] as const)
-          ).map((opt) => (
+          {([
+              { key: "retail",   label: "Non-GST", icon: "storefront-outline" },
+              { key: "gst",      label: "GST",     icon: "file-document-outline" },
+              { key: "estimate", label: "Estimate", icon: "note-edit-outline" },
+            ] as const).map((opt) => (
             <Pressable
               key={opt.key}
               onPress={() => setInvoiceType(opt.key as "gst" | "retail" | "estimate")}
