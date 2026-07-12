@@ -185,6 +185,52 @@ export default function MoreScreen() {
   const [bizSubmitting, setBizSubmitting] = useState(false);
   const [businessProfileInitial, setBusinessProfileInitial] = useState<BusinessProfileSnapshot | null>(null);
 
+  // Module Configuration
+  const ALL_MODULES: { key: string; label: string; desc: string }[] = [
+    { key: "pos", label: "POS Billing", desc: "Point of Sale — retail counter billing" },
+    { key: "b2b", label: "B2B Sales", desc: "Wholesale / bulk order invoicing" },
+    { key: "inventory", label: "Inventory Management", desc: "Product catalog, stock tracking, barcodes" },
+    { key: "warehouse", label: "Warehouse Management", desc: "Multi-warehouse stock transfers" },
+    { key: "ledger", label: "Party Ledger", desc: "Customer/supplier balances, payment tracking" },
+    { key: "staff", label: "Staff Management", desc: "Employee profiles, roles, credentials" },
+    { key: "attendance", label: "Attendance", desc: "Staff check-in/out tracking" },
+    { key: "agents", label: "Field Agents", desc: "GPS tracking, task assignment" },
+    { key: "challans", label: "Delivery Challans", desc: "Dispatch manifests, transit tracking" },
+    { key: "payments", label: "Payments", desc: "Payment in/out records" },
+    { key: "expenses", label: "Expenses", desc: "Operational expense tracking" },
+    { key: "reports", label: "Reports & Compliance", desc: "GST reports, HSN summaries, day book" },
+  ];
+  const [enabledModules, setEnabledModules] = useState<string[]>([]);
+  const [modulesLoading, setModulesLoading] = useState(false);
+
+  const toggleModule = async (key: string) => {
+    const updated = enabledModules.includes(key)
+      ? enabledModules.filter((m) => m !== key)
+      : [...enabledModules, key];
+    setEnabledModules(updated);
+    setModulesLoading(true);
+    try {
+      await api.patch("/companies/me/modules", { modules: updated });
+    } catch (err) {
+      console.error("Failed to update modules:", err);
+    } finally {
+      setModulesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res: any = await api.get("/companies/me/modules");
+        if (Array.isArray(res?.data)) {
+          setEnabledModules(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load modules:", err);
+      }
+    })();
+  }, []);
+
   const openBusinessProfileModal = () => {
     const initial: BusinessProfileSnapshot = {
       bizName: activeCompany?.name ?? "",
@@ -1701,6 +1747,33 @@ export default function MoreScreen() {
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
         </Pressable>
+      </View>
+
+      {/* Module Configuration */}
+      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+          Module Configuration
+        </Text>
+        <Text className="text-sm text-text-secondary mb-4">
+          Toggle business modules on or off. Disabled modules will be hidden from the navigation.
+        </Text>
+        {ALL_MODULES.map((mod) => (
+          <View
+            key={mod.key}
+            className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
+          >
+            <View className="flex-1 mr-3">
+              <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
+              <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
+            </View>
+            <Switch
+              value={enabledModules.includes(mod.key)}
+              onValueChange={() => toggleModule(mod.key)}
+              trackColor={{ false: "#ddd", true: "#0F7A5F" }}
+              thumbColor="#fff"
+            />
+          </View>
+        ))}
       </View>
 
       {/* Security */}
