@@ -7,6 +7,7 @@
 // thermal" rather than replacing either.
 
 import { buildUpiQrSvg } from "./upiQr";
+import { TemplateConfig } from "./printer";
 
 export interface TallyInvoiceItem {
   name: string;
@@ -102,7 +103,11 @@ function numberToIndianWords(amount: number): string {
   return `${words} Only`;
 }
 
-export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
+export function generateTallyInvoiceHtml(data: TallyInvoiceData, template?: TemplateConfig): string {
+  const cfg = (k: keyof TemplateConfig): boolean | string | undefined => template?.[k];
+  const primaryColor = (cfg("primaryColor") as string) || "#111";
+  const accentColor = (cfg("accentColor") as string) || "#0F7A5F";
+
   const isGst = data.invoiceType === "gst";
   const isInterstate = data.igst > 0;
 
@@ -110,9 +115,9 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
     .map(
       (item, idx) => `
       <tr>
-        <td class="cell center">${idx + 1}</td>
+        ${cfg("showItemSno") !== false ? `<td class="cell center">${idx + 1}</td>` : ""}
         <td class="cell">${item.name}</td>
-        <td class="cell center">${item.hsnCode || "-"}</td>
+        ${cfg("showHsnCode") !== false ? `<td class="cell center">${item.hsnCode || "-"}</td>` : ""}
         <td class="cell center">${item.quantity.toFixed(2)}</td>
         <td class="cell right">₹${item.price.toFixed(2)}</td>
         ${isGst ? `<td class="cell center">${item.taxRate.toFixed(1)}%</td><td class="cell right">₹${item.taxAmount.toFixed(2)}</td>` : ""}
@@ -132,7 +137,7 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
           body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 12px;
-            color: #111;
+            color: ${primaryColor};
             margin: 0;
           }
           .invoice-box {
@@ -146,6 +151,7 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
             border-bottom: 1px solid #000;
             text-transform: uppercase;
             letter-spacing: 1px;
+            color: ${accentColor};
           }
           .header {
             display: flex;
@@ -182,16 +188,15 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
 
           <div class="header">
             <div class="col">
-              <div class="company-name">${data.company.name}</div>
-              ${data.company.address ? `<div>${data.company.address}</div>` : ""}
-              ${data.company.phone ? `<div>Phone: ${data.company.phone}</div>` : ""}
-              ${data.company.state ? `<div>State: ${data.company.state}</div>` : ""}
-              ${isGst && data.company.gstin ? `<div><b>GSTIN: ${data.company.gstin}</b></div>` : ""}
+              ${cfg("showCompanyName") !== false ? `<div class="company-name">${data.company.name}</div>` : ""}
+              ${cfg("showCompanyAddress") !== false && data.company.address ? `<div>${data.company.address}</div>` : ""}
+              ${cfg("showCompanyPhone") !== false && data.company.phone ? `<div>Phone: ${data.company.phone}</div>` : ""}
+              ${cfg("showCompanyGstin") !== false && isGst && data.company.gstin ? `<div><b>GSTIN: ${data.company.gstin}</b></div>` : ""}
             </div>
             <div class="col" style="text-align: right;">
-              <div><b>Invoice No:</b> ${data.invoiceNumber}</div>
-              <div><b>Date:</b> ${data.date}</div>
-              ${isGst ? `<div><b>Supply Type:</b> ${isInterstate ? "Interstate (IGST)" : "Intrastate (CGST+SGST)"}</div>` : ""}
+              ${cfg("showInvoiceNumber") !== false ? `<div><b>Invoice No:</b> ${data.invoiceNumber}</div>` : ""}
+              ${cfg("showDate") !== false ? `<div><b>Date:</b> ${data.date}</div>` : ""}
+              ${cfg("showDate") !== false && isGst ? `<div><b>Supply Type:</b> ${isInterstate ? "Interstate (IGST)" : "Intrastate (CGST+SGST)"}</div>` : ""}
               <div><b>Bill Type:</b> ${data.party.category === "b2b" ? "B2B" : "B2C"}</div>
             </div>
           </div>
@@ -199,17 +204,16 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
           <div class="party-block">
             <div class="label">Bill To</div>
             <div><b>${data.party.name}</b></div>
-            ${data.party.phone ? `<div>Phone: ${data.party.phone}</div>` : ""}
-            ${data.party.state ? `<div>State: ${data.party.state}</div>` : ""}
-            ${data.party.category === "b2b" && data.party.gstin ? `<div><b>GSTIN: ${data.party.gstin}</b></div>` : ""}
+            ${cfg("showCustomerPhone") !== false && data.party.phone ? `<div>Phone: ${data.party.phone}</div>` : ""}
+            ${cfg("showCustomerGstin") !== false && data.party.category === "b2b" && data.party.gstin ? `<div><b>GSTIN: ${data.party.gstin}</b></div>` : ""}
           </div>
 
           <table>
             <thead>
               <tr>
-                <th>#</th>
+                ${cfg("showItemSno") !== false ? "<th>#</th>" : ""}
                 <th>Item</th>
-                <th>HSN</th>
+                ${cfg("showHsnCode") !== false ? "<th>HSN</th>" : ""}
                 <th>Qty</th>
                 <th>Rate</th>
                 ${isGst ? "<th>Tax %</th><th>Tax Amt</th>" : ""}
@@ -222,17 +226,19 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
           </table>
 
           <table class="totals">
+            ${cfg("showSubtotal") !== false ? `
             <tr>
               <td class="label">Subtotal</td>
               <td class="value">₹${data.subtotal.toFixed(2)}</td>
             </tr>
+            ` : ""}
             ${
               data.discountTotal > 0
                 ? `<tr><td class="label">Discount</td><td class="value">-₹${data.discountTotal.toFixed(2)}</td></tr>`
                 : ""
             }
             ${
-              isGst
+              cfg("showTaxBreakup") !== false && isGst
                 ? isInterstate
                   ? `<tr><td class="label">IGST</td><td class="value">₹${data.igst.toFixed(2)}</td></tr>`
                   : `<tr><td class="label">CGST</td><td class="value">₹${data.cgst.toFixed(2)}</td></tr>
@@ -248,8 +254,7 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
               <td class="label">Grand Total</td>
               <td class="value">₹${data.total.toFixed(2)}</td>
             </tr>
-            ${
-              data.paymentMode
+            ${cfg("showPaymentMode") !== false && data.paymentMode
                 ? `<tr><td class="label">Payment Mode</td><td class="value">${{ cash: "CASH", upi: "UPI", credit: "CREDIT" }[data.paymentMode]}</td></tr>`
                 : ""
             }
@@ -260,9 +265,9 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
           </div>
 
           <div class="footer">
-            <div class="col" style="${data.company.upiId ? "width: 38%;" : ""}">
+            <div class="col" style="${cfg("showUpiQr") !== false && data.company.upiId ? "width: 38%;" : ""}">
               ${
-                data.company.bankName
+                cfg("showBankDetails") !== false && data.company.bankName
                   ? `
                 <div class="label" style="font-weight:bold; text-transform:uppercase; font-size:10px; color:#444; margin-bottom:3px;">Bank Details</div>
                 <div>Bank: ${data.company.bankName}</div>
@@ -273,7 +278,7 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
               }
             </div>
             ${
-              data.company.upiId
+              cfg("showUpiQr") !== false && data.company.upiId
                 ? `
             <div class="col" style="width: 24%; text-align:center;">
               <div class="label" style="font-weight:bold; text-transform:uppercase; font-size:10px; color:#444; margin-bottom:3px;">Scan to Pay</div>
@@ -282,10 +287,12 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData): string {
             `
                 : ""
             }
-            <div class="col" style="${data.company.upiId ? "width: 38%;" : ""}">
+            <div class="col" style="${cfg("showUpiQr") !== false && data.company.upiId ? "width: 38%;" : ""}">
+              ${cfg("showSignature") !== false ? `
               <div class="signature-box">
                 For ${data.company.name}<br />Authorized Signatory
               </div>
+              ` : ""}
             </div>
           </div>
         </div>

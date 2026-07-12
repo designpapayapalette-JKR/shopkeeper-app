@@ -59,17 +59,61 @@ export function estimateThermalPageHeightPt(itemCount: number, hasUpiQr: boolean
   return Math.round(headerFooterPt + itemCount * perItemPt + qrPt);
 }
 
-export function generateReceiptHtml(data: ReceiptData): string {
+// Template config for customizing what shows on the receipt.
+// Every field is optional — omitted fields fall back to hardcoded defaults
+// so existing call sites (which pass no config) keep working unchanged.
+export interface TemplateConfig {
+  primaryColor?: string;
+  accentColor?: string;
+  showCompanyLogo?: boolean;
+  showCompanyName?: boolean;
+  showCompanyGstin?: boolean;
+  showCompanyPhone?: boolean;
+  showCompanyAddress?: boolean;
+  showBankDetails?: boolean;
+  showUpiQr?: boolean;
+  showCustomerName?: boolean;
+  showCustomerGstin?: boolean;
+  showCustomerPhone?: boolean;
+  showCustomerAddress?: boolean;
+  showInvoiceNumber?: boolean;
+  showDate?: boolean;
+  showDueDate?: boolean;
+  showPaymentMode?: boolean;
+  showHsnCode?: boolean;
+  showItemDiscount?: boolean;
+  showSubtotal?: boolean;
+  showTaxBreakup?: boolean;
+  roundAmount?: boolean;
+  footerText?: string;
+  showSignature?: boolean;
+  paperSize?: "58mm" | "80mm" | "A4";
+  showItemSno?: boolean;
+  showItemMrp?: boolean;
+}
+
+export function generateReceiptHtml(data: ReceiptData, template?: TemplateConfig): string {
   // Effective rate shown is derived from the real computed amounts (not a fixed
   // assumption) — accurate for a single-tax-rate cart, an approximation for a
   // mixed-rate cart, but never fabricated the way a hardcoded 9%/9% would be.
   const pct = (amount: number) =>
     data.subtotal > 0 ? ((amount / data.subtotal) * 100).toFixed(1) : "0.0";
-  const widthMm = data.paperWidth ?? "58";
   const hasTax = data.cgst > 0 || data.sgst > 0 || data.igst > 0;
   const paymentModeLabel = data.paymentMode
     ? { cash: "CASH", upi: "UPI", credit: "CREDIT" }[data.paymentMode]
     : null;
+
+  const cfg = (k: keyof TemplateConfig): boolean | string | undefined => template?.[k];
+
+  // Paper width: config overrides data
+  const paperSizeCfg = cfg("paperSize");
+  const widthMm = paperSizeCfg && paperSizeCfg !== "A4"
+    ? String(paperSizeCfg).replace("mm", "")
+    : data.paperWidth ?? "58";
+
+  // CSS color overrides from config
+  const primaryColor = (cfg("primaryColor") as string) || "#000";
+  const accentColor = (cfg("accentColor") as string) || "#0F7A5F";
 
   const itemsHtml = data.items
     .map(
@@ -101,7 +145,7 @@ export function generateReceiptHtml(data: ReceiptData): string {
             padding: 2mm;
             font-family: 'Courier New', Courier, monospace;
             font-size: 12px;
-            color: #000;
+            color: ${primaryColor};
             line-height: 1.3;
           }
           .text-center {
@@ -145,11 +189,11 @@ export function generateReceiptHtml(data: ReceiptData): string {
       <body>
         <!-- Header -->
         <div class="header text-center">
-          <div class="store-title">${data.storeName}</div>
-          ${data.storeAddress ? `<div style="font-size: 10px;">${data.storeAddress}</div>` : ""}
-          ${data.storePhone ? `<div style="font-size: 10px;">Phone: ${data.storePhone}</div>` : ""}
-          ${(data.invoiceType === "gst" || hasTax) && data.gstNumber ? `<div style="font-size: 10px; font-weight: bold; margin-top: 2px;">GSTIN: ${data.gstNumber}</div>` : ""}
-          <div style="font-size: 12px; font-weight: bold; margin-top: 4px; border: 1px solid #000; padding: 2px; display: inline-block;">
+          ${cfg("showCompanyName") !== false ? `<div class="store-title">${data.storeName}</div>` : ""}
+          ${cfg("showCompanyAddress") !== false && data.storeAddress ? `<div style="font-size: 10px;">${data.storeAddress}</div>` : ""}
+          ${cfg("showCompanyPhone") !== false && data.storePhone ? `<div style="font-size: 10px;">Phone: ${data.storePhone}</div>` : ""}
+          ${cfg("showCompanyGstin") !== false && (data.invoiceType === "gst" || hasTax) && data.gstNumber ? `<div style="font-size: 10px; font-weight: bold; margin-top: 2px;">GSTIN: ${data.gstNumber}</div>` : ""}
+          <div style="font-size: 12px; font-weight: bold; margin-top: 4px; border: 1px solid ${accentColor}; padding: 2px; display: inline-block; color: ${accentColor};">
             ${
               data.invoiceType === "gst"
                 ? "TAX INVOICE"
@@ -166,9 +210,9 @@ export function generateReceiptHtml(data: ReceiptData): string {
 
         <!-- Invoice Details -->
         <div class="invoice-details">
-          <div>Bill No: ${data.invoiceNumber}</div>
-          <div>Date: ${data.date}</div>
-          ${paymentModeLabel ? `<div>Payment: ${paymentModeLabel}</div>` : ""}
+          ${cfg("showInvoiceNumber") !== false ? `<div>Bill No: ${data.invoiceNumber}</div>` : ""}
+          ${cfg("showDate") !== false ? `<div>Date: ${data.date}</div>` : ""}
+          ${cfg("showPaymentMode") !== false && paymentModeLabel ? `<div>Payment: ${paymentModeLabel}</div>` : ""}
         </div>
 
         <div class="divider"></div>
@@ -187,13 +231,15 @@ export function generateReceiptHtml(data: ReceiptData): string {
         <div class="divider"></div>
 
         <!-- Totals -->
+        ${cfg("showSubtotal") !== false ? `
         <div class="totals-row">
           <span>Subtotal:</span>
           <span>₹${data.subtotal.toFixed(2)}</span>
         </div>
+        ` : ""}
 
         ${
-          hasTax
+          cfg("showTaxBreakup") !== false && hasTax
             ? data.igst > 0
               ? `
           <div class="totals-row">
@@ -235,7 +281,7 @@ export function generateReceiptHtml(data: ReceiptData): string {
         <div class="divider"></div>
 
         ${
-          data.upiId
+          cfg("showUpiQr") !== false && data.upiId
             ? `
         <div class="text-center" style="margin: 8px 0;">
           <div style="font-size: 10px; font-weight: bold; margin-bottom: 4px;">Scan to Pay via UPI</div>
@@ -248,9 +294,18 @@ export function generateReceiptHtml(data: ReceiptData): string {
 
         <!-- Footer -->
         <div class="footer text-center">
-          <div>Thank you for your business!</div>
+          <div>${(cfg("footerText") as string) || "Thank you for your business!"}</div>
           <div style="margin-top: 3px; font-style: italic;">Powered by Shopkeeper ERP</div>
         </div>
+
+        ${cfg("showSignature") !== false ? `
+        <div class="divider"></div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px; font-size: 10px;">
+          <div style="text-align: center;">
+            <div style="border-top: 1px solid #000; width: 120px; padding-top: 4px;">Authorised Signatory</div>
+          </div>
+        </div>
+        ` : ""}
       </body>
     </html>
   `;
