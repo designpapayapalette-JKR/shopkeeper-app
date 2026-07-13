@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  Switch,
   Modal,
   ActivityIndicator,
   Alert,
@@ -26,6 +25,7 @@ import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useTerminology } from "../src/lib/terminology-context";
 import { useOutlet } from "../src/lib/outlet-context";
+import ToggleSwitch from "../src/components/ToggleSwitch";
 
 // Not meant to be memorable — it's shared with the new employee over
 // WhatsApp and they're expected to change it after first login.
@@ -1339,6 +1339,26 @@ export default function MoreScreen() {
           Staff & Employees
         </Text>
         <Pressable
+          onPress={() => router.push("/staff" as any)}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Manage Employees
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              View, edit, or remove team members and their roles.
+            </Text>
+          </View>
+          <View className="flex-row items-center" style={{ gap: 4 }}>
+            <MaterialCommunityIcons name="account-group" size={16} color="#0F7A5F" />
+            <Text className="text-primary font-bold text-base">Manage</Text>
+          </View>
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
           onPress={() => {
             fetchSetupData();
             setIsAddingStaff(true);
@@ -1794,11 +1814,9 @@ export default function MoreScreen() {
               <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
               <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
             </View>
-            <Switch
+            <ToggleSwitch
               value={localModules.includes(mod.key)}
               onValueChange={() => toggleModule(mod.key)}
-              trackColor={{ false: "#ddd", true: "#0F7A5F" }}
-              thumbColor="#fff"
             />
           </View>
         ))}

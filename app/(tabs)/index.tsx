@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
-  Switch,
   useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -18,6 +17,7 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useConfirm } from "../../src/components/ConfirmDialog";
+import ToggleSwitch from "../../src/components/ToggleSwitch";
 import { shareLedgerReminder } from "../../src/lib/sharer";
 import { getQueueCount, syncQueuedSales } from "../../src/lib/offlineQueue";
 import { useTerminology } from "../../src/lib/terminology-context";
@@ -336,11 +336,9 @@ export default function DashboardScreen() {
             {mode === "traditional" ? "Simple screen, big buttons" : "Full dashboard & reports"}
           </Text>
         </View>
-        <Switch
+        <ToggleSwitch
           value={mode === "traditional"}
           onValueChange={(v) => setMode(v ? "traditional" : "modern")}
-          trackColor={{ false: "#D1D5DB", true: "#0F7A5F" }}
-          thumbColor="#FFFFFF"
         />
       </Pressable>
 
