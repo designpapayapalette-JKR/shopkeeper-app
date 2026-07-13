@@ -25,6 +25,7 @@ import { shareLedgerReminder, shareChallan } from "../src/lib/sharer";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useTerminology } from "../src/lib/terminology-context";
+import { useOutlet } from "../src/lib/outlet-context";
 
 // Not meant to be memorable — it's shared with the new employee over
 // WhatsApp and they're expected to change it after first login.
@@ -185,6 +186,10 @@ export default function MoreScreen() {
   const [bizUpiQrUrl, setBizUpiQrUrl] = useState("");
   const [bizSubmitting, setBizSubmitting] = useState(false);
   const [businessProfileInitial, setBusinessProfileInitial] = useState<BusinessProfileSnapshot | null>(null);
+
+  // Outlet Switcher
+  const { outlets, selectedOutlet, selectedOutletId, setSelectedOutletId, loading: outletsLoading } = useOutlet();
+  const [showOutletPicker, setShowOutletPicker] = useState(false);
 
   // Module Configuration
   const ALL_MODULES: { key: string; label: string; desc: string }[] = [
@@ -1710,6 +1715,29 @@ export default function MoreScreen() {
           </View>
         )}
       </View>
+
+      {/* Outlet Switcher */}
+      {outlets.length > 0 && (
+        <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark mb-4">
+            Current Outlet
+          </Text>
+          <Pressable
+            onPress={() => setShowOutletPicker(true)}
+            className="flex-row justify-between items-center py-3"
+          >
+            <View className="flex-1 mr-2">
+              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+                {selectedOutlet ? selectedOutlet.name : "All Outlets (LALA JI)"}
+              </Text>
+              <Text className="text-sm text-text-secondary mt-0.5 capitalize">
+                {selectedOutlet ? selectedOutlet.type.replace("_", " ") : "Cross-outlet access"}
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          </Pressable>
+        </View>
+      )}
 
       {/* Business Profile */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
@@ -3560,6 +3588,67 @@ export default function MoreScreen() {
             </View>
           </Pressable>
         </Pressable>
+      </Modal>
+
+      {/* Outlet Picker Modal */}
+      <Modal visible={showOutletPicker} animationType="slide" transparent onRequestClose={() => setShowOutletPicker(false)}>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="bg-white dark:bg-zinc-900 rounded-t-3xl px-6 pb-10" style={{ paddingTop: 24, maxHeight: "70%" }}>
+            <View className="items-center mb-4">
+              <View className="w-10 h-1 rounded-full bg-gray-300 mb-4" />
+              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+                Select Outlet
+              </Text>
+            </View>
+            {outlets.length === 0 ? (
+              <View className="py-8 items-center">
+                <ActivityIndicator size="small" color="#0F7A5F" />
+                <Text className="text-sm text-text-secondary mt-3">Loading outlets...</Text>
+              </View>
+            ) : (
+              <ScrollView className="flex-1">
+                {outlets.map((o) => {
+                  const isActive = o.id === selectedOutletId;
+                  return (
+                    <Pressable
+                      key={o.id}
+                      onPress={() => { setSelectedOutletId(o.id); setShowOutletPicker(false); }}
+                      className="flex-row items-center py-4 px-2 border-b border-gray-100 dark:border-zinc-800"
+                    >
+                      <View
+                        className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                        style={{ backgroundColor: isActive ? "#0F7A5F" : "#E5E7EB" }}
+                      >
+                        <MaterialCommunityIcons
+                          name={isActive ? "store-check" : "store-outline"}
+                          size={20}
+                          color={isActive ? "#fff" : "#6B7280"}
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <Text className={`text-base font-bold ${isActive ? "text-primary" : "text-text-primary dark:text-text-primary-dark"}`}>
+                          {o.name}
+                        </Text>
+                        <Text className="text-xs text-text-secondary mt-0.5 capitalize">
+                          {o.type.replace("_", " ")}
+                        </Text>
+                      </View>
+                      {isActive && (
+                        <MaterialCommunityIcons name="check-circle" size={22} color="#0F7A5F" />
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+            <Pressable
+              onPress={() => { setSelectedOutletId(null); setShowOutletPicker(false); }}
+              className="mt-4 py-3 rounded-xl items-center border border-gray-200 dark:border-zinc-700"
+            >
+              <Text className="text-sm font-bold text-text-secondary">All Outlets (Owner View)</Text>
+            </Pressable>
+          </View>
+        </View>
       </Modal>
     </ScrollView>
   );

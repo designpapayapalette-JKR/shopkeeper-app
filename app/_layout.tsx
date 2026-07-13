@@ -85,6 +85,7 @@ function NavigationGuard() {
 }
 
 import { TerminologyProvider } from "../src/lib/terminology-context";
+import { OutletProvider } from "../src/lib/outlet-context";
 
 export default function RootLayout() {
   useEffect(() => {
@@ -96,10 +97,12 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <TerminologyProvider>
         <AuthProvider>
-          <ConfirmDialogProvider>
-            <StatusBar style="dark" />
-            <NavigationGuard />
-          </ConfirmDialogProvider>
+          <OutletProvider>
+            <ConfirmDialogProvider>
+              <StatusBar style="dark" />
+              <NavigationGuard />
+            </ConfirmDialogProvider>
+          </OutletProvider>
         </AuthProvider>
       </TerminologyProvider>
     </SafeAreaProvider>

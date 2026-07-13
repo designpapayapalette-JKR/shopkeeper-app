@@ -8,6 +8,13 @@ import { toCamelCase, toSnakeCase } from "./caseConvert";
 export const apiUrl =
   process.env.EXPO_PUBLIC_API_URL || "https://api.papayapalette.online";
 
+// Cached outlet ID — set by outlet-context on change so every API request
+// doesn't need an async SecureStore read. This is updated by the outlet
+// context provider when the user switches outlets.
+let _cachedOutletId: string | null = null;
+export function setOutletId(id: string | null) { _cachedOutletId = id; }
+export function getOutletId() { return _cachedOutletId; }
+
 const AUTH_STORAGE_KEY = "shopkeeper_auth_data";
 
 interface AuthData {
@@ -114,6 +121,9 @@ async function request<T = unknown>(
   if (!options.skipAuth) {
     const token = await getValidAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
+  }
+  if (_cachedOutletId) {
+    headers["X-Outlet-Id"] = _cachedOutletId;
   }
 
   let res = await fetch(url, {
