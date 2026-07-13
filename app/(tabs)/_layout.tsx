@@ -1,8 +1,8 @@
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useState, useEffect, useMemo } from "react";
-import { api } from "../../src/lib/api";
+import { useMemo } from "react";
+import { useEnabledModules } from "../../src/lib/useEnabledModules";
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -26,23 +26,7 @@ function TabIcon({
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const [enabledModules, setEnabledModules] = useState<string[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res: any = await api.get("/companies/me/modules");
-        if (Array.isArray(res?.data)) {
-          setEnabledModules(res.data);
-        }
-      } catch {
-        // fall through — default all enabled
-      }
-    })();
-  }, []);
-
-  const isEnabled = (moduleKey: string) =>
-    enabledModules.length === 0 || enabledModules.includes(moduleKey);
+  const { isEnabled } = useEnabledModules();
 
   const baseOptions = {
     headerShown: false,
@@ -82,7 +66,7 @@ export default function TabsLayout() {
       <TabIcon active="point-of-sale" inactive="point-of-sale" focused={focused} />
     ),
     tabBarButton: isEnabled("pos") ? undefined : (() => null) as any,
-  }), [enabledModules]);
+  }), [isEnabled]);
 
   const b2bOptions = useMemo(() => ({
     ...baseOptions,
@@ -91,7 +75,7 @@ export default function TabsLayout() {
       <TabIcon active="briefcase-account" inactive="briefcase-account-outline" focused={focused} />
     ),
     tabBarButton: isEnabled("b2b") ? undefined : (() => null) as any,
-  }), [enabledModules]);
+  }), [isEnabled]);
 
   const inventoryOptions = useMemo(() => ({
     ...baseOptions,
@@ -100,7 +84,7 @@ export default function TabsLayout() {
       <TabIcon active="package-variant" inactive="package-variant-closed" focused={focused} />
     ),
     tabBarButton: isEnabled("inventory") ? undefined : (() => null) as any,
-  }), [enabledModules]);
+  }), [isEnabled]);
 
   const ledgerOptions = useMemo(() => ({
     ...baseOptions,
@@ -109,7 +93,7 @@ export default function TabsLayout() {
       <TabIcon active="account-group" inactive="account-group-outline" focused={focused} />
     ),
     tabBarButton: isEnabled("ledger") ? undefined : (() => null) as any,
-  }), [enabledModules]);
+  }), [isEnabled]);
 
   const agentsOptions = useMemo(() => ({
     ...baseOptions,
@@ -118,7 +102,7 @@ export default function TabsLayout() {
       <TabIcon active="map-marker-radius" inactive="map-marker-radius-outline" focused={focused} />
     ),
     tabBarButton: isEnabled("agents") ? undefined : (() => null) as any,
-  }), [enabledModules]);
+  }), [isEnabled]);
 
   return (
     <Tabs screenOptions={baseOptions as any}>

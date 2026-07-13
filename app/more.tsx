@@ -19,6 +19,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../src/lib/auth-context";
 import { api, ApiError, uploadDocument } from "../src/lib/api";
+import { useEnabledModules } from "../src/lib/useEnabledModules";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../src/lib/sharer";
 import { useTopInset } from "../src/lib/useTopInset";
@@ -200,20 +201,25 @@ export default function MoreScreen() {
     { key: "expenses", label: "Expenses", desc: "Operational expense tracking" },
     { key: "reports", label: "Reports & Compliance", desc: "GST reports, HSN summaries, day book" },
   ];
-  const [enabledModules, setEnabledModules] = useState<string[]>([]);
+  const { enabledModules } = useEnabledModules();
+  const [localModules, setLocalModules] = useState<string[]>(enabledModules);
   const [modulesLoading, setModulesLoading] = useState(false);
   const [onboardingModule, setOnboardingModule] = useState<{ key: string; label: string; desc: string } | null>(null);
   const [dismissedOnboarding, setDismissedOnboarding] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    setLocalModules(enabledModules);
+  }, [enabledModules]);
+
   const toggleModule = async (key: string) => {
-    const wasDisabled = !enabledModules.includes(key);
-    const updated = enabledModules.includes(key)
-      ? enabledModules.filter((m) => m !== key)
-      : [...enabledModules, key];
-    setEnabledModules(updated);
+    const wasDisabled = !localModules.includes(key);
+    const updated = localModules.includes(key)
+      ? localModules.filter((m) => m !== key)
+      : [...localModules, key];
+    setLocalModules(updated);
     setModulesLoading(true);
     try {
-      await api.patch("/companies/me/modules", { modules: updated });
+      await api.patch("/companies/me/mobile-modules", { modules: updated });
     } catch (err) {
       console.error("Failed to update modules:", err);
     } finally {
@@ -224,19 +230,6 @@ export default function MoreScreen() {
       if (mod) setOnboardingModule(mod);
     }
   };
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res: any = await api.get("/companies/me/modules");
-        if (Array.isArray(res?.data)) {
-          setEnabledModules(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to load modules:", err);
-      }
-    })();
-  }, []);
 
   const openBusinessProfileModal = () => {
     const initial: BusinessProfileSnapshot = {
@@ -1774,7 +1767,7 @@ export default function MoreScreen() {
               <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
             </View>
             <Switch
-              value={enabledModules.includes(mod.key)}
+              value={localModules.includes(mod.key)}
               onValueChange={() => toggleModule(mod.key)}
               trackColor={{ false: "#ddd", true: "#0F7A5F" }}
               thumbColor="#fff"

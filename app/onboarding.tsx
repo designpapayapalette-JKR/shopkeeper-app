@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, Linking } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, Linking, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../src/lib/auth-context";
@@ -38,6 +38,13 @@ export default function OnboardingScreen() {
   const { activeCompany, refreshCompany } = useAuth();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
+  const [keyboardActive, setKeyboardActive] = useState(false);
+
+  React.useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardActive(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardActive(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const [step, setStep] = useState(0);
 
@@ -129,6 +136,8 @@ export default function OnboardingScreen() {
   const STEPS = ["Business Details", "Add Team", "Done"];
 
   return (
+    <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
       {/* Step indicator */}
       <View className="flex-row items-center mb-8" style={{ gap: 6 }}>
@@ -321,6 +330,8 @@ export default function OnboardingScreen() {
         </View>
       )}
     </View>
+    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
