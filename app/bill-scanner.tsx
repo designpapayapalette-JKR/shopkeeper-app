@@ -4,6 +4,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
 import { saveScan, ScanCategory } from "../src/lib/scanCapture";
 
 const CATEGORY_META: Record<ScanCategory, { title: string; destination: (uri: string) => string }> = {
@@ -33,6 +34,7 @@ const CATEGORY_META: Record<ScanCategory, { title: string; destination: (uri: st
 export default function BillScannerScreen() {
   const router = useRouter();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset(0);
   const params = useLocalSearchParams<{ category?: ScanCategory }>();
   const category: ScanCategory = params.category && CATEGORY_META[params.category] ? params.category : "purchase";
   const meta = CATEGORY_META[category];
@@ -98,7 +100,7 @@ export default function BillScannerScreen() {
           <Image source={{ uri: capturedUri }} style={StyleSheet.absoluteFill} resizeMode="contain" />
           <View
             className="absolute left-0 right-0 bottom-0 flex-row px-6 pt-4 bg-black/60"
-            style={{ paddingBottom: 32, gap: 12 }}
+            style={{ paddingBottom: 32 + bottomInset, gap: 12 }}
           >
             <Pressable
               onPress={() => setCapturedUri(null)}
@@ -125,7 +127,7 @@ export default function BillScannerScreen() {
               {meta.title}
             </Text>
           </View>
-          <View className="absolute left-0 right-0 items-center" style={{ bottom: 40 }}>
+          <View className="absolute left-0 right-0 items-center" style={{ bottom: 40 + bottomInset }}>
             <Pressable
               onPress={handleCapture}
               disabled={capturing}

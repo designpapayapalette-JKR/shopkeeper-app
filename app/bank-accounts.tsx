@@ -9,6 +9,8 @@ import {
   TextInput,
   Modal,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
@@ -203,7 +205,8 @@ export default function BankAccountsScreen() {
       )}
 
       <Modal visible={isAdding} animationType="slide" onRequestClose={closeAdd}>
-        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Add Bank Account</Text>
             <Pressable onPress={closeAdd} className="w-11 h-11 items-center justify-center">
@@ -248,6 +251,7 @@ export default function BankAccountsScreen() {
             {submitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Save Account</Text>}
           </Pressable>
         </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={isBulkImportOpen} animationType="slide" onRequestClose={() => setIsBulkImportOpen(false)}>

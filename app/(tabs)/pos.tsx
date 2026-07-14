@@ -12,6 +12,8 @@ import {
   useWindowDimensions,
   StyleSheet,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as Print from "expo-print";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -1877,6 +1879,7 @@ export default function PosScreen() {
       {/* ══════ Checkout Sheet (phone only) ══════ */}
       {!isTablet && (
         <Modal visible={isCheckoutOpen} animationType="slide" onRequestClose={() => setIsCheckoutOpen(false)}>
+          <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View className="flex-1 bg-background dark:bg-bg-dark">
             {/* Sheet header */}
             <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
@@ -1892,6 +1895,7 @@ export default function PosScreen() {
               {CheckoutPanel}
             </ScrollView>
           </View>
+          </KeyboardAvoidingView>
         </Modal>
       )}
 
@@ -1989,7 +1993,8 @@ export default function PosScreen() {
 
       {/* ══════ Add New Customer Modal ══════ */}
       <Modal visible={isAddingCustomer} animationType="slide" onRequestClose={closeAddCustomer}>
-        <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: bottomInset + 24 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Customer</Text>
             <Pressable onPress={closeAddCustomer} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
@@ -2050,11 +2055,13 @@ export default function PosScreen() {
               )}
             </Pressable>
           </View>
-        </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={isAddingProduct} animationType="slide" onRequestClose={closeAddProduct}>
-        <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: bottomInset + 24 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Product</Text>
             <Pressable onPress={closeAddProduct} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
@@ -2131,7 +2138,8 @@ export default function PosScreen() {
               )}
             </Pressable>
           </View>
-        </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Per-item GST override */}

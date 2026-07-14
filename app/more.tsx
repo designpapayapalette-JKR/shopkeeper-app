@@ -25,7 +25,6 @@ import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useTerminology } from "../src/lib/terminology-context";
 import { useOutlet } from "../src/lib/outlet-context";
-import ToggleSwitch from "../src/components/ToggleSwitch";
 
 // Not meant to be memorable — it's shared with the new employee over
 // WhatsApp and they're expected to change it after first login.
@@ -207,34 +206,6 @@ export default function MoreScreen() {
     { key: "reports", label: "Reports & Compliance", desc: "GST reports, HSN summaries, day book" },
   ];
   const { enabledModules } = useEnabledModules();
-  const [localModules, setLocalModules] = useState<string[]>(enabledModules);
-  const [modulesLoading, setModulesLoading] = useState(false);
-  const [onboardingModule, setOnboardingModule] = useState<{ key: string; label: string; desc: string } | null>(null);
-  const [dismissedOnboarding, setDismissedOnboarding] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    setLocalModules(enabledModules);
-  }, [enabledModules]);
-
-  const toggleModule = async (key: string) => {
-    const wasDisabled = !localModules.includes(key);
-    const updated = localModules.includes(key)
-      ? localModules.filter((m) => m !== key)
-      : [...localModules, key];
-    setLocalModules(updated);
-    setModulesLoading(true);
-    try {
-      await api.patch("/companies/me/mobile-modules", { modules: updated });
-    } catch (err) {
-      console.error("Failed to update modules:", err);
-    } finally {
-      setModulesLoading(false);
-    }
-    if (wasDisabled && !dismissedOnboarding.has(key)) {
-      const mod = ALL_MODULES.find((m) => m.key === key);
-      if (mod) setOnboardingModule(mod);
-    }
-  };
 
   const openBusinessProfileModal = () => {
     const initial: BusinessProfileSnapshot = {
@@ -1076,7 +1047,7 @@ export default function MoreScreen() {
         });
         if (ok) {
           const isFieldRole = createdRole === "staff" || createdRole === "field_agent";
-          const appName = isFieldRole ? "Employee App" : "Shopkeeper App";
+          const appName = isFieldRole ? "Employee App" : "managemycounter App";
           const downloadUrl = isFieldRole ? AGENT_APP_DOWNLOAD_URL : APP_DOWNLOAD_URL;
           const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the ${appName}.\n\n1. Download the app: ${downloadUrl}\n2. Log in with:\nEmail: ${createdEmail}\nPassword: ${createdPassword}\n\nPlease change your password after logging in.`;
           const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${createdPhone.replace(/\D/g, "")}`;
@@ -1860,15 +1831,15 @@ export default function MoreScreen() {
         </Pressable>
       </View>
 
-      {/* Module Configuration */}
+      {/* Module Configuration — read-only here; toggling happens on the web app only */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
           Module Configuration
         </Text>
         <Text className="text-sm text-text-secondary mb-4">
-          Toggle business modules on or off. Disabled modules will be hidden from the navigation.
+          Modules currently enabled for your business. Manage which modules are on or off from the web app.
         </Text>
-        {ALL_MODULES.map((mod) => (
+        {ALL_MODULES.filter((mod) => enabledModules.includes(mod.key)).map((mod) => (
           <View
             key={mod.key}
             className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
@@ -1877,12 +1848,16 @@ export default function MoreScreen() {
               <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
               <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
             </View>
-            <ToggleSwitch
-              value={localModules.includes(mod.key)}
-              onValueChange={() => toggleModule(mod.key)}
-            />
+            <MaterialCommunityIcons name="check-circle" size={20} color="#0F7A5F" />
           </View>
         ))}
+        <Pressable
+          onPress={() => Linking.openURL("https://admin.papayapalette.online/dashboard/settings")}
+          className="flex-row items-center justify-between py-3 mt-2"
+        >
+          <Text className="text-sm font-bold text-primary">Manage in Web Portal</Text>
+          <MaterialCommunityIcons name="open-in-new" size={20} color="#0F7A5F" />
+        </Pressable>
       </View>
 
       {/* Security */}
@@ -1943,7 +1918,8 @@ export default function MoreScreen() {
             <ActivityIndicator size="large" color="#0F7A5F" />
           </View>
         ) : (
-          <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+          <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
             <View className="flex-row justify-between items-center mb-6">
               <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
                 Record Purchase Bill
@@ -2244,12 +2220,14 @@ export default function MoreScreen() {
               </Pressable>
             </View>
           </ScrollView>
+          </KeyboardAvoidingView>
         )}
       </Modal>
 
       {/* Record Expense Modal */}
       <Modal visible={isExpenseModal} animationType="slide" onRequestClose={closeExpenseModal}>
-        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Record Expense
@@ -2345,10 +2323,12 @@ export default function MoreScreen() {
             {expenseSubmitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Save Expense</Text>}
           </Pressable>
         </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Warehouse Management Modal */}
       <Modal visible={isWarehouseModal} animationType="slide" onRequestClose={closeWarehouseModal}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
@@ -2359,7 +2339,7 @@ export default function MoreScreen() {
             </Pressable>
           </View>
 
-          <ScrollView className="flex-1 mb-4">
+          <ScrollView className="flex-1 mb-4" keyboardShouldPersistTaps="handled">
             {warehouses.map((w) => (
               <View
                 key={w.id}
@@ -2406,10 +2386,12 @@ export default function MoreScreen() {
             </Pressable>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Stock Transfer Modal */}
       <Modal visible={isTransferModal} animationType="slide" onRequestClose={closeTransferModal}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
@@ -2420,7 +2402,7 @@ export default function MoreScreen() {
             </Pressable>
           </View>
 
-          <ScrollView className="flex-grow space-y-4 pb-10">
+          <ScrollView className="flex-grow space-y-4 pb-10" keyboardShouldPersistTaps="handled">
             <View>
               <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
                 Select Product *
@@ -2580,6 +2562,7 @@ export default function MoreScreen() {
             </View>
           </ScrollView>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Staff Attendance Checklist Modal */}
@@ -2663,6 +2646,7 @@ export default function MoreScreen() {
 
       {/* Salary Management Modal */}
       <Modal visible={isSalaryModal} animationType="slide" onRequestClose={closeSalaryModal}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
@@ -2676,6 +2660,7 @@ export default function MoreScreen() {
           <FlatList
             data={salariesList}
             keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
             ListHeaderComponent={
               <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-155 dark:border-zinc-800 mb-6 shadow-sm">
@@ -2771,6 +2756,7 @@ export default function MoreScreen() {
             )}
           />
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Logistics & Delivery Challans Modal */}
@@ -2857,7 +2843,8 @@ export default function MoreScreen() {
 
       {/* Create Challan Modal */}
       <Modal visible={isCreateChallanModal} animationType="slide" onRequestClose={closeCreateChallanModal}>
-        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Generate Challan
@@ -2974,6 +2961,7 @@ export default function MoreScreen() {
             </Pressable>
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Sales Report Modal */}
@@ -3269,7 +3257,8 @@ export default function MoreScreen() {
 
       {/* Business Profile Modal */}
       <Modal visible={isBusinessProfileModal} animationType="slide" onRequestClose={closeBusinessProfileModal}>
-        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
               Business Profile
@@ -3328,6 +3317,7 @@ export default function MoreScreen() {
             </Pressable>
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Quick PIN Setup Modal */}
@@ -3394,7 +3384,8 @@ export default function MoreScreen() {
 
       {/* Add Staff Modal */}
       <Modal visible={isAddingStaff} animationType="slide" onRequestClose={closeAddStaffModal}>
-        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
             Add New Employee
           </Text>
@@ -3531,11 +3522,13 @@ export default function MoreScreen() {
             </Pressable>
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Dispatch Task Modal */}
       <Modal visible={isDispatchTaskModal} animationType="slide" onRequestClose={closeDispatchTaskModal}>
-        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
             Dispatch Task to Agent
           </Text>
@@ -3624,51 +3617,7 @@ export default function MoreScreen() {
             </Pressable>
           </View>
         </ScrollView>
-      </Modal>
-
-      {/* Module Onboarding Modal */}
-      <Modal visible={!!onboardingModule} animationType="fade" transparent onRequestClose={() => setOnboardingModule(null)}>
-        <Pressable className="flex-1 justify-center items-center bg-black/40" onPress={() => setOnboardingModule(null)}>
-          <Pressable className="bg-background dark:bg-background-dark rounded-3xl mx-6 w-full max-w-sm overflow-hidden" onPress={() => {}}>
-            <View className="bg-primary/5 p-6 pb-4">
-              <View className="flex-row items-center gap-3 mb-2">
-                <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-                  <MaterialCommunityIcons name="lightbulb-on-outline" size={20} color="#0F7A5F" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-[10px] font-black text-text-secondary uppercase tracking-wider">New Module Enabled</Text>
-                  <Text className="text-lg font-bold text-text-primary">{onboardingModule?.label}</Text>
-                </View>
-              </View>
-            </View>
-            <View className="p-6">
-              <Text className="text-sm text-text-secondary mb-4">{onboardingModule?.desc}</Text>
-              <View className="gap-3">
-                {onboardingModule && (tipsForModule(onboardingModule.key) || []).map((tip, i) => (
-                  <View key={i} className="flex-row items-start gap-2.5">
-                    <View className="w-5 h-5 rounded-full bg-primary/10 items-center justify-center shrink-0 mt-0.5">
-                      <Text className="text-primary font-bold text-[10px]">{i + 1}</Text>
-                    </View>
-                    <Text className="text-sm text-text-primary flex-1">{tip}</Text>
-                  </View>
-                ))}
-              </View>
-              <View className="flex-row items-center justify-between mt-6">
-                <Pressable onPress={() => {
-                  if (onboardingModule) {
-                    setDismissedOnboarding((prev) => new Set(prev).add(onboardingModule.key));
-                  }
-                  setOnboardingModule(null);
-                }}>
-                  <Text className="text-xs text-text-secondary underline">Don&apos;t show again</Text>
-                </Pressable>
-                <Pressable onPress={() => setOnboardingModule(null)} className="bg-primary px-6 py-2.5 rounded-xl">
-                  <Text className="text-white font-bold text-sm">Got it</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Outlet Picker Modal */}
@@ -3733,23 +3682,5 @@ export default function MoreScreen() {
       </Modal>
     </ScrollView>
   );
-}
-
-function tipsForModule(key: string): string[] {
-  const tips: Record<string, string[]> = {
-    pos: ["Create retail invoices with GST or non-GST billing", "Accept cash, UPI, or credit payments", "Print thermal receipts via Bluetooth printer", "View daily sales summary on the dashboard"],
-    b2b: ["Create wholesale invoices with bulk pricing", "Track B2B customer categories and ledgers", "Generate GST-compliant B2B invoices with IGST/CGST/SGST", "View B2B order history in the Transaction History tab"],
-    inventory: ["Add products with name, price, HSN code, and stock quantity", "Generate and print barcode labels", "Track stock levels and get low-stock alerts", "Manage purchase intakes and stock transfers"],
-    warehouse: ["Create multiple warehouse locations", "Transfer stock between warehouses", "Track warehouse-wise stock levels", "Assign staff to specific warehouses"],
-    ledger: ["Maintain customer and supplier ledgers", "Track payments received and made", "View aging reports for outstanding balances", "Auto-update ledgers from POS invoices and purchases"],
-    staff: ["Add staff members with roles and permissions", "Set up POS PIN for staff login", "Assign staff to warehouses or duties", "Track staff activity in activity logs"],
-    attendance: ["Staff check-in and check-out with GPS location", "View daily attendance records", "Generate attendance reports for payroll", "Set work hours and track overtime"],
-    agents: ["Add field agents to your team", "Track agent location via GPS in real-time", "Assign delivery and collection tasks", "Uses the dedicated Agent App for field operations"],
-    challans: ["Create delivery challans for dispatched goods", "Track challan status (draft, dispatched, delivered)", "Generate e-way bill compatible challans", "Attach photos and notes to challans"],
-    payments: ["Record payments received from customers", "Record payments made to suppliers", "Track payment modes (cash, UPI, bank transfer, cheque)", "View payment history and outstanding amounts"],
-    expenses: ["Record operational expenses with photo receipts", "Categorize expenses (travel, fuel, food, etc.)", "Track expense trends over time", "Attach bill photos from camera or gallery"],
-    reports: ["View GSTR-1 and GSTR-3B summary reports", "Generate HSN-wise sales summary", "Access day book and ledger reports", "Export reports for compliance filing"],
-  };
-  return tips[key] || ["Explore the new module features from the navigation menu"];
 }
 

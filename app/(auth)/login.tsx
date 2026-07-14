@@ -74,7 +74,7 @@ export default function LoginScreen() {
               <Text className="text-white text-3xl font-bold">S</Text>
             </View>
             <Text className="text-3xl font-extrabold text-text-primary dark:text-text-primary-dark text-center tracking-tight">
-              Shopkeeper ERP
+              managemycounter
             </Text>
             <Text className="text-text-secondary dark:text-text-secondary-dark text-center mt-2 font-medium">
               Manage your business with ease

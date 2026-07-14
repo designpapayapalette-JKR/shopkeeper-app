@@ -295,7 +295,7 @@ export function generateReceiptHtml(data: ReceiptData, template?: TemplateConfig
         <!-- Footer -->
         <div class="footer text-center">
           <div>${(cfg("footerText") as string) || "Thank you for your business!"}</div>
-          <div style="margin-top: 3px; font-style: italic;">Powered by Shopkeeper ERP</div>
+          <div style="margin-top: 3px; font-style: italic;">Powered by managemycounter</div>
         </div>
 
         ${cfg("showSignature") !== false ? `

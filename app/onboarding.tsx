@@ -122,7 +122,7 @@ export default function OnboardingScreen() {
       Alert.alert("No Phone Number", "Add a phone number for this member to send their login over WhatsApp.");
       return;
     }
-    const message = `Hi ${member.name}! You've been added to ${activeCompany?.name ?? "our team"} on Shopkeeper/Employee App.\n\nDownload the Employee App and log in with:\nEmail: ${member.email}\nPassword: ${member.tempPassword}\n\nPlease change your password after logging in.`;
+    const message = `Hi ${member.name}! You've been added to ${activeCompany?.name ?? "our team"} on managemycounter/Employee App.\n\nDownload the Employee App and log in with:\nEmail: ${member.email}\nPassword: ${member.tempPassword}\n\nPlease change your password after logging in.`;
     const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${member.phone.replace(/\D/g, "")}`;
     Linking.canOpenURL(url).then((supported) => {
       if (supported) {

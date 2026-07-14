@@ -14,6 +14,7 @@ import { useAuth } from "../../src/lib/auth-context";
 import { api } from "../../src/lib/api";
 import AgentMapView from "../../src/components/AgentMapView";
 import { useTopInset } from "../../src/lib/useTopInset";
+import { useBottomInset } from "../../src/lib/useBottomInset";
 
 interface AgentPing {
   id: string;
@@ -81,6 +82,7 @@ export default function AgentsScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const topInset = useTopInset();
+  const bottomInset = useBottomInset(24);
 
   const [agents, setAgents] = useState<AgentSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -223,13 +225,6 @@ export default function AgentsScreen() {
           </View>
 
           <View className="flex-row items-center" style={{ gap: 8 }}>
-            <Pressable
-              onPress={() => router.push("/walkie-talkie" as any)}
-              className="w-11 h-11 rounded-xl bg-primary/10 items-center justify-center"
-            >
-              <MaterialCommunityIcons name="radio-handheld" size={20} color="#0F7A5F" />
-            </Pressable>
-
           {/* Map / List toggle */}
           <View className="flex-row bg-surface-container dark:bg-surface-dark rounded-xl p-1 gap-1">
             {(["map", "list"] as ViewMode[]).map((mode) => (
@@ -294,7 +289,7 @@ export default function AgentsScreen() {
               with a real location can be flown to on the map; agents who
               haven't checked in yet appear in the List view instead. */}
           {agentsOnMap.length > 0 && (
-            <View className="absolute bottom-0 left-0 right-0 bg-surface-container-lowest dark:bg-surface-dark border-t border-outline-variant dark:border-outline px-4 pt-3 pb-6 gap-2">
+            <View className="absolute bottom-0 left-0 right-0 bg-surface-container-lowest dark:bg-surface-dark border-t border-outline-variant dark:border-outline px-4 pt-3 gap-2" style={{ paddingBottom: bottomInset }}>
               <Text className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-1">
                 Active Agents
               </Text>

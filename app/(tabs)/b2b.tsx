@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Modal,
   SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -387,6 +389,7 @@ export default function B2bScreen() {
             data={filteredParties}
             keyExtractor={(item) => item.id}
             className="px-5 pt-2"
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: insets.bottom }}
             renderItem={({ item }) => (
               <Pressable
@@ -540,6 +543,7 @@ export default function B2bScreen() {
 
       {/* Quick Customer Modal (cross-platform replacement for Alert.prompt) */}
       <Modal visible={quickCustomerModal} transparent animationType="fade">
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <Pressable className="flex-1 bg-black/40 justify-center items-center px-8" onPress={() => { setQuickCustomerModal(false); setQuickCustomerName(""); }}>
           <Pressable className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-3xl p-6" onPress={() => {}}>
             <Text className="text-lg font-bold text-gray-900 dark:text-white mb-1">Quick Customer</Text>
@@ -561,6 +565,7 @@ export default function B2bScreen() {
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

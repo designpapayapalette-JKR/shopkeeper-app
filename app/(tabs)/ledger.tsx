@@ -10,6 +10,8 @@ import {
   Alert,
   FlatList,
   Linking,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -716,7 +718,8 @@ export default function LedgerScreen() {
 
       {/* Record Payment Form Modal */}
       <Modal visible={isRecordingPayment} animationType="slide" onRequestClose={closeRecordPayment}>
-        <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Record Payment
@@ -858,11 +861,13 @@ export default function LedgerScreen() {
               )}
             </Pressable>
           </View>
-        </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Add Party Modal Form */}
       <Modal visible={isAddingParty || editingParty !== null} animationType="slide" onRequestClose={closePartyForm}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
@@ -1022,6 +1027,7 @@ export default function LedgerScreen() {
             </Pressable>
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Shopkeeper",
+    "name": "managemycounter",
     "slug": "shopkeeper-app",
     "scheme": "shopkeeper",
     "version": "0.1.0",
@@ -12,11 +12,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.papayapalette.shopkeeper",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Allow Shopkeeper App to access your location to verify checkout details and locate nearby network-enabled devices.",
-        "NSCameraUsageDescription": "Allow Shopkeeper App to access the camera to photograph documents, purchase receipts, and scan product barcode tags.",
-        "NSMicrophoneUsageDescription": "Allow Shopkeeper App to access the microphone for audio communication.",
-        "NSBluetoothAlwaysUsageDescription": "Allow Shopkeeper App to access Bluetooth to discover and print billing receipts on thermal tickets printers.",
-        "NSBluetoothPeripheralUsageDescription": "Allow Shopkeeper App to access Bluetooth to connect to billing printers."
+        "NSLocationWhenInUseUsageDescription": "Allow managemycounter App to access your location to verify checkout details and locate nearby network-enabled devices.",
+        "NSCameraUsageDescription": "Allow managemycounter App to access the camera to photograph documents, purchase receipts, and scan product barcode tags.",
+        "NSBluetoothAlwaysUsageDescription": "Allow managemycounter App to access Bluetooth to discover and print billing receipts on thermal tickets printers.",
+        "NSBluetoothPeripheralUsageDescription": "Allow managemycounter App to access Bluetooth to connect to billing printers."
       }
     },
     "android": {
@@ -30,9 +29,7 @@
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_SCAN",
         "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.ACCESS_WIFI_STATE",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.ACCESS_WIFI_STATE"
       ]
     },
     "plugins": [
@@ -43,16 +40,15 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Shopkeeper App to access your location to verify checkout details."
+          "locationAlwaysAndWhenInUsePermission": "Allow managemycounter App to access your location to verify checkout details."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Shopkeeper App to access the camera to scan product barcodes."
+          "cameraPermission": "Allow managemycounter App to access the camera to scan product barcodes."
         }
       ],
-      "@config-plugins/react-native-webrtc",
       [
         "expo-build-properties",
         {

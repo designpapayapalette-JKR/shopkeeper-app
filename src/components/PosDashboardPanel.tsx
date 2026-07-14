@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, TextInput, Modal, ScrollView } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, TextInput, Modal, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import { useAuth } from "../lib/auth-context";
@@ -614,7 +614,8 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
       )}
 
       <Modal visible={returnDetail !== null} animationType="slide" onRequestClose={closeReturn}>
-        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Return / Credit Note
@@ -719,6 +720,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
             </>
           )}
         </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Invoice Preview — tapping an invoice used to fire an Alert asking

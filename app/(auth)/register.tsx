@@ -78,7 +78,7 @@ export default function RegisterScreen() {
               Start Your Free Trial
             </Text>
             <Text className="text-text-secondary dark:text-text-secondary-dark text-center mt-2 font-medium">
-              Shopkeeper is invite-only during beta — enter your invite code below.
+              managemycounter is invite-only during beta — enter your invite code below.
             </Text>
           </View>
 
