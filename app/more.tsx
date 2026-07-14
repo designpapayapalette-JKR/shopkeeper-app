@@ -1318,6 +1318,23 @@ export default function MoreScreen() {
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
+          onPress={() => router.push("/support-tickets" as any)}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Support Tickets
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Get help or track existing support requests.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="headset" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
           onPress={() => router.push("/recycle-bin" as any)}
           className="flex-row justify-between items-center py-3"
         >
@@ -1794,6 +1811,52 @@ export default function MoreScreen() {
             </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+      </View>
+
+      {/* Subscription */}
+      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+          Subscription
+        </Text>
+        <View className="flex-row items-center justify-between py-2">
+          <Text className="text-sm text-text-secondary">Plan</Text>
+          <Text className="text-sm font-bold text-text-primary capitalize">
+            {activeCompany?.subscription_plan || "Trial"}
+          </Text>
+        </View>
+        <View className="flex-row items-center justify-between py-2">
+          <Text className="text-sm text-text-secondary">Status</Text>
+          <View className="flex-row items-center gap-1.5">
+            <View className="w-2 h-2 rounded-full" style={{
+              backgroundColor: activeCompany?.subscription_status === "active" ? "#10B981"
+                : activeCompany?.subscription_status === "trial" ? "#F59E0B"
+                : "#EF4444",
+            }} />
+            <Text className="text-sm font-bold capitalize" style={{
+              color: activeCompany?.subscription_status === "active" ? "#10B981"
+                : activeCompany?.subscription_status === "trial" ? "#F59E0B"
+                : "#EF4444",
+            }}>
+              {activeCompany?.subscription_status || "Trial"}
+            </Text>
+          </View>
+        </View>
+        {activeCompany?.subscription_end_date && (
+          <View className="flex-row items-center justify-between py-2">
+            <Text className="text-sm text-text-secondary">Expires</Text>
+            <Text className="text-sm font-bold text-text-primary">
+              {new Date(activeCompany.subscription_end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            </Text>
+          </View>
+        )}
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+        <Pressable
+          onPress={() => Linking.openURL("https://admin.papayapalette.online/dashboard/billing")}
+          className="flex-row items-center justify-between py-2"
+        >
+          <Text className="text-sm font-bold text-primary">Manage in Web Portal</Text>
+          <MaterialCommunityIcons name="open-in-new" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { api, setOutletId } from "./api";
 
 const OUTLET_STORAGE_KEY = "shopkeeper_outlet_id";
@@ -40,7 +40,7 @@ export function OutletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    AsyncStorage.getItem(OUTLET_STORAGE_KEY).then((stored) => {
+    SecureStore.getItemAsync(OUTLET_STORAGE_KEY).then((stored) => {
       if (stored) setSelectedOutletIdState(stored);
       fetchOutlets();
     });
@@ -53,8 +53,8 @@ export function OutletProvider({ children }: { children: React.ReactNode }) {
 
   const setSelectedOutletId = useCallback((id: string | null) => {
     setSelectedOutletIdState(id);
-    if (id) AsyncStorage.setItem(OUTLET_STORAGE_KEY, id);
-    else AsyncStorage.removeItem(OUTLET_STORAGE_KEY);
+    if (id) SecureStore.setItemAsync(OUTLET_STORAGE_KEY, id);
+    else SecureStore.deleteItemAsync(OUTLET_STORAGE_KEY);
   }, []);
 
   const selectedOutlet = outlets.find((o) => o.id === selectedOutletId) ?? null;

@@ -59,6 +59,8 @@ export default function B2bScreen() {
   const [isSelectingParty, setIsSelectingParty] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [quickCustomerModal, setQuickCustomerModal] = useState(false);
+  const [quickCustomerName, setQuickCustomerName] = useState("");
 
   const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
   const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate">("gst");
@@ -131,26 +133,23 @@ export default function B2bScreen() {
   const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
 
   const handleQuickAddCustomer = async () => {
-    Alert.prompt(
-      "Quick Customer",
-      "Enter customer name for anonymous billing:",
-      async (name) => {
-        if (!name || !name.trim()) return;
-        try {
-          const res = await api.post<{ data: Party }>(`${B2B_API}/parties`, {
-            name: name.trim(),
-            phone: undefined,
-            state: undefined,
-          });
-          const newParty = res.data;
-          setParties((prev) => [newParty, ...prev]);
-          setSelectedParty(newParty);
-          setIsSelectingParty(false);
-        } catch (e: any) {
-          Alert.alert("Error", e.message || "Failed to add customer");
-        }
-      }
-    );
+    const name = quickCustomerName.trim();
+    if (!name) return;
+    try {
+      const res = await api.post<{ data: Party }>(`${B2B_API}/parties`, {
+        name,
+        phone: undefined,
+        state: undefined,
+      });
+      const newParty = res.data;
+      setParties((prev) => [newParty, ...prev]);
+      setSelectedParty(newParty);
+      setIsSelectingParty(false);
+      setQuickCustomerModal(false);
+      setQuickCustomerName("");
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed to add customer");
+    }
   };
 
   const handleCheckout = async () => {
@@ -357,7 +356,7 @@ export default function B2bScreen() {
           {/* Quick Anonymous Customer */}
           <View className="px-5 pt-4 mb-2">
             <Pressable
-              onPress={handleQuickAddCustomer}
+              onPress={() => setQuickCustomerModal(true)}
               className="bg-primary/10 dark:bg-primary-dark/20 rounded-2xl border border-primary/30 p-4 flex-row items-center gap-3 active:opacity-75"
             >
               <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center">
@@ -537,6 +536,31 @@ export default function B2bScreen() {
             </Pressable>
           </View>
         </View>
+      </Modal>
+
+      {/* Quick Customer Modal (cross-platform replacement for Alert.prompt) */}
+      <Modal visible={quickCustomerModal} transparent animationType="fade">
+        <Pressable className="flex-1 bg-black/40 justify-center items-center px-8" onPress={() => { setQuickCustomerModal(false); setQuickCustomerName(""); }}>
+          <Pressable className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-3xl p-6" onPress={() => {}}>
+            <Text className="text-lg font-bold text-gray-900 dark:text-white mb-1">Quick Customer</Text>
+            <Text className="text-sm text-gray-500 dark:text-zinc-400 mb-4">Enter customer name for anonymous billing:</Text>
+            <TextInput
+              value={quickCustomerName}
+              onChangeText={setQuickCustomerName}
+              placeholder="Customer name"
+              className="bg-gray-50 dark:bg-zinc-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white mb-4"
+              autoFocus
+            />
+            <View className="flex-row gap-3">
+              <Pressable onPress={() => { setQuickCustomerModal(false); setQuickCustomerName(""); }} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-zinc-700">
+                <Text className="text-sm font-bold text-gray-600 dark:text-zinc-300 text-center">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={handleQuickAddCustomer} className="flex-1 bg-[#0F7A5F] py-3 rounded-xl">
+                <Text className="text-sm font-bold text-white text-center">Add Customer</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );
