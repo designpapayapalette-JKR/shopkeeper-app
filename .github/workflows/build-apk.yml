@@ -49,7 +49,7 @@ jobs:
         run: mv android/app/build/outputs/apk/release/app-release.apk shopkeeper-app-latest.apk
 
       - name: Upload APK as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: shopkeeper-app-apk
           path: shopkeeper-app-latest.apk
