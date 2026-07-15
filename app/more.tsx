@@ -3131,16 +3131,16 @@ export default function MoreScreen() {
                 return (
                   <View className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm">
                     <View className="flex-row justify-between items-center">
-                      <View>
-                        <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark">
+                      <View className="flex-1 mr-2">
+                        <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark" numberOfLines={1}>
                           {item.name}
                         </Text>
-                        <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-0.5">
+                        <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-0.5" numberOfLines={1}>
                           SKU: {item.sku || "N/A"}
                         </Text>
                       </View>
-                      <View className="items-end">
-                        <Text className={`text-sm font-black px-2.5 py-1 rounded-xl ${badgeColor}`}>
+                      <View className="items-end shrink-0">
+                        <Text className={`text-sm font-black px-2.5 py-1 rounded-xl ${badgeColor}`} numberOfLines={1}>
                           {stock} units
                         </Text>
                       </View>
@@ -3209,8 +3209,8 @@ export default function MoreScreen() {
                   className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center"
                 >
                   <View className="flex-1 mr-2">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{p.name}</Text>
-                    <Text className="text-sm text-text-secondary mt-0.5">Phone: {p.phone || "N/A"}</Text>
+                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{p.name}</Text>
+                    <Text className="text-sm text-text-secondary mt-0.5" numberOfLines={1}>Phone: {p.phone || "N/A"}</Text>
                   </View>
                   <View className="flex-row items-center space-x-2">
                     <Pressable
@@ -3236,8 +3236,8 @@ export default function MoreScreen() {
                   className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center"
                 >
                   <View className="flex-1 mr-2">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{p.name}</Text>
-                    <Text className="text-sm text-text-secondary mt-0.5">Phone: {p.phone || "N/A"}</Text>
+                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{p.name}</Text>
+                    <Text className="text-sm text-text-secondary mt-0.5" numberOfLines={1}>Phone: {p.phone || "N/A"}</Text>
                   </View>
                   <View className="flex-row items-center space-x-2">
                     <Pressable

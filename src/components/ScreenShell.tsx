@@ -39,6 +39,8 @@ export default function ScreenShell({
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View
         className={`flex-1 ${bg}`}
+        // Use safe-area insets + a minimum padding to avoid keyboard
+        // overlap on small devices.
         style={{
           paddingTop: topPadding ?? insets.top,
           paddingBottom: Math.max(insets.bottom, 16) + bottomPadding,
@@ -67,6 +69,10 @@ export default function ScreenShell({
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        // On Android we rely on ScrollView + keyboardShouldPersistTaps,
+        // but this prop helps with some manufacturers' keyboard overlays.
+        // eslint-disable-next-line react-native/no-inline-styles
+        style={{ flex: 1 }}
       >
         {content}
       </KeyboardAvoidingView>

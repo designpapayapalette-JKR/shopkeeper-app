@@ -1326,9 +1326,11 @@ export default function PosScreen() {
 
       {/* ── Bill Options ── */}
       <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-4 mb-4">
-        {/* Bill Type */}
+        {/* Bill Type — 2x2 grid rather than 4-across: an icon + label
+            ("Bill of Supply") doesn't fit in a quarter-width button on a
+            360px-wide phone without clipping or wrapping awkwardly. */}
         <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Bill Type</Text>
-        <View className="flex-row gap-2 mb-4">
+        <View className="flex-row flex-wrap mb-4" style={{ gap: 8 }}>
           {([
               { key: "retail",   label: "Non-GST", icon: "storefront-outline" },
               { key: "gst",      label: "GST",     icon: "file-document-outline" },
@@ -1338,19 +1340,23 @@ export default function PosScreen() {
             <Pressable
               key={opt.key}
               onPress={() => setInvoiceType(opt.key as "gst" | "retail" | "estimate" | "bill_of_supply")}
-              className={`flex-1 py-2.5 rounded-xl items-center border ${
+              className={`flex-row items-center justify-center py-2.5 rounded-xl border ${
                 invoiceType === opt.key
                   ? "border-transparent"
                   : "border-outline-variant dark:border-outline"
               }`}
-              style={invoiceType === opt.key ? { backgroundColor: activeBillColor } : undefined}
+              style={[{ width: "48%", gap: 6 }, invoiceType === opt.key ? { backgroundColor: activeBillColor } : undefined]}
             >
               <MaterialCommunityIcons
                 name={opt.icon}
-                size={18}
+                size={16}
                 color={invoiceType === opt.key ? "#FFFFFF" : "#6e7a74"}
               />
-              <Text className={`text-xs font-bold mt-0.5 ${invoiceType === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+              <Text
+                className={`text-xs font-bold ${invoiceType === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}
+                numberOfLines={1}
+                style={{ flexShrink: 1 }}
+              >
                 {opt.key === "gst" ? t("gstBill") : opt.key === "estimate" ? t("estimate") : opt.key === "bill_of_supply" ? "Bill of Supply" : t("sales").split(" ")[0]}
               </Text>
             </Pressable>

@@ -441,18 +441,21 @@ export default function B2bScreen() {
               )}
             </View>
 
-            {/* Invoice type */}
+            {/* Invoice type — 2x2 grid rather than 4-across, since "Bill of
+                Supply" doesn't fit on one line in a quarter-width button on
+                a 360px-wide phone. */}
             <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Bill Type</Text>
-            <View className="flex-row gap-2 mb-4">
+            <View className="flex-row flex-wrap mb-4" style={{ gap: 8 }}>
               {(["gst", "retail", "estimate", "bill_of_supply"] as const).map((t) => (
                 <Pressable
                   key={t}
                   onPress={() => setInvoiceType(t)}
-                  className={`flex-1 py-3 rounded-xl items-center border ${
+                  className={`py-3 rounded-xl items-center border ${
                     invoiceType === t ? "bg-primary border-primary" : "border-outline-variant dark:border-outline"
                   }`}
+                  style={{ width: "48%" }}
                 >
-                  <Text className={`text-[11px] font-bold text-center ${invoiceType === t ? "text-white" : "text-on-surface-variant"}`}>
+                  <Text className={`text-xs font-bold text-center ${invoiceType === t ? "text-white" : "text-on-surface-variant"}`} numberOfLines={1}>
                     {t === "gst" ? "GST" : t === "retail" ? "Non-GST" : t === "estimate" ? "Estimate" : "Bill of Supply"}
                   </Text>
                 </Pressable>

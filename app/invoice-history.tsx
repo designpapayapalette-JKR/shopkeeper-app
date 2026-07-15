@@ -133,75 +133,90 @@ export default function InvoiceHistoryScreen() {
     return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
   };
 
+  const BADGE_STYLES: Record<string, { bg: string; text: string }> = {
+    gst: { bg: "bg-primary/10", text: "text-primary" },
+    retail: { bg: "bg-gray-100 dark:bg-zinc-800", text: "text-on-surface-variant dark:text-text-secondary-dark" },
+    estimate: { bg: "bg-secondary/10", text: "text-secondary" },
+    bill_of_supply: { bg: "bg-secondary/10", text: "text-secondary" },
+    b2b: { bg: "bg-primary/10", text: "text-primary" },
+  };
+
+  const renderBadge = (type: string) => {
+    const s = BADGE_STYLES[type] || BADGE_STYLES.retail;
+    return (
+      <Text className={`text-[10px] font-bold px-2 py-1 rounded-full ${s.bg} ${s.text}`} numberOfLines={1}>
+        {type.replace(/_/g, " ").toUpperCase()}
+      </Text>
+    );
+  };
+
   const renderTab = (tab: typeof TABS[0]) => (
     <Pressable
       key={tab.key}
       onPress={() => setActiveTab(tab.key)}
-      className={`py-3 px-4 rounded-full flex-row items-center gap-2 ${activeTab === tab.key ? "bg-primary" : "bg-surface-2"}`}
+      className={`py-3 px-4 rounded-full flex-row items-center gap-2 ${activeTab === tab.key ? "bg-primary" : "bg-surface dark:bg-surface-dark"}`}
     >
       <MaterialCommunityIcons name={tab.icon} size={18} color={activeTab === tab.key ? "#fff" : "#666"} />
-      <Text className={`text-xs font-bold ${activeTab === tab.key ? "text-white" : "text-text-secondary"}`}>{tab.label}</Text>
+      <Text className={`text-xs font-bold ${activeTab === tab.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{tab.label}</Text>
     </Pressable>
   );
 
   const renderInvoiceItem = (item: InvoiceSummary) => (
-    <Pressable onPress={() => openDetail(item.id)} className="bg-card border border-border rounded-2xl p-4 mx-4 mb-3">
+    <Pressable onPress={() => openDetail(item.id)} className="bg-surface dark:bg-surface-dark border border-gray-100 dark:border-zinc-800 rounded-2xl p-4 mx-4 mb-3">
       <View className="flex-row justify-between items-center mb-2">
-        <Text className="font-mono text-sm font-bold text-foreground">{item.invoice_number}</Text>
-        <Text className={`badge ${item.type === "gst" ? "badge-blue" : item.type === "retail" ? "badge-neutral" : "badge-amber"}`}>
-          {item.type?.toUpperCase()}
-        </Text>
+        <Text className="font-mono text-sm font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>{item.invoice_number}</Text>
+        {renderBadge(item.type)}
       </View>
       <View className="flex-row justify-between items-center">
-        <View>
-          <Text className="text-xs text-text-secondary">{item.party?.name || "Walk-in Customer"}</Text>
-          <Text className="text-xs text-text-secondary mt-0.5">{formatDate(item.date)}</Text>
+        <View className="flex-1 mr-2">
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark" numberOfLines={1}>{item.party?.name || "Walk-in Customer"}</Text>
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{formatDate(item.date)}</Text>
         </View>
-        <Text className="text-base font-bold text-foreground">₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
+        <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark shrink-0" numberOfLines={1}>₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
       </View>
     </Pressable>
   );
 
   const renderB2bItem = (item: B2BInvoiceSummary) => (
-    <View className="bg-card border border-border rounded-2xl p-4 mx-4 mb-3">
+    <View className="bg-surface dark:bg-surface-dark border border-gray-100 dark:border-zinc-800 rounded-2xl p-4 mx-4 mb-3">
       <View className="flex-row justify-between items-center mb-2">
-        <Text className="font-mono text-sm font-bold text-foreground">{item.invoice_number}</Text>
-        <Text className="badge badge-blue">B2B</Text>
+        <Text className="font-mono text-sm font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>{item.invoice_number}</Text>
+        {renderBadge("b2b")}
       </View>
       <View className="flex-row justify-between items-center">
-        <View>
-          <Text className="text-xs text-text-secondary">{item.party?.name || "B2B Customer"}</Text>
-          <Text className="text-xs text-text-secondary mt-0.5">{formatDate(item.date)}</Text>
+        <View className="flex-1 mr-2">
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark" numberOfLines={1}>{item.party?.name || "B2B Customer"}</Text>
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{formatDate(item.date)}</Text>
         </View>
-        <Text className="text-base font-bold text-foreground">₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
+        <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark shrink-0" numberOfLines={1}>₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
       </View>
     </View>
   );
 
   const renderPurchaseItem = (item: PurchaseSummary) => (
-    <View className="bg-card border border-border rounded-2xl p-4 mx-4 mb-3">
+    <View className="bg-surface dark:bg-surface-dark border border-gray-100 dark:border-zinc-800 rounded-2xl p-4 mx-4 mb-3">
       <View className="flex-row justify-between items-center mb-2">
-        <Text className="font-mono text-sm font-bold text-foreground">{item.purchase_number}</Text>
+        <Text className="font-mono text-sm font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>{item.purchase_number}</Text>
         <MaterialCommunityIcons name="truck-delivery" size={18} color="#0F7A5F" />
       </View>
       <View className="flex-row justify-between items-center">
-        <View>
-          <Text className="text-xs text-text-secondary">{item.supplier?.name || "Supplier"}</Text>
-          <Text className="text-xs text-text-secondary mt-0.5">{item.warehouse?.name} • {formatDate(item.date)}</Text>
+        <View className="flex-1 mr-2">
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark" numberOfLines={1}>{item.supplier?.name || "Supplier"}</Text>
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5" numberOfLines={1}>{item.warehouse?.name} • {formatDate(item.date)}</Text>
         </View>
-        <Text className="text-base font-bold text-foreground">₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
+        <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark shrink-0" numberOfLines={1}>₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
       </View>
     </View>
   );
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: topInset }}>
-      <View className="px-4 py-4 border-b border-border">
+      <View className="px-4 py-4 border-b border-gray-100 dark:border-zinc-800">
         <View className="flex-row items-center gap-3 mb-3">
           <Pressable onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
           </Pressable>
-          <Text className="text-lg font-bold text-foreground">Transaction History</Text>
+          <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">Transaction History</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-2">
           {TABS.map(renderTab)}
@@ -216,8 +231,8 @@ export default function InvoiceHistoryScreen() {
         invoices.length === 0 ? (
           <View className="flex-1 items-center justify-center px-8">
             <MaterialCommunityIcons name="cash-register" size={48} color="#ccc" />
-            <Text className="text-base font-bold text-foreground mt-4">No Retail Invoices</Text>
-            <Text className="text-sm text-text-secondary text-center mt-2">Start selling at POS to register sales history.</Text>
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No Retail Invoices</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Start selling at POS to register sales history.</Text>
           </View>
         ) : (
           <FlatList data={invoices} keyExtractor={(i) => i.id} renderItem={({ item }) => renderInvoiceItem(item)} contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} />
@@ -226,8 +241,8 @@ export default function InvoiceHistoryScreen() {
         b2bInvoices.length === 0 ? (
           <View className="flex-1 items-center justify-center px-8">
             <MaterialCommunityIcons name="briefcase-account" size={48} color="#ccc" />
-            <Text className="text-base font-bold text-foreground mt-4">No B2B Orders</Text>
-            <Text className="text-sm text-text-secondary text-center mt-2">Create B2B invoices from the B2B sales module.</Text>
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No B2B Orders</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Create B2B invoices from the B2B sales module.</Text>
           </View>
         ) : (
           <FlatList data={b2bInvoices} keyExtractor={(i) => i.id} renderItem={({ item }) => renderB2bItem(item)} contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} />
@@ -236,8 +251,8 @@ export default function InvoiceHistoryScreen() {
         purchases.length === 0 ? (
           <View className="flex-1 items-center justify-center px-8">
             <MaterialCommunityIcons name="truck-delivery" size={48} color="#ccc" />
-            <Text className="text-base font-bold text-foreground mt-4">No Purchases</Text>
-            <Text className="text-sm text-text-secondary text-center mt-2">Register purchase intakes in Inventory.</Text>
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No Purchases</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Register purchase intakes in Inventory.</Text>
           </View>
         ) : (
           <FlatList data={purchases} keyExtractor={(i) => i.id} renderItem={({ item }) => renderPurchaseItem(item)} contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} />
@@ -248,7 +263,7 @@ export default function InvoiceHistoryScreen() {
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6 pb-10" style={{ maxHeight: "80%" }}>
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-bold text-foreground flex-1 mr-2">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>
                 {detailInvoice?.invoiceNumber || "Invoice"}
               </Text>
               <Pressable onPress={() => setDetailInvoiceId(null)}>
@@ -260,16 +275,16 @@ export default function InvoiceHistoryScreen() {
               <ActivityIndicator color="#0F7A5F" />
             ) : (
               <ScrollView>
-                <Text className="text-sm text-text-secondary mb-1">Customer: {detailInvoice.party?.name || "Walk-in Customer"}</Text>
-                <Text className="text-lg font-black text-foreground mb-4">₹{Number(detailInvoice.grandTotal).toLocaleString("en-IN")}</Text>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-1" numberOfLines={1}>Customer: {detailInvoice.party?.name || "Walk-in Customer"}</Text>
+                <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark mb-4">₹{Number(detailInvoice.grandTotal).toLocaleString("en-IN")}</Text>
 
                 {/* e-Way Bill / e-Invoice — manual record only, no live NIC/GSP
                     API call. Generate on the government portal / via your GSP,
                     then log the resulting number here for reference. */}
-                <View className="border-t border-border pt-4">
-                  <Text className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">e-Way Bill</Text>
+                <View className="border-t border-gray-100 dark:border-zinc-800 pt-4">
+                  <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-1">e-Way Bill</Text>
                   {detailInvoice.ewayBill ? (
-                    <Text className="text-sm text-foreground mb-3">EWB {detailInvoice.ewayBill.ewbNumber} — {detailInvoice.ewayBill.status}</Text>
+                    <Text className="text-sm text-on-surface dark:text-text-primary-dark mb-3" numberOfLines={1}>EWB {detailInvoice.ewayBill.ewbNumber} — {detailInvoice.ewayBill.status}</Text>
                   ) : showEwbForm ? (
                     <View className="mb-4">
                       <TextInput
@@ -277,14 +292,14 @@ export default function InvoiceHistoryScreen() {
                         onChangeText={setEwbNumber}
                         placeholder="e-Way bill number (from portal)"
                         placeholderTextColor="#A0A0A0"
-                        className="bg-surface border border-border rounded-xl px-3 py-2.5 text-sm font-medium text-foreground mb-2"
+                        className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm font-medium text-on-surface dark:text-text-primary-dark mb-2"
                       />
                       <View className="flex-row" style={{ gap: 8 }}>
                         <Pressable onPress={recordEwayBill} disabled={ewbSubmitting || !ewbNumber.trim()} className="bg-primary px-4 py-2 rounded-lg">
                           {ewbSubmitting ? <ActivityIndicator color="white" size="small" /> : <Text className="text-white font-bold text-xs">Save</Text>}
                         </Pressable>
-                        <Pressable onPress={() => setShowEwbForm(false)} className="px-4 py-2 rounded-lg border border-border">
-                          <Text className="text-text-secondary font-bold text-xs">Cancel</Text>
+                        <Pressable onPress={() => setShowEwbForm(false)} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-zinc-800">
+                          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-xs">Cancel</Text>
                         </Pressable>
                       </View>
                     </View>
@@ -294,9 +309,9 @@ export default function InvoiceHistoryScreen() {
                     </Pressable>
                   )}
 
-                  <Text className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">e-Invoice (IRN)</Text>
+                  <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-1">e-Invoice (IRN)</Text>
                   {detailInvoice.eInvoice ? (
-                    <Text className="text-sm text-foreground mb-1" numberOfLines={2}>IRN {detailInvoice.eInvoice.irn} — {detailInvoice.eInvoice.status}</Text>
+                    <Text className="text-sm text-on-surface dark:text-text-primary-dark mb-1" numberOfLines={2}>IRN {detailInvoice.eInvoice.irn} — {detailInvoice.eInvoice.status}</Text>
                   ) : showEInvForm ? (
                     <View>
                       <TextInput
@@ -304,14 +319,14 @@ export default function InvoiceHistoryScreen() {
                         onChangeText={setEinvIrn}
                         placeholder="IRN (from your GSP)"
                         placeholderTextColor="#A0A0A0"
-                        className="bg-surface border border-border rounded-xl px-3 py-2.5 text-sm font-medium text-foreground mb-2"
+                        className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm font-medium text-on-surface dark:text-text-primary-dark mb-2"
                       />
                       <View className="flex-row" style={{ gap: 8 }}>
                         <Pressable onPress={recordEInvoice} disabled={einvSubmitting || !einvIrn.trim()} className="bg-primary px-4 py-2 rounded-lg">
                           {einvSubmitting ? <ActivityIndicator color="white" size="small" /> : <Text className="text-white font-bold text-xs">Save</Text>}
                         </Pressable>
-                        <Pressable onPress={() => setShowEInvForm(false)} className="px-4 py-2 rounded-lg border border-border">
-                          <Text className="text-text-secondary font-bold text-xs">Cancel</Text>
+                        <Pressable onPress={() => setShowEInvForm(false)} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-zinc-800">
+                          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-xs">Cancel</Text>
                         </Pressable>
                       </View>
                     </View>
