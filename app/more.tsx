@@ -18,6 +18,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../src/lib/auth-context";
 import { api, ApiError, uploadDocument } from "../src/lib/api";
+import { SETTINGS_MODULE_CATEGORIES } from "../src/lib/moduleCategories";
 import { useEnabledModules } from "../src/lib/useEnabledModules";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../src/lib/sharer";
@@ -191,20 +192,6 @@ export default function MoreScreen() {
   const [showOutletPicker, setShowOutletPicker] = useState(false);
 
   // Module Configuration
-  const ALL_MODULES: { key: string; label: string; desc: string }[] = [
-    { key: "pos", label: "POS Billing", desc: "Point of Sale — retail counter billing" },
-    { key: "b2b", label: "B2B Sales", desc: "Wholesale / bulk order invoicing" },
-    { key: "inventory", label: "Inventory Management", desc: "Product catalog, stock tracking, barcodes" },
-    { key: "warehouse", label: "Warehouse Management", desc: "Multi-warehouse stock transfers" },
-    { key: "ledger", label: "Party Ledger", desc: "Customer/supplier balances, payment tracking" },
-    { key: "staff", label: "Staff Management", desc: "Employee profiles, roles, credentials" },
-    { key: "attendance", label: "Attendance", desc: "Staff check-in/out tracking" },
-    { key: "agents", label: "Field Agents", desc: "GPS tracking, task assignment" },
-    { key: "challans", label: "Delivery Challans", desc: "Dispatch manifests, transit tracking" },
-    { key: "payments", label: "Payments", desc: "Payment in/out records" },
-    { key: "expenses", label: "Expenses", desc: "Operational expense tracking" },
-    { key: "reports", label: "Reports & Compliance", desc: "GST reports, HSN summaries, day book" },
-  ];
   const { enabledModules } = useEnabledModules();
 
   const openBusinessProfileModal = () => {
@@ -1535,23 +1522,25 @@ export default function MoreScreen() {
           <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
         </Pressable>
 
-        <Pressable
-          onPress={() => {
-            fetchSetupData();
-            setIsTransferModal(true);
-          }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
-        >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Stock Transfer
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Move inventory stock between company warehouses.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
-        </Pressable>
+        {enabledModules.includes("warehouse") && (
+          <Pressable
+            onPress={() => {
+              fetchSetupData();
+              setIsTransferModal(true);
+            }}
+            className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
+          >
+            <View className="flex-1 pr-2">
+              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+                Stock Transfer
+              </Text>
+              <Text className="text-sm text-text-secondary mt-0.5">
+                Move inventory stock between company warehouses.
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          </Pressable>
+        )}
 
         <Pressable
           onPress={() => {
@@ -1839,18 +1828,31 @@ export default function MoreScreen() {
         <Text className="text-sm text-text-secondary mb-4">
           Modules currently enabled for your business. Manage which modules are on or off from the web app.
         </Text>
-        {ALL_MODULES.filter((mod) => enabledModules.includes(mod.key)).map((mod) => (
-          <View
-            key={mod.key}
-            className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
-          >
-            <View className="flex-1 mr-3">
-              <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
-              <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
+        {SETTINGS_MODULE_CATEGORIES.map((cat) => {
+          const catModules = cat.modules.filter((mod) => enabledModules.includes(mod.key));
+          if (catModules.length === 0) return null;
+          return (
+            <View key={cat.id} className="mb-4">
+              <View className="flex-row items-center gap-2 mb-2">
+                <View className="w-1 h-4 rounded-full bg-primary" />
+                <Text className="text-xs font-bold text-text-secondary uppercase tracking-wider">{cat.label}</Text>
+                <Text className="text-[10px] text-text-secondary ml-auto">{catModules.length} enabled</Text>
+              </View>
+              {catModules.map((mod) => (
+                <View
+                  key={mod.key}
+                  className="flex-row items-center justify-between py-2.5 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
+                >
+                  <View className="flex-1 mr-3">
+                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
+                    <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
+                  </View>
+                  <MaterialCommunityIcons name="check-circle" size={20} color="#0F7A5F" />
+                </View>
+              ))}
             </View>
-            <MaterialCommunityIcons name="check-circle" size={20} color="#0F7A5F" />
-          </View>
-        ))}
+          );
+        })}
         <Pressable
           onPress={() => Linking.openURL("https://admin.papayapalette.online/dashboard/settings")}
           className="flex-row items-center justify-between py-3 mt-2"

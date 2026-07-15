@@ -95,6 +95,15 @@ export default function TabsLayout() {
     tabBarButton: isEnabled("ledger") ? undefined : (() => null) as any,
   }), [isEnabled]);
 
+  const estimatesOptions = useMemo(() => ({
+    ...baseOptions,
+    title: "Estimates",
+    tabBarIcon: ({ focused }: { focused: boolean }) => (
+      <TabIcon active="file-document" inactive="file-document-outline" focused={focused} />
+    ),
+    tabBarButton: isEnabled("estimates") ? undefined : (() => null) as any,
+  }), [isEnabled]);
+
   const agentsOptions = useMemo(() => ({
     ...baseOptions,
     title: "Agents",
@@ -109,6 +118,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={dashboardOptions as any} />
       <Tabs.Screen name="pos" options={posOptions as any} />
       <Tabs.Screen name="b2b" options={b2bOptions as any} />
+      <Tabs.Screen name="estimates" options={estimatesOptions as any} />
       <Tabs.Screen name="inventory" options={inventoryOptions as any} />
       <Tabs.Screen name="ledger" options={ledgerOptions as any} />
       <Tabs.Screen name="agents" options={agentsOptions as any} />

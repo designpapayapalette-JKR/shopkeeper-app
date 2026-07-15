@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Text,
   View,
@@ -46,6 +46,7 @@ interface Product {
   mrp?: string;
   tax_rate: string;
   stock_quantity?: string;
+  category?: { name: string } | null;
 }
 
 interface Party {
@@ -202,6 +203,12 @@ export default function PosScreen() {
 
   // Keep screen awake during POS so it doesn't lock mid-sale.
   useKeepAwake();
+
+  const [filterCategory, setFilterCategory] = useState("");
+  const categories = useMemo(() => {
+    const names = products.map(p => p.category?.name).filter(Boolean) as string[];
+    return [...new Set(names)].sort();
+  }, [products]);
 
   // Quick Add Product State — lets a cashier add a brand-new SKU mid-bill
   // instead of having to abandon the sale, go to Inventory, add it, and
@@ -1076,11 +1083,14 @@ export default function PosScreen() {
     }
   };
 
-  // Filter products by search bar input
+  // Filter products by search bar input and category
   const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      p.sku.toLowerCase().includes(productSearch.toLowerCase())
+    (p) => {
+      const matchesSearch = p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+        p.sku.toLowerCase().includes(productSearch.toLowerCase());
+      const matchesCategory = !filterCategory || p.category?.name === filterCategory;
+      return matchesSearch && matchesCategory;
+    }
   );
 
   // Filter parties by search bar input
@@ -1697,7 +1707,7 @@ export default function PosScreen() {
                 )}
               </View>
             </View>
-            <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 mb-4 flex-row items-center">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 mb-3 flex-row items-center">
               <MaterialCommunityIcons name="magnify" size={18} color="#3e4944" style={{ marginRight: 8 }} />
               <TextInput
                 placeholder="Search by name or SKU..."
@@ -1710,6 +1720,25 @@ export default function PosScreen() {
                 <MaterialCommunityIcons name="barcode-scan" size={20} color="#0F7A5F" />
               </Pressable>
             </View>
+            {categories.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3" contentContainerStyle={{ gap: 6, paddingHorizontal: 2 }}>
+                <Pressable
+                  onPress={() => setFilterCategory("")}
+                  className={`px-3 py-1.5 rounded-full border ${!filterCategory ? "bg-primary dark:bg-primary-dark border-primary" : "border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-surface-dark"}`}
+                >
+                  <Text className={`text-xs font-bold ${!filterCategory ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>All ({products.length})</Text>
+                </Pressable>
+                {categories.map((cat) => (
+                  <Pressable
+                    key={cat}
+                    onPress={() => setFilterCategory(filterCategory === cat ? "" : cat)}
+                    className={`px-3 py-1.5 rounded-full border ${filterCategory === cat ? "bg-primary dark:bg-primary-dark border-primary" : "border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-surface-dark"}`}
+                  >
+                    <Text className={`text-xs font-bold ${filterCategory === cat ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>{cat}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
             {isPosDevice ? (
               renderPosProductGrid()
             ) : loading ? (
@@ -1822,6 +1851,29 @@ export default function PosScreen() {
               </Pressable>
             </View>
           </View>
+
+          {/* Category chips */}
+          {categories.length > 0 && (
+            <View className="px-5 mb-3">
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                <Pressable
+                  onPress={() => setFilterCategory("")}
+                  className={`px-3 py-1.5 rounded-full border ${!filterCategory ? "bg-primary dark:bg-primary-dark border-primary" : "border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-surface-dark"}`}
+                >
+                  <Text className={`text-xs font-bold ${!filterCategory ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>All ({products.length})</Text>
+                </Pressable>
+                {categories.map((cat) => (
+                  <Pressable
+                    key={cat}
+                    onPress={() => setFilterCategory(filterCategory === cat ? "" : cat)}
+                    className={`px-3 py-1.5 rounded-full border ${filterCategory === cat ? "bg-primary dark:bg-primary-dark border-primary" : "border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-surface-dark"}`}
+                  >
+                    <Text className={`text-xs font-bold ${filterCategory === cat ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>{cat}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Product list */}
           <View className="flex-1 px-5">

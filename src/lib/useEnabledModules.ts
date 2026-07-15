@@ -4,7 +4,7 @@ import { api } from "./api";
 
 const POLL_INTERVAL = 30000;
 const ALL_MODULES = [
-  "pos", "b2b", "inventory", "warehouse", "ledger",
+  "pos", "b2b", "estimates", "inventory", "warehouse", "ledger",
   "staff", "attendance", "agents", "challans",
   "payments", "expenses", "reports", "payroll",
 ];
