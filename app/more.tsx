@@ -192,7 +192,60 @@ export default function MoreScreen() {
   const [showOutletPicker, setShowOutletPicker] = useState(false);
 
   // Module Configuration
-  const { enabledModules } = useEnabledModules();
+  const { enabledModules, refresh: refreshEnabledModules } = useEnabledModules();
+  const isOwner = user?.role === "owner";
+  // The raw mobile-specific selection (as opposed to `enabledModules` above,
+  // which is already merged with the web fallback) — an empty array here
+  // means "not configured, using the web module list as fallback", and the
+  // toggle UI needs to be able to represent and save that state directly.
+  const [mobileModules, setMobileModules] = useState<string[]>([]);
+  const [mobileModulesLoaded, setMobileModulesLoaded] = useState(false);
+  const [savingModuleKey, setSavingModuleKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get<{ data: string[] }>("/companies/me/mobile-modules")
+      .then((res) => setMobileModules(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => {})
+      .finally(() => setMobileModulesLoaded(true));
+  }, []);
+
+  const toggleMobileModule = async (key: string) => {
+    if (!isOwner || savingModuleKey) return;
+    const wasEnabled = mobileModules.includes(key);
+    const updated = wasEnabled ? mobileModules.filter((k) => k !== key) : [...mobileModules, key];
+    setSavingModuleKey(key);
+    setMobileModules(updated);
+    try {
+      await api.patch("/companies/me/mobile-modules", { modules: updated });
+      refreshEnabledModules();
+    } catch (err) {
+      setMobileModules(mobileModules); // revert on failure
+      Alert.alert("Error", err instanceof ApiError ? err.message : "Failed to update module settings.");
+    } finally {
+      setSavingModuleKey(null);
+    }
+  };
+
+  const resetMobileModulesToWebDefaults = async () => {
+    if (!isOwner) return;
+    const ok = await confirm({
+      title: "Reset to Web Defaults?",
+      message: "This clears the mobile-specific module selection so the app uses whatever is enabled on the web dashboard instead.",
+      confirmLabel: "Reset",
+      destructive: true,
+    });
+    if (!ok) return;
+    setSavingModuleKey("__reset__");
+    setMobileModules([]);
+    try {
+      await api.patch("/companies/me/mobile-modules", { modules: [] });
+      refreshEnabledModules();
+    } catch (err) {
+      Alert.alert("Error", err instanceof ApiError ? err.message : "Failed to reset module settings.");
+    } finally {
+      setSavingModuleKey(null);
+    }
+  };
 
   const openBusinessProfileModal = () => {
     const initial: BusinessProfileSnapshot = {
@@ -1895,46 +1948,90 @@ export default function MoreScreen() {
         </Pressable>
       </View>
 
-      {/* Module Configuration — read-only here; toggling happens on the web app only */}
+      {/* Module Configuration — toggleable from here now (owner only); a
+          mobile-specific selection, separate from the web sidebar's module
+          list. Leaving it empty falls back to whatever's enabled on web. */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
           Module Configuration
         </Text>
         <Text className="text-sm text-text-secondary mb-4">
-          Modules currently enabled for your business. Manage which modules are on or off from the web app.
+          {isOwner
+            ? "Choose which modules appear in this app. This is separate from the web dashboard's module list."
+            : "Modules currently enabled for your business. Only the shop owner can change these."}
         </Text>
+        {mobileModulesLoaded && isOwner && mobileModules.length === 0 && (
+          <View className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5 mb-4">
+            <Text className="text-xs text-text-secondary">
+              No mobile-specific selection yet — this app is currently using the web dashboard's module list. Toggling any module below starts a mobile-only selection.
+            </Text>
+          </View>
+        )}
         {SETTINGS_MODULE_CATEGORIES.map((cat) => {
-          const catModules = cat.modules.filter((mod) => enabledModules.includes(mod.key));
-          if (catModules.length === 0) return null;
+          const catModulesToShow = isOwner ? cat.modules : cat.modules.filter((mod) => enabledModules.includes(mod.key));
+          if (catModulesToShow.length === 0) return null;
+          const enabledCount = cat.modules.filter((mod) => enabledModules.includes(mod.key)).length;
           return (
             <View key={cat.id} className="mb-4">
               <View className="flex-row items-center gap-2 mb-2">
                 <View className="w-1 h-4 rounded-full bg-primary" />
                 <Text className="text-xs font-bold text-text-secondary uppercase tracking-wider">{cat.label}</Text>
-                <Text className="text-[10px] text-text-secondary ml-auto">{catModules.length} enabled</Text>
+                <Text className="text-[10px] text-text-secondary ml-auto">{enabledCount} enabled</Text>
               </View>
-              {catModules.map((mod) => (
-                <View
-                  key={mod.key}
-                  className="flex-row items-center justify-between py-2.5 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
-                >
-                  <View className="flex-1 mr-3">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
-                    <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
-                  </View>
-                  <MaterialCommunityIcons name="check-circle" size={20} color="#0F7A5F" />
-                </View>
-              ))}
+              {catModulesToShow.map((mod) => {
+                const enabled = enabledModules.includes(mod.key);
+                const usingMobileOverride = mobileModules.includes(mod.key);
+                if (!isOwner) {
+                  return (
+                    <View
+                      key={mod.key}
+                      className="flex-row items-center justify-between py-2.5 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
+                    >
+                      <View className="flex-1 mr-3">
+                        <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
+                        <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
+                      </View>
+                      <MaterialCommunityIcons name="check-circle" size={20} color="#0F7A5F" />
+                    </View>
+                  );
+                }
+                return (
+                  <Pressable
+                    key={mod.key}
+                    onPress={() => toggleMobileModule(mod.key)}
+                    disabled={savingModuleKey !== null}
+                    className="flex-row items-center justify-between py-2.5 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
+                  >
+                    <View className="flex-1 mr-3">
+                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
+                      <Text className="text-xs text-text-secondary mt-0.5">
+                        {mod.desc}{usingMobileOverride ? "" : enabled ? " · via web default" : ""}
+                      </Text>
+                    </View>
+                    {savingModuleKey === mod.key ? (
+                      <ActivityIndicator size="small" color="#0F7A5F" />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name={enabled ? "toggle-switch" : "toggle-switch-off-outline"}
+                        size={30}
+                        color={enabled ? "#0F7A5F" : "#9E9E9E"}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
             </View>
           );
         })}
-        <Pressable
-          onPress={() => Linking.openURL("https://admin.papayapalette.online/dashboard/settings")}
-          className="flex-row items-center justify-between py-3 mt-2"
-        >
-          <Text className="text-sm font-bold text-primary">Manage in Web Portal</Text>
-          <MaterialCommunityIcons name="open-in-new" size={20} color="#0F7A5F" />
-        </Pressable>
+        {isOwner && mobileModules.length > 0 && (
+          <Pressable onPress={resetMobileModulesToWebDefaults} disabled={savingModuleKey !== null} className="flex-row items-center justify-center py-3 mt-2">
+            {savingModuleKey === "__reset__" ? (
+              <ActivityIndicator size="small" color="#6B7280" />
+            ) : (
+              <Text className="text-sm font-bold text-text-secondary">Reset to Web Defaults</Text>
+            )}
+          </Pressable>
+        )}
       </View>
 
       {/* Security */}
