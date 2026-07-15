@@ -64,6 +64,7 @@ interface Product {
   unit?: string;
   pack_unit?: string | null;
   pack_size?: string | null;
+  hsn_code?: string | null;
 }
 
 interface Warehouse {
@@ -110,8 +111,21 @@ interface Challan {
   driver_name: string;
   driver_phone: string;
   destination: string;
+  reason?: string;
   status: "pending" | "in_transit" | "delivered";
+  party?: { name?: string } | null;
 }
+
+const CHALLAN_REASONS: { value: string; label: string }[] = [
+  { value: "supply", label: "Supply (invoice to follow)" },
+  { value: "export", label: "Export" },
+  { value: "job_work", label: "Job Work" },
+  { value: "sales_return", label: "Sales Return" },
+  { value: "line_sales", label: "Line Sales" },
+  { value: "exhibition_or_fairs", label: "Exhibition or Fairs" },
+  { value: "own_use", label: "Own Use" },
+  { value: "others", label: "Others" },
+];
 
 interface Party {
   id: string;
@@ -625,6 +639,13 @@ export default function MoreScreen() {
   const [driverName, setDriverName] = useState("");
   const [driverPhone, setDriverPhone] = useState("");
   const [destination, setDestination] = useState("");
+  const [challanReason, setChallanReason] = useState("supply");
+  const [challanPartyId, setChallanPartyId] = useState("");
+  const [placeOfSupply, setPlaceOfSupply] = useState("");
+  const [transportMode, setTransportMode] = useState("road");
+  const [challanNotes, setChallanNotes] = useState("");
+  const [challanItemSearch, setChallanItemSearch] = useState("");
+  const [challanItems, setChallanItems] = useState<{ productId: string; name: string; hsnCode: string | null; quantity: string }[]>([]);
   const [challanSubmitting, setChallanSubmitting] = useState(false);
 
   const fetchSetupData = async () => {
@@ -966,6 +987,13 @@ export default function MoreScreen() {
     setDriverPhone("");
     setDestination("");
     setSelectedInvoiceId("");
+    setChallanReason("supply");
+    setChallanPartyId("");
+    setPlaceOfSupply("");
+    setTransportMode("road");
+    setChallanNotes("");
+    setChallanItemSearch("");
+    setChallanItems([]);
   };
 
   const closeCreateChallanModal = async () => {
@@ -974,15 +1002,31 @@ export default function MoreScreen() {
       vehicleNumber.trim() !== "" ||
       driverName.trim() !== "" ||
       driverPhone.trim() !== "" ||
-      destination.trim() !== "";
+      destination.trim() !== "" ||
+      challanPartyId !== "" ||
+      challanItems.length > 0;
     if (hasChanges && !(await confirmDiscard())) return;
     setIsCreateChallanModal(false);
     resetChallanForm();
   };
 
+  const addChallanItem = (p: Product) => {
+    setChallanItems((prev) => {
+      if (prev.some((i) => i.productId === p.id)) return prev;
+      return [...prev, { productId: p.id, name: p.name, hsnCode: p.hsn_code || null, quantity: "1" }];
+    });
+  };
+  const updateChallanItemQty = (productId: string, value: string) => {
+    setChallanItems((prev) => prev.map((i) => (i.productId === productId ? { ...i, quantity: value } : i)));
+  };
+  const removeChallanItem = (productId: string) => {
+    setChallanItems((prev) => prev.filter((i) => i.productId !== productId));
+  };
+  const filteredProductsForChallan = products.filter((p) => p.name.toLowerCase().includes(challanItemSearch.toLowerCase()));
+
   const handleCreateChallan = async () => {
-    if (!vehicleNumber || !driverName || !driverPhone || !destination) {
-      Alert.alert("Required Fields", "All fields with * are required.");
+    if (!selectedInvoiceId && challanItems.length === 0) {
+      Alert.alert("Nothing to Dispatch", "Link an invoice or add at least one item being moved.");
       return;
     }
     if (!user?.company_id) return;
@@ -992,11 +1036,19 @@ export default function MoreScreen() {
       // Challan number generation + item-copying from the linked invoice now
       // happen atomically server-side — see shopkeeper-api/src/routes/challans.ts.
       const res = await api.post<{ data: Challan }>("/challans", {
-        vehicle_number: vehicleNumber,
-        driver_name: driverName,
-        driver_phone: driverPhone,
-        destination: destination,
+        vehicle_number: vehicleNumber || undefined,
+        driver_name: driverName || undefined,
+        driver_phone: driverPhone || undefined,
+        destination: destination || undefined,
+        party_id: challanPartyId || undefined,
+        reason: challanReason,
+        place_of_supply: placeOfSupply || undefined,
+        transport_mode: transportMode || undefined,
+        notes: challanNotes || undefined,
         invoice_id: selectedInvoiceId || undefined,
+        items: !selectedInvoiceId && challanItems.length > 0
+          ? challanItems.map((i) => ({ product_id: i.productId, quantity: parseFloat(i.quantity) || 0, hsn_code: i.hsnCode || undefined }))
+          : undefined,
       });
 
       Alert.alert("Success", `Challan ${res.data.challan_number} generated successfully.`);
@@ -2980,15 +3032,20 @@ export default function MoreScreen() {
                   <View className="bg-surface dark:bg-surface-dark p-4.5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-4 shadow-sm">
                     <View className="flex-row justify-between items-start">
                       <View className="flex-1 mr-2">
-                        <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark">
+                        <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark" numberOfLines={1}>
                           {item.challan_number}
                         </Text>
-                        <Text className="text-sm text-text-secondary mt-1 font-semibold">
-                          Driver: {item.driver_name} ({item.driver_phone})
+                        <Text className="text-sm text-text-secondary mt-1 font-semibold" numberOfLines={1}>
+                          {item.party?.name || item.destination || "No consignee recorded"}
+                          {item.reason ? ` · ${CHALLAN_REASONS.find((r) => r.value === item.reason)?.label || item.reason}` : ""}
                         </Text>
-                        <Text className="text-sm text-text-secondary mt-0.5">
-                          Vehicle: {item.vehicle_number} | Route: {item.destination}
-                        </Text>
+                        {(item.vehicle_number || item.driver_name) && (
+                          <Text className="text-sm text-text-secondary mt-0.5" numberOfLines={1}>
+                            {item.vehicle_number ? `Vehicle: ${item.vehicle_number}` : ""}
+                            {item.vehicle_number && item.driver_name ? " · " : ""}
+                            {item.driver_name ? `Driver: ${item.driver_name}` : ""}
+                          </Text>
+                        )}
                       </View>
                       <View className="flex-row items-center space-x-2">
                         <Pressable
@@ -3031,43 +3088,145 @@ export default function MoreScreen() {
           <View className="space-y-4">
             <View>
               <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                Link Existing Invoice (Optional)
+                Reason for Transport *
               </Text>
-              <View className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-2 py-1.5">
-                <TextInput
-                  placeholder="Select Invoice"
-                  placeholderTextColor="#A0A0A0"
-                  value={selectedInvoiceId}
-                  onChangeText={setSelectedInvoiceId}
-                  className="text-sm font-medium px-2 py-2 text-text-primary"
-                />
-                <ScrollView horizontal className="flex-row px-2 pb-1">
-                  {invoices.map((inv) => (
-                    <Pressable
-                      key={inv.id}
-                      onPress={() => setSelectedInvoiceId(inv.id)}
-                      className={`mr-2 px-2.5 py-1 rounded-md border ${
-                        selectedInvoiceId === inv.id
-                          ? "bg-primary border-primary dark:bg-primary-dark"
-                          : "bg-background border-gray-200 dark:border-zinc-800"
-                      }`}
-                    >
-                      <Text
-                        className={`text-sm font-semibold ${
-                          selectedInvoiceId === inv.id ? "text-white" : "text-text-secondary"
-                        }`}
-                      >
-                        {inv.invoice_number}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                {CHALLAN_REASONS.map((r) => (
+                  <Pressable
+                    key={r.value}
+                    onPress={() => setChallanReason(r.value)}
+                    className={`mr-2 px-3 py-2.5 rounded-lg border ${
+                      challanReason === r.value ? "bg-primary border-primary dark:bg-primary-dark" : "bg-surface border-gray-200 dark:border-zinc-800"
+                    }`}
+                  >
+                    <Text className={`text-xs font-semibold ${challanReason === r.value ? "text-white" : "text-text-secondary"}`}>{r.label}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
             </View>
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                Vehicle Number *
+                Consignee (Party)
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                {partiesList.map((p) => (
+                  <Pressable
+                    key={p.id}
+                    onPress={() => setChallanPartyId(p.id)}
+                    className={`mr-2 px-3 py-2.5 rounded-lg border ${
+                      challanPartyId === p.id ? "bg-primary border-primary dark:bg-primary-dark" : "bg-surface border-gray-200 dark:border-zinc-800"
+                    }`}
+                  >
+                    <Text className={`text-xs font-semibold ${challanPartyId === p.id ? "text-white" : "text-text-secondary"}`}>{p.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Link Existing Invoice (copies its items onto the challan)
+              </Text>
+              <ScrollView horizontal className="flex-row">
+                {invoices.map((inv) => (
+                  <Pressable
+                    key={inv.id}
+                    onPress={() => setSelectedInvoiceId(selectedInvoiceId === inv.id ? "" : inv.id)}
+                    className={`mr-2 px-2.5 py-1.5 rounded-md border ${
+                      selectedInvoiceId === inv.id
+                        ? "bg-primary border-primary dark:bg-primary-dark"
+                        : "bg-background border-gray-200 dark:border-zinc-800"
+                    }`}
+                  >
+                    <Text
+                      className={`text-sm font-semibold ${
+                        selectedInvoiceId === inv.id ? "text-white" : "text-text-secondary"
+                      }`}
+                    >
+                      {inv.invoice_number}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            {!selectedInvoiceId && (
+              <View className="mt-4">
+                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                  Items Being Moved
+                </Text>
+                <View className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-2 py-1">
+                  <TextInput
+                    placeholder="Search products by name..."
+                    placeholderTextColor="#A0A0A0"
+                    value={challanItemSearch}
+                    onChangeText={setChallanItemSearch}
+                    className="text-sm font-medium px-2 py-3 text-text-primary"
+                  />
+                  <ScrollView horizontal className="flex-row px-2 pb-2">
+                    {filteredProductsForChallan.map((p) => (
+                      <Pressable
+                        key={p.id}
+                        onPress={() => addChallanItem(p)}
+                        className="mr-2 px-4 py-3 rounded-lg border border-dashed border-primary"
+                      >
+                        <Text className="text-sm font-bold text-primary">+ {p.name}</Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+                {challanItems.map((item) => (
+                  <View key={item.productId} className="flex-row items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
+                    <Text className="flex-1 mr-2 text-sm font-semibold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{item.name}</Text>
+                    <TextInput
+                      value={item.quantity}
+                      onChangeText={(v) => updateChallanItemQty(item.productId, v)}
+                      keyboardType="numeric"
+                      className="bg-background dark:bg-bg-dark border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm font-bold w-16 text-center mr-2"
+                    />
+                    <Pressable onPress={() => removeChallanItem(item.productId)}>
+                      <MaterialCommunityIcons name="trash-can-outline" size={18} color="#D64545" />
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Place of Supply (State)
+              </Text>
+              <TextInput
+                value={placeOfSupply}
+                onChangeText={setPlaceOfSupply}
+                placeholder="e.g. Maharashtra"
+                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+              />
+            </View>
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Transport Mode
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                {(["road", "rail", "air", "ship"] as const).map((m) => (
+                  <Pressable
+                    key={m}
+                    onPress={() => setTransportMode(m)}
+                    className={`mr-2 px-4 py-2.5 rounded-lg border capitalize ${
+                      transportMode === m ? "bg-primary border-primary dark:bg-primary-dark" : "bg-surface border-gray-200 dark:border-zinc-800"
+                    }`}
+                  >
+                    <Text className={`text-sm font-semibold capitalize ${transportMode === m ? "text-white" : "text-text-secondary"}`}>{m}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Vehicle Number
               </Text>
               <TextInput
                 value={vehicleNumber}
@@ -3079,7 +3238,7 @@ export default function MoreScreen() {
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                Driver Name *
+                Driver Name
               </Text>
               <TextInput
                 value={driverName}
@@ -3091,7 +3250,7 @@ export default function MoreScreen() {
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                Driver Phone *
+                Driver Phone
               </Text>
               <TextInput
                 value={driverPhone}
@@ -3104,12 +3263,24 @@ export default function MoreScreen() {
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                Destination Address *
+                Ship-To / Destination Address
               </Text>
               <TextInput
                 value={destination}
                 onChangeText={setDestination}
                 placeholder="Delivery Destination Address"
+                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+              />
+            </View>
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Notes
+              </Text>
+              <TextInput
+                value={challanNotes}
+                onChangeText={setChallanNotes}
+                placeholder="Optional"
                 className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
               />
             </View>

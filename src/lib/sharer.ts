@@ -60,8 +60,14 @@ export function shareLedgerReminder(partyName: string, partyPhone: string, balan
 }
 
 export function shareChallan(challan: any) {
-  const message = `Delivery Challan: ${challan.challan_number}\nVehicle: ${challan.vehicle_number}\nDriver: ${challan.driver_name} (${challan.driver_phone})\nDestination: ${challan.destination}\nStatus: ${challan.status.toUpperCase()}`;
-  
+  const lines = [`Delivery Challan: ${challan.challan_number}`];
+  if (challan.party?.name) lines.push(`Consignee: ${challan.party.name}`);
+  else if (challan.destination) lines.push(`Destination: ${challan.destination}`);
+  if (challan.vehicle_number) lines.push(`Vehicle: ${challan.vehicle_number}`);
+  if (challan.driver_name) lines.push(`Driver: ${challan.driver_name}${challan.driver_phone ? ` (${challan.driver_phone})` : ""}`);
+  lines.push(`Status: ${challan.status.toUpperCase()}`);
+  const message = lines.join("\n");
+
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
   Linking.canOpenURL(whatsappUrl)
