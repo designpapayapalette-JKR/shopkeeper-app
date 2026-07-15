@@ -40,7 +40,7 @@ export interface TallyInvoiceData {
   };
   invoiceNumber: string;
   date: string;
-  invoiceType: "gst" | "retail" | "estimate";
+  invoiceType: "gst" | "retail" | "estimate" | "bill_of_supply";
   items: TallyInvoiceItem[];
   subtotal: number;
   discountTotal: number;
@@ -183,7 +183,7 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData, template?: Temp
       <body>
         <div class="invoice-box">
           <div class="title-bar">
-            ${isGst ? "Tax Invoice" : data.invoiceType === "retail" ? "Retail Invoice" : "Estimate / Quotation"}
+            ${isGst ? "Tax Invoice" : data.invoiceType === "retail" ? "Retail Invoice" : data.invoiceType === "bill_of_supply" ? "Bill of Supply" : "Estimate / Quotation"}
           </div>
 
           <div class="header">

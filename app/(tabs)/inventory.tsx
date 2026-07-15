@@ -272,6 +272,7 @@ export default function InventoryScreen() {
   const [newProductUnit, setNewProductUnit] = useState("pcs");
   const [newProductPackUnit, setNewProductPackUnit] = useState("");
   const [newProductPackSize, setNewProductPackSize] = useState("");
+  const [newProductTracksSerials, setNewProductTracksSerials] = useState(false);
   const [newProductParentId, setNewProductParentId] = useState<string | null>(null);
   const [newProductVariantLabel, setNewProductVariantLabel] = useState("");
   const [parentPickerSearch, setParentPickerSearch] = useState("");
@@ -365,6 +366,7 @@ export default function InventoryScreen() {
         unit: newProductUnit.trim() || "pcs",
         pack_unit: newProductPackUnit.trim() || undefined,
         pack_size: newProductPackSize ? parseFloat(newProductPackSize) : undefined,
+        tracks_serials: newProductTracksSerials,
         parent_product_id: newProductParentId || undefined,
         variant_label: newProductParentId ? newProductVariantLabel.trim() || undefined : undefined,
       };
@@ -402,6 +404,7 @@ export default function InventoryScreen() {
     setNewProductUnit("pcs");
     setNewProductPackUnit("");
     setNewProductPackSize("");
+    setNewProductTracksSerials(false);
     setNewProductParentId(null);
     setNewProductVariantLabel("");
     setParentPickerSearch("");
@@ -1266,6 +1269,22 @@ export default function InventoryScreen() {
                   />
                 </View>
               )}
+              <Pressable
+                onPress={() => setNewProductTracksSerials((v) => !v)}
+                className={`flex-row items-center justify-between px-3 py-3 rounded-xl border mt-4 ${
+                  newProductTracksSerials ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline"
+                }`}
+              >
+                <View className="flex-1 pr-2">
+                  <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">Track individual serial numbers</Text>
+                  <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">For warranty-bearing or high-value items sold as single units</Text>
+                </View>
+                <MaterialCommunityIcons
+                  name={newProductTracksSerials ? "toggle-switch" : "toggle-switch-off-outline"}
+                  size={26}
+                  color={newProductTracksSerials ? "#0F7A5F" : "#9E9E9E"}
+                />
+              </Pressable>
             </View>
 
             <View className="mt-6 pt-4 border-t border-outline-variant dark:border-outline">

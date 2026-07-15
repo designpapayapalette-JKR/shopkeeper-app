@@ -1151,6 +1151,81 @@ export default function MoreScreen() {
         Operations
       </Text>
 
+      {/* Purchases, Returns & Compliance */}
+      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+          Purchases, Returns & Compliance
+        </Text>
+
+        <Pressable onPress={() => router.push("/purchase-entry" as any)} className="flex-row justify-between items-center py-3">
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Record Purchase</Text>
+            <Text className="text-sm text-text-secondary mt-0.5">Log stock received from a supplier, multiple items at once.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/credit-note" as any)} className="flex-row justify-between items-center py-3">
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Credit Note</Text>
+            <Text className="text-sm text-text-secondary mt-0.5">Record a sales return against an existing invoice.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/debit-note" as any)} className="flex-row justify-between items-center py-3">
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Debit Note</Text>
+            <Text className="text-sm text-text-secondary mt-0.5">Record a purchase return against an existing bill.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/recurring-invoices" as any)} className="flex-row justify-between items-center py-3">
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Recurring Invoices</Text>
+            <Text className="text-sm text-text-secondary mt-0.5">Auto-generate an invoice weekly, monthly, quarterly, or yearly.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/bank-reconciliation" as any)} className="flex-row justify-between items-center py-3">
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Bank Reconciliation</Text>
+            <Text className="text-sm text-text-secondary mt-0.5">Import a bank statement and match it against recorded payments.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/balance-sheet" as any)} className="flex-row justify-between items-center py-3">
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Balance Sheet & Stock Valuation</Text>
+            <Text className="text-sm text-text-secondary mt-0.5">Assets, liabilities, equity, and standing inventory value.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/financial-year" as any)} className="flex-row justify-between items-center py-3">
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Financial Year Closing</Text>
+            <Text className="text-sm text-text-secondary mt-0.5">Close a past Apr-Mar year to lock it against backdated entries.</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        </Pressable>
+      </View>
+
       {/* Data & Activity */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">

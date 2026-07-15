@@ -17,7 +17,7 @@ export interface ReceiptData {
   upiId?: string;
   invoiceNumber: string;
   date: string;
-  invoiceType: "gst" | "retail" | "estimate";
+  invoiceType: "gst" | "retail" | "estimate" | "bill_of_supply";
   items: ReceiptItem[];
   subtotal: number;
   cgst: number;
@@ -199,6 +199,8 @@ export function generateReceiptHtml(data: ReceiptData, template?: TemplateConfig
                 ? "TAX INVOICE"
                 : data.invoiceType === "retail"
                 ? "RETAIL BILL"
+                : data.invoiceType === "bill_of_supply"
+                ? "BILL OF SUPPLY"
                 : hasTax
                 ? "GST ESTIMATE / QUOTATION"
                 : "ESTIMATE / QUOTATION"

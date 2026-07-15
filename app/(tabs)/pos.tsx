@@ -149,7 +149,8 @@ export default function PosScreen() {
   const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
   const [isSplitPayment, setIsSplitPayment] = useState(false);
   const [splitPayments, setSplitPayments] = useState<{ method: "cash" | "upi" | "credit"; amount: string }[]>([]);
-  const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate">("retail");
+  const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate" | "bill_of_supply">("retail");
+  const [applyRoundOff, setApplyRoundOff] = useState(true);
   const businessMode: "retail" | "b2b" = activeCompany?.business_mode === "b2b" ? "b2b" : "retail";
   const [cashCustomerId, setCashCustomerId] = useState<string | null>(null);
   // An estimate is normally tax-free (it's a quotation, not a bill yet), but
@@ -846,6 +847,7 @@ export default function PosScreen() {
         due_date: creditPeriod ? new Date(Date.now() + creditPeriod * 86400000).toISOString() : undefined,
         discount_total: discountVal,
         apply_gst: invoiceType === "estimate" ? estimateWithGst : undefined,
+        apply_round_off: applyRoundOff,
         extra_charge_total: extraChargeVal,
         extra_charge_label: extraChargeVal > 0 && (hasCreditSplit || paymentMode === "credit") ? "Credit Charge" : undefined,
         items: cart.map((item) => ({
@@ -1104,6 +1106,7 @@ export default function PosScreen() {
     retail: "#6B21A8",
     gst:    "#0F7A5F",
     estimate: "#B45309",
+    bill_of_supply: "#334155",
   };
 
   const activeBillColor = BILL_TYPE_COLORS[invoiceType];
@@ -1330,10 +1333,11 @@ export default function PosScreen() {
               { key: "retail",   label: "Non-GST", icon: "storefront-outline" },
               { key: "gst",      label: "GST",     icon: "file-document-outline" },
               { key: "estimate", label: "Estimate", icon: "note-edit-outline" },
+              { key: "bill_of_supply", label: "Bill of Supply", icon: "file-outline" },
             ] as const).map((opt) => (
             <Pressable
               key={opt.key}
-              onPress={() => setInvoiceType(opt.key as "gst" | "retail" | "estimate")}
+              onPress={() => setInvoiceType(opt.key as "gst" | "retail" | "estimate" | "bill_of_supply")}
               className={`flex-1 py-2.5 rounded-xl items-center border ${
                 invoiceType === opt.key
                   ? "border-transparent"
@@ -1347,11 +1351,25 @@ export default function PosScreen() {
                 color={invoiceType === opt.key ? "#FFFFFF" : "#6e7a74"}
               />
               <Text className={`text-xs font-bold mt-0.5 ${invoiceType === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
-                {opt.key === "gst" ? t("gstBill") : opt.key === "estimate" ? t("estimate") : t("sales").split(" ")[0]}
+                {opt.key === "gst" ? t("gstBill") : opt.key === "estimate" ? t("estimate") : opt.key === "bill_of_supply" ? "Bill of Supply" : t("sales").split(" ")[0]}
               </Text>
             </Pressable>
           ))}
         </View>
+
+        <Pressable
+          onPress={() => setApplyRoundOff((v) => !v)}
+          className={`flex-row items-center justify-between px-3 py-2.5 rounded-xl border mb-1 ${
+            applyRoundOff ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline"
+          }`}
+        >
+          <Text className="text-xs font-bold text-on-surface dark:text-text-primary-dark">Round off total to nearest ₹1</Text>
+          <MaterialCommunityIcons
+            name={applyRoundOff ? "toggle-switch" : "toggle-switch-off-outline"}
+            size={26}
+            color={applyRoundOff ? "#0F7A5F" : "#9E9E9E"}
+          />
+        </Pressable>
 
         {/* An estimate is normally tax-free (it's a quotation), but some
             customers want to see the GST-inclusive number before committing. */}

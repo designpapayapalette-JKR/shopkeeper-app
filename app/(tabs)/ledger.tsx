@@ -79,6 +79,9 @@ export default function LedgerScreen() {
   const [newPartyCategory, setNewPartyCategory] = useState<"b2b" | "b2c">("b2c");
   const [newPartyBalance, setNewPartyBalance] = useState("");
   const [newPartyCreditLimit, setNewPartyCreditLimit] = useState("");
+  const [newPartyAddress, setNewPartyAddress] = useState("");
+  const [newPartyPan, setNewPartyPan] = useState("");
+  const [newPartyAadhaar, setNewPartyAadhaar] = useState("");
   const [addPartyLoading, setAddPartyLoading] = useState(false);
 
   // Record Payment Modal State
@@ -213,6 +216,9 @@ export default function LedgerScreen() {
     setNewPartyGstin("");
     setNewPartyCategory("b2c");
     setNewPartyBalance("");
+    setNewPartyAddress("");
+    setNewPartyPan("");
+    setNewPartyAadhaar("");
   };
 
   const handleOpenEditParty = (party: Party) => {
@@ -222,6 +228,9 @@ export default function LedgerScreen() {
     setNewPartyGstin(party.gstin || "");
     setNewPartyCategory(party.category || "b2c");
     setNewPartyState("");
+    setNewPartyAddress((party as any).address || "");
+    setNewPartyPan((party as any).pan || "");
+    setNewPartyAadhaar((party as any).aadhaar || "");
   };
 
   const closePartyForm = async () => {
@@ -229,12 +238,18 @@ export default function LedgerScreen() {
       ? newPartyName !== editingParty.name ||
         newPartyPhone !== (editingParty.phone || "") ||
         newPartyGstin !== (editingParty.gstin || "") ||
-        newPartyCategory !== (editingParty.category || "b2c")
+        newPartyCategory !== (editingParty.category || "b2c") ||
+        newPartyAddress !== ((editingParty as any).address || "") ||
+        newPartyPan !== ((editingParty as any).pan || "") ||
+        newPartyAadhaar !== ((editingParty as any).aadhaar || "")
       : newPartyName.trim() !== "" ||
         newPartyPhone.trim() !== "" ||
         newPartyState.trim() !== "" ||
         newPartyGstin.trim() !== "" ||
         newPartyBalance.trim() !== "" ||
+        newPartyAddress.trim() !== "" ||
+        newPartyPan.trim() !== "" ||
+        newPartyAadhaar.trim() !== "" ||
         newPartyCategory !== "b2c";
     if (hasChanges) {
       const ok = await confirm({
@@ -264,6 +279,9 @@ export default function LedgerScreen() {
           gstin: newPartyGstin || undefined,
           category: newPartyCategory,
           credit_limit: newPartyCreditLimit ? parseFloat(newPartyCreditLimit) : null,
+          address: newPartyAddress || undefined,
+          pan: newPartyPan || undefined,
+          aadhaar: newPartyAadhaar || undefined,
         });
         Alert.alert("Success", "Party details updated.");
       } else {
@@ -278,6 +296,9 @@ export default function LedgerScreen() {
           current_balance: balance,
           opening_balance: balance,
           credit_limit: newPartyCreditLimit ? parseFloat(newPartyCreditLimit) : null,
+          address: newPartyAddress || undefined,
+          pan: newPartyPan || undefined,
+          aadhaar: newPartyAadhaar || undefined,
         });
         Alert.alert("Success", `${activeTab === "customer" ? "Customer" : "Supplier"} added successfully.`);
       }
@@ -967,6 +988,51 @@ export default function LedgerScreen() {
                 />
               </View>
             )}
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Address
+              </Text>
+              <TextInput
+                value={newPartyAddress}
+                onChangeText={setNewPartyAddress}
+                placeholder="Street, city, state, PIN code"
+                placeholderTextColor="#A0A0A0"
+                multiline
+                numberOfLines={2}
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                PAN
+              </Text>
+              <TextInput
+                value={newPartyPan}
+                onChangeText={(v) => setNewPartyPan(v.toUpperCase())}
+                placeholder="e.g. ABCDE1234F"
+                placeholderTextColor="#A0A0A0"
+                autoCapitalize="characters"
+                maxLength={10}
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                Aadhaar
+              </Text>
+              <TextInput
+                value={newPartyAadhaar}
+                onChangeText={setNewPartyAadhaar}
+                placeholder="12-digit Aadhaar number"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="number-pad"
+                maxLength={12}
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
 
             {!editingParty && (
               <View className="mt-4">

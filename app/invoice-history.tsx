@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, Modal, ScrollView } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, Modal, ScrollView, TextInput } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { api } from "../src/lib/api";
+import { api, ApiError } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 
 type HistoryTab = "sales" | "b2b" | "purchases";
@@ -51,6 +51,61 @@ export default function InvoiceHistoryScreen() {
   const [b2bInvoices, setB2bInvoices] = useState<B2BInvoiceSummary[]>([]);
   const [purchases, setPurchases] = useState<PurchaseSummary[]>([]);
 
+  const [detailInvoiceId, setDetailInvoiceId] = useState<string | null>(null);
+  const [detailInvoice, setDetailInvoice] = useState<any | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [showEwbForm, setShowEwbForm] = useState(false);
+  const [ewbNumber, setEwbNumber] = useState("");
+  const [ewbSubmitting, setEwbSubmitting] = useState(false);
+  const [showEInvForm, setShowEInvForm] = useState(false);
+  const [einvIrn, setEinvIrn] = useState("");
+  const [einvSubmitting, setEinvSubmitting] = useState(false);
+
+  const openDetail = async (id: string) => {
+    setDetailInvoiceId(id);
+    setDetailLoading(true);
+    setShowEwbForm(false);
+    setShowEInvForm(false);
+    try {
+      const res = await api.get<{ data: any }>(`/invoices/${id}/detail`);
+      setDetailInvoice(res.data);
+    } catch {
+      Alert.alert("Error", "Could not load invoice detail.");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const recordEwayBill = async () => {
+    if (!detailInvoice || !ewbNumber.trim()) return;
+    setEwbSubmitting(true);
+    try {
+      const res = await api.post<{ data: any }>(`/eway-bills/${detailInvoice.id}`, { ewbNumber: ewbNumber.trim() });
+      setDetailInvoice({ ...detailInvoice, ewayBill: res.data });
+      setShowEwbForm(false);
+      setEwbNumber("");
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to record e-way bill.");
+    } finally {
+      setEwbSubmitting(false);
+    }
+  };
+
+  const recordEInvoice = async () => {
+    if (!detailInvoice || !einvIrn.trim()) return;
+    setEinvSubmitting(true);
+    try {
+      const res = await api.post<{ data: any }>(`/e-invoices/${detailInvoice.id}`, { irn: einvIrn.trim() });
+      setDetailInvoice({ ...detailInvoice, eInvoice: res.data });
+      setShowEInvForm(false);
+      setEinvIrn("");
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to record e-invoice.");
+    } finally {
+      setEinvSubmitting(false);
+    }
+  };
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -90,7 +145,7 @@ export default function InvoiceHistoryScreen() {
   );
 
   const renderInvoiceItem = (item: InvoiceSummary) => (
-    <View className="bg-card border border-border rounded-2xl p-4 mx-4 mb-3">
+    <Pressable onPress={() => openDetail(item.id)} className="bg-card border border-border rounded-2xl p-4 mx-4 mb-3">
       <View className="flex-row justify-between items-center mb-2">
         <Text className="font-mono text-sm font-bold text-foreground">{item.invoice_number}</Text>
         <Text className={`badge ${item.type === "gst" ? "badge-blue" : item.type === "retail" ? "badge-neutral" : "badge-amber"}`}>
@@ -104,7 +159,7 @@ export default function InvoiceHistoryScreen() {
         </View>
         <Text className="text-base font-bold text-foreground">₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 
   const renderB2bItem = (item: B2BInvoiceSummary) => (
@@ -188,6 +243,89 @@ export default function InvoiceHistoryScreen() {
           <FlatList data={purchases} keyExtractor={(i) => i.id} renderItem={({ item }) => renderPurchaseItem(item)} contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} />
         )
       )}
+
+      <Modal visible={detailInvoiceId !== null} animationType="slide" transparent onRequestClose={() => setDetailInvoiceId(null)}>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6 pb-10" style={{ maxHeight: "80%" }}>
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-bold text-foreground flex-1 mr-2">
+                {detailInvoice?.invoiceNumber || "Invoice"}
+              </Text>
+              <Pressable onPress={() => setDetailInvoiceId(null)}>
+                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+
+            {detailLoading || !detailInvoice ? (
+              <ActivityIndicator color="#0F7A5F" />
+            ) : (
+              <ScrollView>
+                <Text className="text-sm text-text-secondary mb-1">Customer: {detailInvoice.party?.name || "Walk-in Customer"}</Text>
+                <Text className="text-lg font-black text-foreground mb-4">₹{Number(detailInvoice.grandTotal).toLocaleString("en-IN")}</Text>
+
+                {/* e-Way Bill / e-Invoice — manual record only, no live NIC/GSP
+                    API call. Generate on the government portal / via your GSP,
+                    then log the resulting number here for reference. */}
+                <View className="border-t border-border pt-4">
+                  <Text className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">e-Way Bill</Text>
+                  {detailInvoice.ewayBill ? (
+                    <Text className="text-sm text-foreground mb-3">EWB {detailInvoice.ewayBill.ewbNumber} — {detailInvoice.ewayBill.status}</Text>
+                  ) : showEwbForm ? (
+                    <View className="mb-4">
+                      <TextInput
+                        value={ewbNumber}
+                        onChangeText={setEwbNumber}
+                        placeholder="e-Way bill number (from portal)"
+                        placeholderTextColor="#A0A0A0"
+                        className="bg-surface border border-border rounded-xl px-3 py-2.5 text-sm font-medium text-foreground mb-2"
+                      />
+                      <View className="flex-row" style={{ gap: 8 }}>
+                        <Pressable onPress={recordEwayBill} disabled={ewbSubmitting || !ewbNumber.trim()} className="bg-primary px-4 py-2 rounded-lg">
+                          {ewbSubmitting ? <ActivityIndicator color="white" size="small" /> : <Text className="text-white font-bold text-xs">Save</Text>}
+                        </Pressable>
+                        <Pressable onPress={() => setShowEwbForm(false)} className="px-4 py-2 rounded-lg border border-border">
+                          <Text className="text-text-secondary font-bold text-xs">Cancel</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : (
+                    <Pressable onPress={() => setShowEwbForm(true)} className="mb-4">
+                      <Text className="text-primary font-bold text-sm">+ Record e-Way Bill</Text>
+                    </Pressable>
+                  )}
+
+                  <Text className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">e-Invoice (IRN)</Text>
+                  {detailInvoice.eInvoice ? (
+                    <Text className="text-sm text-foreground mb-1" numberOfLines={2}>IRN {detailInvoice.eInvoice.irn} — {detailInvoice.eInvoice.status}</Text>
+                  ) : showEInvForm ? (
+                    <View>
+                      <TextInput
+                        value={einvIrn}
+                        onChangeText={setEinvIrn}
+                        placeholder="IRN (from your GSP)"
+                        placeholderTextColor="#A0A0A0"
+                        className="bg-surface border border-border rounded-xl px-3 py-2.5 text-sm font-medium text-foreground mb-2"
+                      />
+                      <View className="flex-row" style={{ gap: 8 }}>
+                        <Pressable onPress={recordEInvoice} disabled={einvSubmitting || !einvIrn.trim()} className="bg-primary px-4 py-2 rounded-lg">
+                          {einvSubmitting ? <ActivityIndicator color="white" size="small" /> : <Text className="text-white font-bold text-xs">Save</Text>}
+                        </Pressable>
+                        <Pressable onPress={() => setShowEInvForm(false)} className="px-4 py-2 rounded-lg border border-border">
+                          <Text className="text-text-secondary font-bold text-xs">Cancel</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : (
+                    <Pressable onPress={() => setShowEInvForm(true)}>
+                      <Text className="text-primary font-bold text-sm">+ Record e-Invoice</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

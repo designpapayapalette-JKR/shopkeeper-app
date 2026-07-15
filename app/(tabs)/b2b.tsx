@@ -65,7 +65,8 @@ export default function B2bScreen() {
   const [quickCustomerName, setQuickCustomerName] = useState("");
 
   const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
-  const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate">("gst");
+  const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate" | "bill_of_supply">("gst");
+  const [applyRoundOff, setApplyRoundOff] = useState(true);
 
   const B2B_API = "/b2b";
 
@@ -177,6 +178,7 @@ export default function B2bScreen() {
           discount: c.discount,
         })),
         discountTotal,
+        applyRoundOff,
       });
       Alert.alert("Invoice Created", `Invoice #${res.data.invoiceNumber || res.data.id?.substring(0, 8)}`, [
         { text: "New Sale", onPress: () => { setCart([]); setSelectedParty(null); loadData(); } },
@@ -442,7 +444,7 @@ export default function B2bScreen() {
             {/* Invoice type */}
             <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Bill Type</Text>
             <View className="flex-row gap-2 mb-4">
-              {(["gst", "retail", "estimate"] as const).map((t) => (
+              {(["gst", "retail", "estimate", "bill_of_supply"] as const).map((t) => (
                 <Pressable
                   key={t}
                   onPress={() => setInvoiceType(t)}
@@ -450,12 +452,26 @@ export default function B2bScreen() {
                     invoiceType === t ? "bg-primary border-primary" : "border-outline-variant dark:border-outline"
                   }`}
                 >
-                  <Text className={`text-xs font-bold ${invoiceType === t ? "text-white" : "text-on-surface-variant"}`}>
-                    {t === "gst" ? "GST" : t === "retail" ? "Non-GST" : "Estimate"}
+                  <Text className={`text-[11px] font-bold text-center ${invoiceType === t ? "text-white" : "text-on-surface-variant"}`}>
+                    {t === "gst" ? "GST" : t === "retail" ? "Non-GST" : t === "estimate" ? "Estimate" : "Bill of Supply"}
                   </Text>
                 </Pressable>
               ))}
             </View>
+
+            <Pressable
+              onPress={() => setApplyRoundOff((v) => !v)}
+              className={`flex-row items-center justify-between px-3 py-2.5 rounded-xl border mb-4 ${
+                applyRoundOff ? "bg-primary/10 border-primary" : "border-outline-variant dark:border-outline"
+              }`}
+            >
+              <Text className="text-xs font-bold text-on-surface dark:text-text-primary-dark">Round off total to nearest ₹1</Text>
+              <MaterialCommunityIcons
+                name={applyRoundOff ? "toggle-switch" : "toggle-switch-off-outline"}
+                size={26}
+                color={applyRoundOff ? "#0F7A5F" : "#9E9E9E"}
+              />
+            </Pressable>
 
             {/* Payment mode */}
             <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Payment</Text>
