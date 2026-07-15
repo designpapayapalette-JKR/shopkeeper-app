@@ -17,6 +17,7 @@ export interface TallyInvoiceItem {
   taxRate: number;
   taxAmount: number;
   total: number;
+  serialNumbers?: string;
 }
 
 export interface TallyInvoiceData {
@@ -116,7 +117,7 @@ export function generateTallyInvoiceHtml(data: TallyInvoiceData, template?: Temp
       (item, idx) => `
       <tr>
         ${cfg("showItemSno") !== false ? `<td class="cell center">${idx + 1}</td>` : ""}
-        <td class="cell">${item.name}</td>
+        <td class="cell">${item.name}${item.serialNumbers ? `<div style="font-size: 9px; color: #666;">S/N: ${item.serialNumbers}</div>` : ""}</td>
         ${cfg("showHsnCode") !== false ? `<td class="cell center">${item.hsnCode || "-"}</td>` : ""}
         <td class="cell center">${item.quantity.toFixed(2)}</td>
         <td class="cell right">₹${item.price.toFixed(2)}</td>

@@ -5,6 +5,7 @@ export interface ReceiptItem {
   quantity: number;
   price: number;
   total: number;
+  serialNumbers?: string;
 }
 
 export type ThermalPaperWidth = "58" | "80";
@@ -124,6 +125,7 @@ export function generateReceiptHtml(data: ReceiptData, template?: TemplateConfig
           <span>${item.quantity.toFixed(0)} x ₹${item.price.toFixed(2)}</span>
           <span>₹${item.total.toFixed(2)}</span>
         </div>
+        ${item.serialNumbers ? `<div style="font-size: 9px; color: #666;">S/N: ${item.serialNumbers}</div>` : ""}
       </div>
     `
     )
