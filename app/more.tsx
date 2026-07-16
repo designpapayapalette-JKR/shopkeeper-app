@@ -1252,7 +1252,8 @@ export default function MoreScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <ScrollView className="flex-1 px-6">
       {/* Title */}
       <View className="mb-8">
         <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
@@ -4050,6 +4051,7 @@ export default function MoreScreen() {
         </View>
       </Modal>
     </ScrollView>
+    </View>
   );
 }
 
