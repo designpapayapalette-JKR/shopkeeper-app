@@ -60,8 +60,15 @@ export default function B2bScreen() {
   const [isSelectingParty, setIsSelectingParty] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [quickCustomerModal, setQuickCustomerModal] = useState(false);
-  const [quickCustomerName, setQuickCustomerName] = useState("");
+  const [addPartyModal, setAddPartyModal] = useState(false);
+  const [newPartyName, setNewPartyName] = useState("");
+  const [newPartyPhone, setNewPartyPhone] = useState("");
+  const [newPartyGstin, setNewPartyGstin] = useState("");
+  const [newPartyState, setNewPartyState] = useState("");
+  const [newPartyAddress, setNewPartyAddress] = useState("");
+  const [newPartyCreditLimit, setNewPartyCreditLimit] = useState("");
+  const [newPartyNote, setNewPartyNote] = useState("");
+  const [addPartyLoading, setAddPartyLoading] = useState(false);
 
   const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
   const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate" | "bill_of_supply">("gst");
@@ -134,23 +141,43 @@ export default function B2bScreen() {
     : 0;
   const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
 
-  const handleQuickAddCustomer = async () => {
-    const name = quickCustomerName.trim();
-    if (!name) return;
+  const handleAddParty = async () => {
+    const name = newPartyName.trim();
+    if (!name) {
+      Alert.alert("Required", "Enter a customer name.");
+      return;
+    }
+    setAddPartyLoading(true);
     try {
-      const res = await api.post<{ data: Party }>(`${B2B_API}/parties`, {
+      const res = await api.post<{ data: Party }>("/parties", {
         name,
-        phone: undefined,
-        state: undefined,
+        phone: newPartyPhone.trim() || undefined,
+        gstin: newPartyGstin.trim() || undefined,
+        state: newPartyState.trim() || undefined,
+        address: newPartyAddress.trim() || undefined,
+        creditLimit: newPartyCreditLimit.trim() === "" ? undefined : Number(newPartyCreditLimit),
+        type: "customer",
+        category: "b2b",
       });
       const newParty = res.data;
+      if (newPartyNote.trim()) {
+        await api.post(`/parties/${newParty.id}/notes`, { body: newPartyNote.trim() }).catch(() => {});
+      }
       setParties((prev) => [newParty, ...prev]);
       setSelectedParty(newParty);
       setIsSelectingParty(false);
-      setQuickCustomerModal(false);
-      setQuickCustomerName("");
+      setAddPartyModal(false);
+      setNewPartyName("");
+      setNewPartyPhone("");
+      setNewPartyGstin("");
+      setNewPartyState("");
+      setNewPartyAddress("");
+      setNewPartyCreditLimit("");
+      setNewPartyNote("");
     } catch (e: any) {
       Alert.alert("Error", e.message || "Failed to add customer");
+    } finally {
+      setAddPartyLoading(false);
     }
   };
 
@@ -357,18 +384,18 @@ export default function B2bScreen() {
             </Pressable>
           </View>
 
-          {/* Quick Anonymous Customer */}
+          {/* Add Party */}
           <View className="px-5 pt-4 mb-2">
             <Pressable
-              onPress={() => setQuickCustomerModal(true)}
+              onPress={() => setAddPartyModal(true)}
               className="bg-primary/10 dark:bg-primary-dark/20 rounded-2xl border border-primary/30 p-4 flex-row items-center gap-3 active:opacity-75"
             >
               <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center">
-                <MaterialCommunityIcons name="incognito" size={20} color="#0F7A5F" />
+                <MaterialCommunityIcons name="account-plus" size={20} color="#0F7A5F" />
               </View>
               <View className="flex-1">
-                <Text className="text-sm font-bold text-primary dark:text-primary-dark">Quick Anonymous Customer</Text>
-                <Text className="text-xs text-on-surface-variant">Enter just a name — no GST/company details needed</Text>
+                <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Party</Text>
+                <Text className="text-xs text-on-surface-variant">Name, GST, credit limit, and notes</Text>
               </View>
               <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
             </Pressable>
@@ -563,31 +590,96 @@ export default function B2bScreen() {
         </SafeAreaProvider>
       </Modal>
 
-      {/* Quick Customer Modal (cross-platform replacement for Alert.prompt) */}
-      <Modal visible={quickCustomerModal} transparent animationType="fade">
+      {/* Add Party Modal */}
+      <Modal visible={addPartyModal} animationType="slide" onRequestClose={() => setAddPartyModal(false)}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <Pressable className="flex-1 bg-black/40 justify-center items-center px-8" onPress={() => { setQuickCustomerModal(false); setQuickCustomerName(""); }}>
-          <Pressable className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-3xl p-6" onPress={() => {}}>
-            <Text className="text-lg font-bold text-gray-900 dark:text-white mb-1">Quick Customer</Text>
-            <Text className="text-sm text-gray-500 dark:text-zinc-400 mb-4">Enter customer name for anonymous billing:</Text>
+        <View className="flex-1 bg-background dark:bg-bg-dark">
+          <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: insets.top }}>
+            <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Add Party</Text>
+            <Pressable onPress={() => setAddPartyModal(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
+              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+            </Pressable>
+          </View>
+          <ScrollView className="flex-1 px-5 pt-4" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 24 }}>
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Customer Name *</Text>
             <TextInput
-              value={quickCustomerName}
-              onChangeText={setQuickCustomerName}
-              placeholder="Customer name"
-              className="bg-gray-50 dark:bg-zinc-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white mb-4"
+              value={newPartyName}
+              onChangeText={setNewPartyName}
+              placeholder="e.g. ABC Traders"
+              placeholderTextColor="#A0A0A0"
               autoFocus
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm text-on-surface dark:text-text-primary-dark mb-3"
             />
-            <View className="flex-row gap-3">
-              <Pressable onPress={() => { setQuickCustomerModal(false); setQuickCustomerName(""); }} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-zinc-700">
-                <Text className="text-sm font-bold text-gray-600 dark:text-zinc-300 text-center">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={handleQuickAddCustomer} className="flex-1 bg-[#0F7A5F] py-3 rounded-xl">
-                <Text className="text-sm font-bold text-white text-center">Add Customer</Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Pressable>
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Phone Number</Text>
+            <TextInput
+              value={newPartyPhone}
+              onChangeText={setNewPartyPhone}
+              placeholder="e.g. 9876543210"
+              placeholderTextColor="#A0A0A0"
+              keyboardType="phone-pad"
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm text-on-surface dark:text-text-primary-dark mb-3"
+            />
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">GSTIN</Text>
+            <TextInput
+              value={newPartyGstin}
+              onChangeText={(v) => setNewPartyGstin(v.toUpperCase())}
+              placeholder="e.g. 22AAAAA0000A1Z5"
+              placeholderTextColor="#A0A0A0"
+              autoCapitalize="characters"
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm text-on-surface dark:text-text-primary-dark mb-3"
+            />
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">State</Text>
+            <TextInput
+              value={newPartyState}
+              onChangeText={setNewPartyState}
+              placeholder="e.g. Maharashtra"
+              placeholderTextColor="#A0A0A0"
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm text-on-surface dark:text-text-primary-dark mb-3"
+            />
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Address</Text>
+            <TextInput
+              value={newPartyAddress}
+              onChangeText={setNewPartyAddress}
+              placeholder="Billing address"
+              placeholderTextColor="#A0A0A0"
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm text-on-surface dark:text-text-primary-dark mb-3"
+            />
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Credit Limit (₹)</Text>
+            <TextInput
+              value={newPartyCreditLimit}
+              onChangeText={setNewPartyCreditLimit}
+              placeholder="Optional — leave blank for no cap"
+              placeholderTextColor="#A0A0A0"
+              keyboardType="numeric"
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm text-on-surface dark:text-text-primary-dark mb-3"
+            />
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Note</Text>
+            <TextInput
+              value={newPartyNote}
+              onChangeText={setNewPartyNote}
+              placeholder="Payment terms agreed, special instructions..."
+              placeholderTextColor="#A0A0A0"
+              multiline
+              numberOfLines={2}
+              className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm text-on-surface dark:text-text-primary-dark mb-4"
+              style={{ minHeight: 60, textAlignVertical: "top" }}
+            />
+            <Pressable
+              onPress={handleAddParty}
+              disabled={addPartyLoading}
+              className="bg-primary dark:bg-primary-dark py-3.5 rounded-xl items-center justify-center active:opacity-90"
+            >
+              {addPartyLoading ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text className="text-white font-bold text-sm">Add & Select</Text>
+              )}
+            </Pressable>
+          </ScrollView>
+        </View>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
     </View>
   );
