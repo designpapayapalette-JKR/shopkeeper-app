@@ -151,7 +151,7 @@ interface BusinessProfileSnapshot {
 
 export default function MoreScreen() {
   const { user, activeCompany, refreshCompany, setupQuickPin, pinLoginAvailable, logout } = useAuth();
-  const { mode, lang, setMode, setLang } = useTerminology();
+  const { lang, setLang } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
   const confirmDiscard = async () =>
@@ -1845,52 +1845,25 @@ export default function MoreScreen() {
         Settings
       </Text>
 
-      {/* Terminology Settings */}
+      {/* Language Settings */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark mb-4">
-          App Language & Terminology
+          App Language
         </Text>
-        <View className="mb-2">
-          <Text className="text-xs font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-            Terminology Mode
-          </Text>
-          <View className="flex-row bg-gray-50 p-1 rounded-xl" style={{ gap: 4 }}>
-            <Pressable
-              onPress={() => setMode("modern")}
-              className={`flex-1 py-2.5 rounded-lg items-center ${mode === "modern" ? "bg-white shadow-sm" : ""}`}
-            >
-              <Text className="text-xs font-bold text-text-primary">Modern</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setMode("traditional")}
-              className={`flex-1 py-2.5 rounded-lg items-center ${mode === "traditional" ? "bg-primary shadow-sm" : ""}`}
-            >
-              <Text className={`text-xs font-bold ${mode === "traditional" ? "text-white" : "text-text-primary"}`}>Traditional</Text>
-            </Pressable>
-          </View>
+        <View className="flex-row bg-gray-50 p-1 rounded-xl" style={{ gap: 4 }}>
+          <Pressable
+            onPress={() => setLang("en")}
+            className={`flex-1 py-2.5 rounded-lg items-center ${lang === "en" ? "bg-white shadow-sm" : ""}`}
+          >
+            <Text className="text-xs font-bold text-text-primary">English</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setLang("hi")}
+            className={`flex-1 py-2.5 rounded-lg items-center ${lang === "hi" ? "bg-primary shadow-sm" : ""}`}
+          >
+            <Text className={`text-xs font-bold ${lang === "hi" ? "text-white" : "text-text-primary"}`}>Hindi (हिंदी)</Text>
+          </Pressable>
         </View>
-
-        {mode === "traditional" && (
-          <View className="mt-2 pt-4 border-t border-gray-100">
-            <Text className="text-xs font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-              Language (Traditional)
-            </Text>
-            <View className="flex-row bg-gray-50 p-1 rounded-xl" style={{ gap: 4 }}>
-              <Pressable
-                onPress={() => setLang("en")}
-                className={`flex-1 py-2.5 rounded-lg items-center ${lang === "en" ? "bg-white shadow-sm" : ""}`}
-              >
-                <Text className="text-xs font-bold text-text-primary">English</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setLang("hi")}
-                className={`flex-1 py-2.5 rounded-lg items-center ${lang === "hi" ? "bg-primary shadow-sm" : ""}`}
-              >
-                <Text className={`text-xs font-bold ${lang === "hi" ? "text-white" : "text-text-primary"}`}>Hindi (हिंदी)</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* Outlet Switcher */}

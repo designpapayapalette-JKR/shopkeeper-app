@@ -17,7 +17,6 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useConfirm } from "../../src/components/ConfirmDialog";
-import ToggleSwitch from "../../src/components/ToggleSwitch";
 import { shareLedgerReminder } from "../../src/lib/sharer";
 import { getQueueCount, syncQueuedSales } from "../../src/lib/offlineQueue";
 import { useTerminology } from "../../src/lib/terminology-context";
@@ -83,7 +82,7 @@ function timeAgo(iso: string): string {
 export default function DashboardScreen() {
   const { user, activeCompany, activeBrand, availableBrands, setActiveBrand, logout } =
     useAuth();
-  const { t, mode, setMode } = useTerminology();
+  const { t } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
   const topInset = useTopInset();
@@ -316,32 +315,6 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Terminology Mode — Traditional swaps the dashboard for a big-button,
-          quick-actions-only layout for shopkeepers who want the simplest
-          possible screen; Modern keeps the full stats dashboard. */}
-      <Pressable
-        onPress={() => setMode(mode === "traditional" ? "modern" : "traditional")}
-        className="bg-surface-container-highest dark:bg-surface-dark border-b border-outline-variant dark:border-outline px-margin-mobile py-2 flex-row items-center justify-between"
-      >
-        <View className="flex-row items-center flex-1 mr-2" style={{ gap: 8 }}>
-          <MaterialCommunityIcons
-            name={mode === "traditional" ? "account-voice" : "view-dashboard-outline"}
-            size={16}
-            color="#0F7A5F"
-          />
-          <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
-            {mode === "traditional" ? "Traditional Mode" : "Modern Mode"}
-          </Text>
-          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark flex-1" numberOfLines={1}>
-            {mode === "traditional" ? "Simple screen, big buttons" : "Full dashboard & reports"}
-          </Text>
-        </View>
-        <ToggleSwitch
-          value={mode === "traditional"}
-          onValueChange={(v) => setMode(v ? "traditional" : "modern")}
-        />
-      </Pressable>
-
       {/* Profile menu — the only way to reach Operations/Settings now that
           "More" is no longer a bottom tab, plus Sign Out. */}
       <Modal visible={isProfileMenuOpen} animationType="fade" transparent onRequestClose={() => setIsProfileMenuOpen(false)}>
@@ -534,95 +507,6 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 96 }}
       >
-        {mode === "traditional" ? (
-          <View className="px-margin-mobile pt-lg" style={{ gap: 18 }}>
-            <View>
-              <Text className="font-headline-lg text-headline-lg text-on-surface dark:text-text-primary-dark">
-                Namaste, {user?.first_name ?? "Malik"}!
-              </Text>
-              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
-                {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
-              </Text>
-            </View>
-
-            {/* Big Quick Actions grid — the whole point of Traditional mode
-                is fewer decisions, bigger touch targets. */}
-            <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-              {QUICK_ACTIONS.map((action) => (
-                <Pressable
-                  key={action.id}
-                  onPress={() => (action.id === "scan" ? setIsScanHubOpen(true) : router.push(action.route as any))}
-                  className={`items-center justify-center rounded-2xl active:scale-95 ${
-                    action.primary ? "bg-primary dark:bg-primary-dark shadow-md" : "bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline"
-                  }`}
-                  style={{ width: "47%", aspectRatio: 1, gap: 8 }}
-                >
-                  <MaterialCommunityIcons name={action.icon} size={40} color={action.primary ? "#ffffff" : "#005f49"} />
-                  <Text className={`font-bold text-base ${action.primary ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>
-                    {action.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* Big standalone info rows — everything else (charts, low
-                stock, overdue reminders) is deliberately hidden in this
-                mode. Each gets its own accent color so the eye can scan
-                the list without reading every label. */}
-            {[
-              {
-                route: "/invoice-history",
-                icon: "cash-multiple" as const,
-                color: "#0F7A5F",
-                bg: "bg-primary/10",
-                title: "Aaj Ki Bikri",
-                subtitle: statsLoading ? "…" : `${formatCurrency(stats.salesToday)} · ${stats.invoicesToday} bill${stats.invoicesToday !== 1 ? "s" : ""}`,
-              },
-              {
-                route: "/ledger",
-                icon: "book-open-variant" as const,
-                color: "#B45309",
-                bg: "bg-secondary/10",
-                title: "Baaki Paisa (Balance)",
-                subtitle: statsLoading ? "…" : `${formatCurrency(stats.pendingReceivables)} lena hai`,
-              },
-              {
-                route: "/expenses",
-                icon: "wallet-outline" as const,
-                color: "#D64545",
-                bg: "bg-error/10",
-                title: "Kharcha (Expenses)",
-                subtitle: statsLoading ? "…" : `${formatCurrency(stats.cashOut)} aaj ka kharcha`,
-              },
-              {
-                route: "/gst-reports?tab=daybook",
-                icon: "notebook-outline" as const,
-                color: "#1E6FA6",
-                bg: "bg-info/10",
-                title: "Roznamcha (Day Book)",
-                subtitle: "Aaj ki poori entry ek jagah",
-              },
-            ].map((row) => (
-              <Pressable
-                key={row.route}
-                onPress={() => router.push(row.route as any)}
-                className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4 flex-row items-center active:opacity-80"
-                style={{ gap: 14 }}
-              >
-                <View className={`w-14 h-14 rounded-full ${row.bg} items-center justify-center`}>
-                  <MaterialCommunityIcons name={row.icon} size={26} color={row.color} />
-                </View>
-                <View className="flex-1">
-                  <Text className="font-bold text-lg text-on-surface dark:text-text-primary-dark">{row.title}</Text>
-                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark" numberOfLines={1}>
-                    {row.subtitle}
-                  </Text>
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={24} color="#9E9E9E" />
-              </Pressable>
-            ))}
-          </View>
-        ) : (
         <View className="px-margin-mobile pt-lg" style={{ gap: 24 }}>
           {/* ── Today's Snapshot ── */}
           <View style={{ gap: 8 }}>
@@ -1007,7 +891,6 @@ export default function DashboardScreen() {
             )}
           </View>
         </View>
-        )}
       </ScrollView>
 
       {/* Scan & Record Hub — camera/scan actions only. Non-camera shortcuts
