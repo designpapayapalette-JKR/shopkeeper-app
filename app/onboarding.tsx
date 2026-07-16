@@ -6,6 +6,7 @@ import { useAuth } from "../src/lib/auth-context";
 import { api, ApiError } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import { isValidGstin } from "../src/lib/gstin";
 
 const STAFF_ROLES = [
   { id: "manager", name: "Manager" },
@@ -67,6 +68,10 @@ export default function OnboardingScreen() {
   const handleSaveBusinessDetails = async () => {
     if (!bizName.trim()) {
       Alert.alert("Required Field", "Business name is required.");
+      return;
+    }
+    if (!isValidGstin(bizGstin)) {
+      Alert.alert("Invalid GSTIN", "GSTIN should be 15 characters, like 22AAAAA0000A1Z5. Leave it blank if you don't have one yet.");
       return;
     }
     setSavingBiz(true);

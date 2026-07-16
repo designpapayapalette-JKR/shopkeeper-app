@@ -25,6 +25,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../src/lib/sharer";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import { isValidGstin } from "../src/lib/gstin";
 import { useTerminology, TerminologyLang } from "../src/lib/terminology-context";
 import { useOutlet } from "../src/lib/outlet-context";
 
@@ -298,6 +299,10 @@ export default function MoreScreen() {
   const handleSaveBusinessProfile = async () => {
     if (!bizName.trim()) {
       Alert.alert("Required Field", "Business name is required.");
+      return;
+    }
+    if (!isValidGstin(bizGstin)) {
+      Alert.alert("Invalid GSTIN", "GSTIN should be 15 characters, like 22AAAAA0000A1Z5. Leave it blank if you don't have one yet.");
       return;
     }
     setBizSubmitting(true);
