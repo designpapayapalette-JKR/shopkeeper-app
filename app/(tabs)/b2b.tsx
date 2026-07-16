@@ -9,7 +9,6 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -17,7 +16,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { api } from "../../src/lib/api";
 import { useAuth } from "../../src/lib/auth-context";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets, SafeAreaProvider } from "react-native-safe-area-context";
 
 interface Product {
   id: string;
@@ -240,7 +239,7 @@ export default function B2bScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-bg-dark">
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="px-5 pt-2 pb-3 border-b border-outline-variant dark:border-outline">
         <View className="flex-row items-center gap-2 mb-1">
@@ -349,6 +348,7 @@ export default function B2bScreen() {
 
       {/* ══════ Select Customer Modal ══════ */}
       <Modal visible={isSelectingParty} animationType="slide" onRequestClose={() => setIsSelectingParty(false)}>
+        <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-bg-dark">
           <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: insets.top }}>
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Select Customer</Text>
@@ -419,10 +419,12 @@ export default function B2bScreen() {
             }
           />
         </View>
+        </SafeAreaProvider>
       </Modal>
 
       {/* ══════ Checkout Modal ══════ */}
       <Modal visible={showCheckout} animationType="slide" onRequestClose={() => setShowCheckout(false)}>
+        <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Checkout</Text>
@@ -558,6 +560,7 @@ export default function B2bScreen() {
             </Pressable>
           </View>
         </View>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Quick Customer Modal (cross-platform replacement for Alert.prompt) */}
@@ -586,6 +589,6 @@ export default function B2bScreen() {
         </Pressable>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

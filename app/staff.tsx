@@ -13,6 +13,7 @@ import {
   Linking,
   KeyboardAvoidingView,
 } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
@@ -337,6 +338,7 @@ export default function StaffScreen() {
 
       {/* Add Modal */}
       <Modal visible={isAdding} animationType="slide" onRequestClose={closeAdd}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="flex-1"
@@ -470,10 +472,12 @@ export default function StaffScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Edit Modal */}
       <Modal visible={!!editingStaff} animationType="slide" onRequestClose={closeEdit}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="flex-1"
@@ -583,6 +587,7 @@ export default function StaffScreen() {
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
     </View>
   );

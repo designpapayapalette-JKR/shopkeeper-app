@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { api, ApiError } from "../src/lib/api";
@@ -198,6 +199,7 @@ export default function PurchaseHistoryScreen() {
       )}
 
       <Modal visible={returnPurchase !== null} animationType="slide" onRequestClose={closeReturn}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
@@ -263,6 +265,7 @@ export default function PurchaseHistoryScreen() {
           )}
         </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
     </View>
   );

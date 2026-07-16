@@ -66,7 +66,7 @@ const QUICK_ACTIONS = [
   { id: "pos", label: "New Bill", icon: "receipt", route: "/pos", primary: true },
   { id: "scan", label: "Scan", icon: "qrcode-scan", route: "/inventory?openScanner=1", primary: false },
   { id: "payment", label: "Payment", icon: "cash-multiple", route: "/ledger", primary: false },
-  { id: "purchase", label: "Purchase", icon: "cart-check", route: "/more?openPurchase=1", primary: false },
+  { id: "purchase", label: "Buy", icon: "cart-check", route: "/more?openPurchase=1", primary: false },
   { id: "expense", label: "Expense", icon: "wallet-outline", route: "/more?openExpense=1", primary: false },
 ] as const;
 

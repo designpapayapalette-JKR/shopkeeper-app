@@ -53,7 +53,7 @@ export default function TabsLayout() {
 
   const dashboardOptions = useMemo(() => ({
     ...baseOptions,
-    title: "Dashboard",
+    title: "Home",
     tabBarIcon: ({ focused }: { focused: boolean }) => (
       <TabIcon active="view-dashboard" inactive="view-dashboard-outline" focused={focused} />
     ),
@@ -79,7 +79,7 @@ export default function TabsLayout() {
 
   const inventoryOptions = useMemo(() => ({
     ...baseOptions,
-    title: "Inventory",
+    title: "Stock",
     tabBarIcon: ({ focused }: { focused: boolean }) => (
       <TabIcon active="package-variant" inactive="package-variant-closed" focused={focused} />
     ),

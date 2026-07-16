@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../src/lib/auth-context";
@@ -371,7 +372,7 @@ export default function LedgerScreen() {
     <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
       {/* Header */}
       <View className="mb-6 flex-row items-center justify-between">
-        <View>
+        <View className="flex-1 mr-3">
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
             {activeTab === "customer" ? t("receivables") : t("payables")}
           </Text>
@@ -381,7 +382,7 @@ export default function LedgerScreen() {
         </View>
         <Pressable
           onPress={() => router.push("/unified-ledger" as any)}
-          className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3.5 py-2.5 rounded-xl"
+          className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3.5 py-2.5 rounded-xl shrink-0"
           style={{ gap: 6 }}
         >
           <MaterialCommunityIcons name="view-list-outline" size={16} color="#0F7A5F" />
@@ -560,6 +561,7 @@ export default function LedgerScreen() {
 
       {/* Bulk Import Modal */}
       <Modal visible={isBulkImportOpen} animationType="slide" onRequestClose={() => setIsBulkImportOpen(false)}>
+        <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
@@ -599,11 +601,13 @@ export default function LedgerScreen() {
             onComplete={fetchParties}
           />
         </View>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Detailed Ledger Entries Modal */}
       {selectedParty && (
         <Modal visible={selectedParty !== null} animationType="slide" onRequestClose={() => setSelectedParty(null)}>
+          <SafeAreaProvider>
           <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
             <View className="flex-row justify-between items-center mb-6">
               <View>
@@ -734,11 +738,13 @@ export default function LedgerScreen() {
               />
             )}
           </View>
+          </SafeAreaProvider>
         </Modal>
       )}
 
       {/* Record Payment Form Modal */}
       <Modal visible={isRecordingPayment} animationType="slide" onRequestClose={closeRecordPayment}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
@@ -884,10 +890,12 @@ export default function LedgerScreen() {
           </View>
         </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Add Party Modal Form */}
       <Modal visible={isAddingParty || editingParty !== null} animationType="slide" onRequestClose={closePartyForm}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
@@ -1094,6 +1102,7 @@ export default function LedgerScreen() {
           </View>
         </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
     </View>
   );

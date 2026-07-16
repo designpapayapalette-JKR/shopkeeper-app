@@ -9,7 +9,6 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -211,7 +210,7 @@ export default function EstimatesScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-bg-dark">
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: insets.top }}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
         {checkoutResult ? (
           <View className="flex-1 items-center justify-center px-6">
@@ -380,6 +379,6 @@ export default function EstimatesScreen() {
           </View>
         </Modal>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

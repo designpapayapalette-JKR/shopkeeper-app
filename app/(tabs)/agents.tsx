@@ -214,7 +214,7 @@ export default function AgentsScreen() {
         style={{ paddingTop: topInset }}
       >
         <View className="flex-row justify-between items-center">
-          <View>
+          <View className="flex-1 mr-3">
             <Text className="text-xl font-black text-on-surface dark:text-text-primary-dark">
               Field Agents
             </Text>
@@ -224,7 +224,7 @@ export default function AgentsScreen() {
             </Text>
           </View>
 
-          <View className="flex-row items-center" style={{ gap: 8 }}>
+          <View className="flex-row items-center shrink-0" style={{ gap: 8 }}>
           {/* Map / List toggle */}
           <View className="flex-row bg-surface-container dark:bg-surface-dark rounded-xl p-1 gap-1">
             {(["map", "list"] as ViewMode[]).map((mode) => (

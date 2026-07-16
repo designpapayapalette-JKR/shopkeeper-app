@@ -29,6 +29,7 @@ import { useAuth } from "../../src/lib/auth-context";
 import { api, ApiError } from "../../src/lib/api";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 import { useTopInset } from "../../src/lib/useTopInset";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { enqueueSale, isNetworkFailure } from "../../src/lib/offlineQueue";
 import { useTerminology } from "../../src/lib/terminology-context";
@@ -1686,7 +1687,7 @@ export default function PosScreen() {
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark">
       {isOffline && (
-        <View className="bg-amber-500 px-4 py-2 flex-row items-center justify-center" style={{ gap: 6 }}>
+        <View className="bg-amber-500 px-4 py-2 flex-row items-center justify-center" style={{ gap: 6, paddingTop: topInset }}>
           <MaterialCommunityIcons name="wifi-off" size={14} color="white" />
           <Text className="text-white text-xs font-bold">You're offline — showing cached data</Text>
         </View>
@@ -1955,6 +1956,7 @@ export default function PosScreen() {
       {/* ══════ Checkout Sheet (phone only) ══════ */}
       {!isTablet && (
         <Modal visible={isCheckoutOpen} animationType="slide" onRequestClose={() => setIsCheckoutOpen(false)}>
+          <SafeAreaProvider>
           <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View className="flex-1 bg-background dark:bg-bg-dark">
             {/* Sheet header */}
@@ -1972,11 +1974,13 @@ export default function PosScreen() {
             </ScrollView>
           </View>
           </KeyboardAvoidingView>
+          </SafeAreaProvider>
         </Modal>
       )}
 
       {/* ══════ Select Customer Modal ══════ */}
       <Modal visible={isSelectingParty} animationType="slide" onRequestClose={() => setIsSelectingParty(false)}>
+        <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-bg-dark">
           <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Select Customer</Text>
@@ -2065,10 +2069,12 @@ export default function PosScreen() {
             }
           />
         </View>
+        </SafeAreaProvider>
       </Modal>
 
       {/* ══════ Add New Customer Modal ══════ */}
       <Modal visible={isAddingCustomer} animationType="slide" onRequestClose={closeAddCustomer}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: bottomInset + 24 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
@@ -2133,9 +2139,11 @@ export default function PosScreen() {
           </View>
         </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
 
       <Modal visible={isAddingProduct} animationType="slide" onRequestClose={closeAddProduct}>
+        <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: bottomInset + 24 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
@@ -2216,6 +2224,7 @@ export default function PosScreen() {
           </View>
         </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Per-item GST override */}
@@ -2269,6 +2278,7 @@ export default function PosScreen() {
 
       {/* Held Bills Modal */}
       <Modal visible={isHeldBillsOpen} animationType="slide" onRequestClose={() => setIsHeldBillsOpen(false)}>
+        <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Parked Bills</Text>
@@ -2324,6 +2334,7 @@ export default function PosScreen() {
             />
           )}
         </View>
+        </SafeAreaProvider>
       </Modal>
     </View>
   );

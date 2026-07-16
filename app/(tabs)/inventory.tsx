@@ -15,6 +15,7 @@ import {
   Platform,
   useWindowDimensions,
 } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -995,6 +996,7 @@ export default function InventoryScreen() {
 
       {/* Bulk Import Modal */}
       <Modal visible={isBulkImportOpen} animationType="slide" onRequestClose={() => setIsBulkImportOpen(false)}>
+        <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
@@ -1040,6 +1042,7 @@ export default function InventoryScreen() {
             onComplete={fetchProducts}
           />
         </View>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Barcode Scanner Modal */}
@@ -1069,6 +1072,7 @@ export default function InventoryScreen() {
 
       {/* Add Product Modal Form */}
       <Modal visible={isAdding} animationType="slide" onRequestClose={closeAddProduct}>
+        <SafeAreaProvider>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Add New Product
@@ -1361,10 +1365,12 @@ export default function InventoryScreen() {
             </Pressable>
           </View>
         </ScrollView>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Edit Product Modal */}
       <Modal visible={!!editingProduct} animationType="slide" onRequestClose={closeEditProduct}>
+        <SafeAreaProvider>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Edit Product
@@ -1429,6 +1435,7 @@ export default function InventoryScreen() {
             </Pressable>
           </View>
         </ScrollView>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Add/Edit Warehouse Location Modal */}
