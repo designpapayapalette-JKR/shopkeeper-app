@@ -167,8 +167,13 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // Recent Transactions is always today-only and scoped to this tab's
+      // channel at the data layer — historical bills live in Reports/
+      // Daybook instead, per the hard UX rule.
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
       const [invRes, summaryRes] = await Promise.all([
-        api.get<{ data: InvoiceSummary[] }>("/invoices"),
+        api.get<{ data: InvoiceSummary[] }>("/invoices", { params: { channel: "pos", startDate: startOfDay.toISOString() } }),
         api.get<{ data: PosSummary }>("/invoices/pos/summary"),
       ]);
       setInvoices(invRes.data ?? []);
@@ -331,6 +336,24 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
       Alert.alert("Share Error", e.message || "Could not share invoice.");
     } finally {
       setPreviewBusy(null);
+    }
+  };
+
+  const [settingStatusId, setSettingStatusId] = useState<string | null>(null);
+  const [partialModalInvoice, setPartialModalInvoice] = useState<InvoiceSummary | null>(null);
+  const [partialAmount, setPartialAmount] = useState("");
+
+  const handleSetPaymentStatus = async (invoice: InvoiceSummary, status: "paid" | "partial" | "hold", amountPaid?: number) => {
+    setSettingStatusId(invoice.id);
+    try {
+      await api.patch(`/invoices/${invoice.id}/payment-status`, { status, ...(amountPaid !== undefined ? { amount_paid: amountPaid } : {}) });
+      setPartialModalInvoice(null);
+      setPartialAmount("");
+      load();
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to update payment status.");
+    } finally {
+      setSettingStatusId(null);
     }
   };
 
@@ -578,11 +601,32 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
                     <ActivityIndicator size="small" color="#0F7A5F" style={{ marginTop: 4 }} />
                   ) : (
                     <Text className="text-sm text-primary font-bold mt-1 uppercase">
-                      {item.payment_status}
+                      {item.payment_status === "unpaid" ? "Hold" : item.payment_status === "partial" ? "Partial Paid" : item.payment_status}
                     </Text>
                   )}
                 </View>
               </Pressable>
+              {item.type !== "estimate" && (
+                <View className="border-t border-gray-100 dark:border-zinc-800 flex-row">
+                  <Pressable
+                    onPress={() => handleSetPaymentStatus(item, "hold")}
+                    disabled={settingStatusId === item.id}
+                    className="flex-1 py-2.5 items-center border-r border-gray-100 dark:border-zinc-800"
+                  >
+                    {settingStatusId === item.id ? (
+                      <ActivityIndicator size="small" color="#0F7A5F" />
+                    ) : (
+                      <Text className="text-sm font-bold text-primary">Hold</Text>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={() => { setPartialModalInvoice(item); setPartialAmount(""); }}
+                    className="flex-1 py-2.5 items-center"
+                  >
+                    <Text className="text-sm font-bold text-primary">Partial Paid</Text>
+                  </Pressable>
+                </View>
+              )}
               <View className="border-t border-gray-100 dark:border-zinc-800 flex-row">
                 <Pressable
                   onPress={() => handleOpenReturn(item)}
@@ -1019,6 +1063,38 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
               </View>
             </ScrollView>
           )}
+        </View>
+      </Modal>
+
+      {/* Partial Paid amount entry */}
+      <Modal visible={partialModalInvoice !== null} transparent animationType="fade">
+        <View className="flex-1 bg-black/40 justify-center items-center px-8">
+          <View className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-3xl p-6">
+            <Text className="text-lg font-bold text-gray-900 dark:text-white mb-1">Record Partial Payment</Text>
+            <Text className="text-sm text-gray-500 dark:text-zinc-400 mb-4">
+              {partialModalInvoice?.invoice_number} — Total ₹{partialModalInvoice ? parseFloat(partialModalInvoice.grand_total).toFixed(2) : "0.00"}
+            </Text>
+            <TextInput
+              value={partialAmount}
+              onChangeText={setPartialAmount}
+              placeholder="Amount paid so far"
+              keyboardType="numeric"
+              className="bg-gray-50 dark:bg-zinc-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white mb-4"
+              autoFocus
+            />
+            <View className="flex-row gap-3">
+              <Pressable onPress={() => { setPartialModalInvoice(null); setPartialAmount(""); }} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-zinc-700">
+                <Text className="text-sm font-bold text-gray-600 dark:text-zinc-300 text-center">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => partialModalInvoice && handleSetPaymentStatus(partialModalInvoice, "partial", Number(partialAmount) || 0)}
+                disabled={settingStatusId === partialModalInvoice?.id}
+                className="flex-1 bg-[#0F7A5F] py-3 rounded-xl"
+              >
+                <Text className="text-sm font-bold text-white text-center">Save</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       </Modal>
     </View>

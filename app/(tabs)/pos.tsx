@@ -742,7 +742,7 @@ export default function PosScreen() {
     if (selectedParty) return selectedParty;
     if (businessMode === "b2b") return null;
 
-    const defaultCustomerName = activeCompany?.defaultCustomerName || "Cash Customer";
+    const defaultCustomerName = activeCompany?.default_customer_name || "Cash Customer";
 
     if (cashCustomerId) {
       const cached = parties.find((p) => p.id === cashCustomerId);
