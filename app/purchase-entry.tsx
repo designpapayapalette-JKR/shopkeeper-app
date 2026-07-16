@@ -53,6 +53,7 @@ export default function PurchaseEntryScreen() {
   const [supplierId, setSupplierId] = useState<string | null>(null);
   const [warehouseId, setWarehouseId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [isRcm, setIsRcm] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [result, setResult] = useState<any | null>(null);
 
@@ -111,6 +112,7 @@ export default function PurchaseEntryScreen() {
       const res = await api.post<{ data: any }>("/purchases", {
         supplierId,
         warehouseId,
+        isRcm,
         items: cart.map((c) => ({
           productId: c.product.id,
           quantity: parseFloat(c.quantity) || 0,
@@ -190,6 +192,20 @@ export default function PurchaseEntryScreen() {
             </ScrollView>
           </>
         )}
+
+        {/* RCM Toggle */}
+        <Pressable
+          onPress={() => setIsRcm(!isRcm)}
+          className={`flex-row items-center p-4 rounded-xl border mb-4 ${isRcm ? "bg-primary/10 border-primary" : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
+        >
+          <View className={`w-6 h-6 rounded-lg items-center justify-center mr-3 ${isRcm ? "bg-primary" : "bg-gray-200 dark:bg-zinc-800"}`}>
+            {isRcm && <MaterialCommunityIcons name="check" size={16} color="white" />}
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">Reverse Charge (RCM)</Text>
+            <Text className="text-xs text-text-secondary mt-0.5">GST is payable by the buyer</Text>
+          </View>
+        </Pressable>
 
         <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Add Products</Text>
         <TextInput

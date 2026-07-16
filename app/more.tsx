@@ -24,7 +24,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../src/lib/sharer";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
-import { useTerminology } from "../src/lib/terminology-context";
+import { useTerminology, TerminologyLang } from "../src/lib/terminology-context";
 import { useOutlet } from "../src/lib/outlet-context";
 
 // Not meant to be memorable — it's shared with the new employee over
@@ -147,6 +147,7 @@ interface BusinessProfileSnapshot {
   bizUpiId: string;
   bizUpiPayeeName: string;
   bizUpiQrUrl: string;
+  bizUdyamNumber: string;
 }
 
 export default function MoreScreen() {
@@ -198,6 +199,7 @@ export default function MoreScreen() {
   const [bizUpiId, setBizUpiId] = useState("");
   const [bizUpiPayeeName, setBizUpiPayeeName] = useState("");
   const [bizUpiQrUrl, setBizUpiQrUrl] = useState("");
+  const [bizUdyamNumber, setBizUdyamNumber] = useState("");
   const [bizSubmitting, setBizSubmitting] = useState(false);
   const [businessProfileInitial, setBusinessProfileInitial] = useState<BusinessProfileSnapshot | null>(null);
 
@@ -274,6 +276,7 @@ export default function MoreScreen() {
       bizUpiId: activeCompany?.upi_id ?? "",
       bizUpiPayeeName: activeCompany?.upi_payee_name ?? "",
       bizUpiQrUrl: activeCompany?.upi_qr_url ?? "",
+      bizUdyamNumber: activeCompany?.udyam_number ?? "",
     };
     setBusinessProfileInitial(initial);
     setBizName(initial.bizName);
@@ -287,6 +290,7 @@ export default function MoreScreen() {
     setBizUpiId(initial.bizUpiId);
     setBizUpiPayeeName(initial.bizUpiPayeeName);
     setBizUpiQrUrl(initial.bizUpiQrUrl);
+    setBizUdyamNumber(initial.bizUdyamNumber);
     setIsBusinessProfileModal(true);
   };
 
@@ -308,6 +312,7 @@ export default function MoreScreen() {
         bankIfsc: bizBankIfsc.trim() || undefined,
         upiId: bizUpiId.trim() || undefined,
         upiPayeeName: bizUpiPayeeName.trim() || undefined,
+        udyamNumber: bizUdyamNumber.trim() || undefined,
       });
       await refreshCompany();
       Alert.alert("Saved", "Business profile updated. This appears on your Tally-style invoices.");
@@ -332,6 +337,7 @@ export default function MoreScreen() {
     setBizUpiId("");
     setBizUpiPayeeName("");
     setBizUpiQrUrl("");
+    setBizUdyamNumber("");
   };
 
   const closeBusinessProfileModal = async () => {
@@ -347,6 +353,7 @@ export default function MoreScreen() {
       bizUpiId: activeCompany?.upi_id ?? "",
       bizUpiPayeeName: activeCompany?.upi_payee_name ?? "",
       bizUpiQrUrl: activeCompany?.upi_qr_url ?? "",
+      bizUdyamNumber: activeCompany?.udyam_number ?? "",
     };
     const hasChanges =
       bizName !== baseline.bizName ||
@@ -358,7 +365,8 @@ export default function MoreScreen() {
       bizBankAccountNumber !== baseline.bizBankAccountNumber ||
       bizBankIfsc !== baseline.bizBankIfsc ||
       bizUpiId !== baseline.bizUpiId ||
-      bizUpiPayeeName !== baseline.bizUpiPayeeName;
+      bizUpiPayeeName !== baseline.bizUpiPayeeName ||
+      bizUdyamNumber !== baseline.bizUdyamNumber;
     if (hasChanges && !(await confirmDiscard())) return;
     setBusinessProfileInitial(null);
     setIsBusinessProfileModal(false);
@@ -1850,19 +1858,25 @@ export default function MoreScreen() {
         <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark mb-4">
           App Language
         </Text>
-        <View className="flex-row bg-gray-50 p-1 rounded-xl" style={{ gap: 4 }}>
-          <Pressable
-            onPress={() => setLang("en")}
-            className={`flex-1 py-2.5 rounded-lg items-center ${lang === "en" ? "bg-white shadow-sm" : ""}`}
-          >
-            <Text className="text-xs font-bold text-text-primary">English</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setLang("hi")}
-            className={`flex-1 py-2.5 rounded-lg items-center ${lang === "hi" ? "bg-primary shadow-sm" : ""}`}
-          >
-            <Text className={`text-xs font-bold ${lang === "hi" ? "text-white" : "text-text-primary"}`}>Hindi (हिंदी)</Text>
-          </Pressable>
+        <View className="flex-row flex-wrap bg-gray-50 p-1 rounded-xl" style={{ gap: 4 }}>
+          {[
+            { key: "en", label: "English" },
+            { key: "hi", label: "हिंदी" },
+            { key: "ta", label: "தமிழ்" },
+            { key: "ml", label: "മലയാളം" },
+            { key: "kn", label: "ಕನ್ನಡ" },
+            { key: "te", label: "తెలుగు" },
+            { key: "mr", label: "मराठी" },
+            { key: "gu", label: "ગુજરાતી" },
+          ].map((l) => (
+            <Pressable
+              key={l.key}
+              onPress={() => setLang(l.key as TerminologyLang)}
+              className={`py-2.5 px-3 rounded-lg items-center ${lang === l.key ? "bg-primary shadow-sm" : ""}`}
+            >
+              <Text className={`text-xs font-bold ${lang === l.key ? "text-white" : "text-text-primary"}`}>{l.label}</Text>
+            </Pressable>
+          ))}
         </View>
       </View>
 
@@ -3598,6 +3612,7 @@ export default function MoreScreen() {
               { label: "Bank IFSC", value: bizBankIfsc, setter: setBizBankIfsc, placeholder: "IFSC code", autoCapitalize: "characters" as const },
               { label: "UPI ID", value: bizUpiId, setter: setBizUpiId, placeholder: "e.g. shopname@okhdfcbank" },
               { label: "UPI Payee Name (shown to customers)", value: bizUpiPayeeName, setter: setBizUpiPayeeName, placeholder: "Your Business Name" },
+              { label: "MSME/Udyam Registration No.", value: bizUdyamNumber, setter: setBizUdyamNumber, placeholder: "e.g. UDYAM-MH-01-0000000" },
             ].map((field) => (
               <View className="mt-4" key={field.label}>
                 <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">

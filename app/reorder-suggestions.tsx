@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput } from "react-native";
 import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -12,6 +12,13 @@ interface Suggestion {
   reorder_level: number;
   suggested_quantity: number;
   unit: string;
+  unit_cost: number;
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  phone: string | null;
 }
 
 export default function ReorderSuggestionsScreen() {
@@ -19,6 +26,13 @@ export default function ReorderSuggestionsScreen() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [selection, setSelection] = useState<Set<string>>(new Set());
+  const [generating, setGenerating] = useState(false);
+
+  // Supplier selection modal
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [poNotes, setPoNotes] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -46,6 +60,51 @@ export default function ReorderSuggestionsScreen() {
   const selectAll = () => {
     if (selection.size === suggestions.length) setSelection(new Set());
     else setSelection(new Set(suggestions.map((s) => s.product_id)));
+  };
+
+  const openGeneratePO = async () => {
+    if (selection.size === 0) return;
+    setGenerating(true);
+    try {
+      const res = await api.get<{ data: Supplier[] }>("/purchase-orders/suggestions/suppliers");
+      setSuppliers(res.data ?? []);
+      setSelectedSupplier(null);
+      setPoNotes("");
+      setShowSupplierModal(true);
+    } catch {
+      Alert.alert("Error", "Could not load suppliers.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const generatePO = async () => {
+    if (!selectedSupplier) return;
+    setGenerating(true);
+    try {
+      const items = suggestions
+        .filter((s) => selection.has(s.product_id))
+        .map((s) => ({
+          productId: s.product_id,
+          quantity: s.suggested_quantity,
+          unitCost: s.unit_cost || 0,
+        }));
+
+      const res = await api.post<{ data: { poNumber: string } }>("/purchase-orders/generate-from-suggestions", {
+        supplierId: selectedSupplier.id,
+        notes: poNotes.trim() || undefined,
+        items,
+      });
+
+      setShowSupplierModal(false);
+      setSelection(new Set());
+      Alert.alert("PO Generated", `Purchase Order ${res.data.poNumber} created successfully.`);
+      load();
+    } catch (e: any) {
+      Alert.alert("Error", e?.response?.data?.error || "Failed to generate purchase order.");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -77,10 +136,13 @@ export default function ReorderSuggestionsScreen() {
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => Alert.alert("Coming Soon", "One-click purchase order generation from selected items will be available soon. For now, go to Operations > Record Purchase Bill to create the purchase.")}
+                onPress={openGeneratePO}
+                disabled={selection.size === 0 || generating}
                 className="bg-primary px-4 py-2 rounded-xl"
               >
-                <Text className="text-sm font-bold text-white">Generate PO ({selection.size})</Text>
+                <Text className="text-sm font-bold text-white">
+                  {generating ? "Generating..." : `Generate PO (${selection.size})`}
+                </Text>
               </Pressable>
             </View>
 
@@ -109,6 +171,65 @@ export default function ReorderSuggestionsScreen() {
           </>
         )}
       </View>
+
+      {/* Supplier Selection Modal */}
+      <Modal visible={showSupplierModal} transparent animationType="slide">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <View className="mt-auto bg-white rounded-t-3xl p-6 max-h-[80%]">
+            <Text className="text-lg font-black mb-2">Select Supplier</Text>
+            <Text className="text-sm text-text-secondary mb-4">
+              Choose a supplier for the purchase order.
+            </Text>
+
+            {suppliers.length === 0 ? (
+              <Text className="text-sm text-text-secondary text-center py-4">
+                No suppliers found. Add a supplier first.
+              </Text>
+            ) : (
+              <ScrollView className="max-h-64 mb-4">
+                {suppliers.map((s) => (
+                  <Pressable
+                    key={s.id}
+                    onPress={() => setSelectedSupplier(s)}
+                    className={`p-4 rounded-xl mb-2 border ${
+                      selectedSupplier?.id === s.id ? "border-primary bg-primary/5" : "border-gray-100 bg-gray-50"
+                    }`}
+                  >
+                    <Text className="font-bold text-sm">{s.name}</Text>
+                    {s.phone && <Text className="text-xs text-text-secondary">{s.phone}</Text>}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+
+            <TextInput
+              placeholder="Notes (optional)"
+              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4 text-sm"
+              value={poNotes}
+              onChangeText={setPoNotes}
+              multiline
+            />
+
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setShowSupplierModal(false)}
+                className="flex-1 bg-gray-100 py-3 rounded-xl items-center"
+              >
+                <Text className="font-bold">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={generatePO}
+                disabled={!selectedSupplier || generating}
+                className="flex-1 bg-primary py-3 rounded-xl items-center"
+              >
+                <Text className="font-bold text-white">
+                  {generating ? "Generating..." : "Generate PO"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
