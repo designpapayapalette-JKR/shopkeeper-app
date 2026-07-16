@@ -154,7 +154,7 @@ interface BusinessProfileSnapshot {
 
 export default function MoreScreen() {
   const { user, activeCompany, refreshCompany, setupQuickPin, pinLoginAvailable, logout } = useAuth();
-  const { lang, setLang } = useTerminology();
+  const { lang, setLang, t } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
   const confirmDiscard = async () =>
@@ -1335,7 +1335,7 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-2.5"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Bank Accounts
+            {t("bankAccounts")}
           </Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
@@ -1383,7 +1383,7 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-2.5"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Expenses
+            {t("expenses")}
           </Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
@@ -1395,7 +1395,7 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-2.5"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Day Book
+            {t("dayBook")}
           </Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
@@ -1407,7 +1407,7 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-2.5"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Activity Log
+            {t("activityLog")}
           </Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
@@ -1431,7 +1431,7 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-2.5"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Recycle Bin
+            {t("recycleBin")}
           </Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
