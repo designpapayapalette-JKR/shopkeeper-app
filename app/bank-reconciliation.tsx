@@ -136,7 +136,8 @@ export default function BankReconciliationScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-4" style={{ paddingTop: topInset + 8 }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset + 8 }}>
+    <ScrollView className="flex-1 px-4">
       <Text className="text-xl font-black text-text-primary mb-1">Bank Reconciliation</Text>
       <Text className="text-sm text-text-secondary mb-4">Import your bank statement and match each line to a recorded payment.</Text>
 
@@ -223,5 +224,6 @@ export default function BankReconciliationScreen() {
         </View>
       </Modal>
     </ScrollView>
+    </View>
   );
 }

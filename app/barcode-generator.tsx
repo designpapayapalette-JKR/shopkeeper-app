@@ -127,7 +127,8 @@ export default function BarcodeGeneratorScreen() {
   );
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+    <ScrollView className="flex-1">
       <View className="px-6 pb-4 flex-row items-center" style={{ gap: 12 }}>
         <Pressable onPress={() => router.back()} className="w-10 h-10 items-center justify-center -ml-2">
           <MaterialCommunityIcons name="arrow-left" size={22} color="#0F7A5F" />
@@ -282,5 +283,6 @@ export default function BarcodeGeneratorScreen() {
         </View>
       )}
     </ScrollView>
+    </View>
   );
 }

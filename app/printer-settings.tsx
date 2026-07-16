@@ -167,7 +167,8 @@ export default function PrinterSettingsScreen() {
   );
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: 40 + bottomInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+    <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 40 + bottomInset }}>
       <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-1">
         Printer Settings
       </Text>
@@ -353,6 +354,7 @@ export default function PrinterSettingsScreen() {
         </View>
       )}
     </ScrollView>
+    </View>
   );
 }
 

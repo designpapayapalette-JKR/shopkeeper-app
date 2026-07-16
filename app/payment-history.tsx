@@ -50,7 +50,8 @@ export default function PaymentHistoryScreen() {
   const totalOut = payments.filter((p) => p.direction === "out").reduce((s, p) => s + p.amount, 0);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
+    <View style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
+    <ScrollView style={{ flex: 1 }}>
       <View className="px-4 py-3">
         <Text className="text-xl font-black text-text-primary mb-1">Payment History</Text>
         <Text className="text-sm text-text-secondary mb-4">Browse all payments received and made</Text>
@@ -127,5 +128,6 @@ export default function PaymentHistoryScreen() {
         </View>
       </View>
     </ScrollView>
+    </View>
   );
 }

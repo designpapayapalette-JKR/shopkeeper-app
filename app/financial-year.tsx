@@ -68,7 +68,8 @@ export default function FinancialYearScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-4" style={{ paddingTop: topInset + 8 }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset + 8 }}>
+    <ScrollView className="flex-1 px-4">
       <Text className="text-xl font-black text-text-primary mb-1">Financial Year Closing</Text>
       <Text className="text-sm text-text-secondary mb-4">
         India's financial year runs April–March. Closing a past year blocks new backdated transactions — it never deletes or alters existing records.
@@ -105,5 +106,6 @@ export default function FinancialYearScreen() {
         </Pressable>
       )}
     </ScrollView>
+    </View>
   );
 }

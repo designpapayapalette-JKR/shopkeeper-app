@@ -108,7 +108,8 @@ export default function ReorderSuggestionsScreen() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
+    <View style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
+    <ScrollView style={{ flex: 1 }}>
       <View className="px-4 py-3">
         <View className="flex-row justify-between items-center mb-2">
           <Text className="text-xl font-black text-text-primary">Reorder Suggestions</Text>
@@ -231,5 +232,6 @@ export default function ReorderSuggestionsScreen() {
         </View>
       </Modal>
     </ScrollView>
+    </View>
   );
 }

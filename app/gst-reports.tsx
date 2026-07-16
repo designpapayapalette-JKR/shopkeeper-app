@@ -214,7 +214,8 @@ export default function GstReportsScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: 40 }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+    <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 40 }}>
       <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-1">
         GST & Compliance Reports
       </Text>
@@ -437,6 +438,7 @@ export default function GstReportsScreen() {
         </View>
       )}
     </ScrollView>
+    </View>
   );
 }
 

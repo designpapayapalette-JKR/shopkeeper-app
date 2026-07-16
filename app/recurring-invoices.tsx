@@ -128,7 +128,8 @@ export default function RecurringInvoicesScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-4" style={{ paddingTop: topInset + 8 }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset + 8 }}>
+    <ScrollView className="flex-1 px-4">
       <View className="flex-row justify-between items-center mb-4">
         <View className="flex-1 mr-2">
           <Text className="text-xl font-black text-text-primary">Recurring Invoices</Text>
@@ -217,5 +218,6 @@ export default function RecurringInvoicesScreen() {
         </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
+    </View>
   );
 }

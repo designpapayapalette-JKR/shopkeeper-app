@@ -30,7 +30,8 @@ export default function AgingReportScreen() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
+    <View style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
+    <ScrollView style={{ flex: 1 }}>
       <View className="px-4 py-3">
         <Text className="text-xl font-black text-text-primary mb-1">Aging Report</Text>
         <Text className="text-sm text-text-secondary mb-4">{type === "receivable" ? "Receivables (Customers)" : "Payables (Suppliers)"}</Text>
@@ -99,5 +100,6 @@ export default function AgingReportScreen() {
         )}
       </View>
     </ScrollView>
+    </View>
   );
 }
