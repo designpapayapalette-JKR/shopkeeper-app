@@ -1780,6 +1780,21 @@ export default function MoreScreen() {
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
+          onPress={() => Linking.openURL("https://app.papayapalette.online/dashboard/settings")}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-sm font-bold text-text-secondary">GST default, discount type, walk-in name</Text>
+          </View>
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-sm font-bold text-primary">Web Portal</Text>
+            <MaterialCommunityIcons name="open-in-new" size={18} color="#0F7A5F" />
+          </View>
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
           onPress={() => router.push("/printer-settings" as any)}
           className="flex-row justify-between items-center py-2.5"
         >

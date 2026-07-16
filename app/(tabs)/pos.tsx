@@ -774,6 +774,8 @@ export default function PosScreen() {
     if (selectedParty) return selectedParty;
     if (businessMode === "b2b" && !anonymousBilling) return null;
 
+    const defaultCustomerName = activeCompany?.defaultCustomerName || "Cash Customer";
+
     if (cashCustomerId) {
       const cached = parties.find((p) => p.id === cashCustomerId);
       if (cached) return cached;
@@ -781,15 +783,15 @@ export default function PosScreen() {
 
     try {
       const existing = await api.get<{ data: Party[] }>("/parties", {
-        params: { type: "customer", search: "Cash Customer" },
+        params: { type: "customer", search: defaultCustomerName },
       });
-      const found = (existing.data ?? []).find((p) => p.name === "Cash Customer");
+      const found = (existing.data ?? []).find((p) => p.name === defaultCustomerName);
       if (found) {
         setCashCustomerId(found.id);
         return found;
       }
       const created = await api.post<{ data: Party }>("/parties", {
-        name: "Cash Customer",
+        name: defaultCustomerName,
         type: "customer",
         category: "b2c",
         current_balance: 0,
