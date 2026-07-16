@@ -1272,254 +1272,183 @@ export default function MoreScreen() {
       </Text>
 
       {/* Purchases, Returns & Compliance */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+      <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Purchases, Returns & Compliance
         </Text>
 
-        <Pressable onPress={() => router.push("/purchase-entry" as any)} className="flex-row justify-between items-center py-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Record Purchase</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">Log stock received from a supplier, multiple items at once.</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        <Pressable onPress={() => router.push("/purchase-entry" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Record Purchase</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
-        <Pressable onPress={() => router.push("/credit-note" as any)} className="flex-row justify-between items-center py-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Credit Note</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">Record a sales return against an existing invoice.</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        <Pressable onPress={() => router.push("/credit-note" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Credit Note</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
-        <Pressable onPress={() => router.push("/debit-note" as any)} className="flex-row justify-between items-center py-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Debit Note</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">Record a purchase return against an existing bill.</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        <Pressable onPress={() => router.push("/debit-note" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Debit Note</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
-        <Pressable onPress={() => router.push("/recurring-invoices" as any)} className="flex-row justify-between items-center py-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Recurring Invoices</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">Auto-generate an invoice weekly, monthly, quarterly, or yearly.</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        <Pressable onPress={() => router.push("/recurring-invoices" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Recurring Invoices</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
-        <Pressable onPress={() => router.push("/bank-reconciliation" as any)} className="flex-row justify-between items-center py-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Bank Reconciliation</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">Import a bank statement and match it against recorded payments.</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        <Pressable onPress={() => router.push("/bank-reconciliation" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Reconciliation</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
-        <Pressable onPress={() => router.push("/balance-sheet" as any)} className="flex-row justify-between items-center py-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Balance Sheet & Stock Valuation</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">Assets, liabilities, equity, and standing inventory value.</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        <Pressable onPress={() => router.push("/balance-sheet" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Balance Sheet & Stock Valuation</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
-        <Pressable onPress={() => router.push("/financial-year" as any)} className="flex-row justify-between items-center py-3">
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">Financial Year Closing</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">Close a past Apr-Mar year to lock it against backdated entries.</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+        <Pressable onPress={() => router.push("/financial-year" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Financial Year Closing</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 
       {/* Data & Activity */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+      <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Data & Activity
         </Text>
         <Pressable
           onPress={() => router.push("/bank-accounts" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Bank Accounts
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Track which account payments in/out are credited or debited from.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Bank Accounts
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/scanned-documents" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Scanned Documents
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Every purchase bill, product, or expense receipt photographed via Scan & Record.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Scanned Documents
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/invoice-history" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Invoice History
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Reprint, reshare, or return items on any past invoice.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Invoice History
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/purchase-history" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Purchase History
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              View past purchase bills or return items to a supplier.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Purchase History
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/expenses" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Expenses
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Day/week/month/year totals and every recorded claim with its receipt.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Expenses
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/gst-reports?tab=daybook" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Day Book
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Every sale, purchase, and payment for a single day, at a glance.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Day Book
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/activity-log" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Activity Log
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              See who created, edited, or deleted records and when.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Activity Log
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/support-tickets" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Support Tickets
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Get help or track existing support requests.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="headset" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Support Tickets
+          </Text>
+          <MaterialCommunityIcons name="headset" size={20} color="#0F7A5F" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/recycle-bin" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Recycle Bin
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Restore products, parties, or invoices that were deleted by mistake.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Recycle Bin
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 
       {/* Staff & Employees */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+      <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Staff & Employees
         </Text>
         <Pressable
           onPress={() => router.push("/staff" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Manage Employees
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              View, edit, or remove team members and their roles.
-            </Text>
-          </View>
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Manage Employees
+          </Text>
           <View className="flex-row items-center" style={{ gap: 4 }}>
             <MaterialCommunityIcons name="account-group" size={16} color="#0F7A5F" />
             <Text className="text-primary font-bold text-base">Manage</Text>
@@ -1533,22 +1462,17 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsAddingStaff(true);
           }}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Add New Employee
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Create a login for a Field Agent or Manager in your company.
-            </Text>
-          </View>
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Add New Employee
+          </Text>
           <View className="flex-row items-center" style={{ gap: 4 }}>
             <MaterialCommunityIcons name="plus" size={16} color="#0F7A5F" />
             <Text className="text-primary font-bold text-base">Add</Text>
           </View>
         </Pressable>
-        
+
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
@@ -1556,23 +1480,18 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsDispatchTaskModal(true);
           }}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Dispatch Agent Task
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Assign a new task or delivery to a field agent.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Dispatch Agent Task
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 
       {/* Business Reports & Analytics */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+      <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Business Reports & Analytics
         </Text>
 
@@ -1581,17 +1500,12 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsSalesReportModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Sales Performance Report
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Total revenues, invoice volume counts, and bill averages.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Sales Performance Report
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
@@ -1599,17 +1513,12 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsStockReportModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Inventory Stock Levels
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              List of products with live aggregated quantity tracking.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Inventory Stock Levels
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
@@ -1617,85 +1526,60 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsLedgerReportModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Ledger Outstanding Summary
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Payables vs receivables outstanding aggregates.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Ledger Outstanding Summary
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-4" />
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-3" />
 
         <Pressable
           onPress={() => router.push("/gst-reports" as any)}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              GST & Compliance Reports
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              HSN summary, GSTR-ready sales/purchase registers, and day book — export as CSV.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            GST & Compliance Reports
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/aging-report" as any)}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-3"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-2"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Aging Report
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Receivables/payables by aging buckets (0-30, 31-60, 61-90, 90+ days).
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Aging Report
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/pnl-report" as any)}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-3"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-2"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              P&L Statement
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Revenue, COGS, expenses and net profit with date range.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            P&L Statement
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/payment-history" as any)}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-3"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-2"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Payment History
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Browse all payments received and made with filters.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Payment History
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 
       {/* Inventory & Logistics Operations */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+      <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Inventory & Logistics
         </Text>
 
@@ -1704,17 +1588,12 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsPurchaseModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50 dark:active:bg-zinc-800"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50 dark:active:bg-zinc-800"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Record Purchase Bill
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Add product stock intake and credit supplier balance.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Record Purchase Bill
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         {enabledModules.includes("warehouse") && (
@@ -1723,17 +1602,12 @@ export default function MoreScreen() {
               fetchSetupData();
               setIsTransferModal(true);
             }}
-            className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
+            className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
           >
-            <View className="flex-1 pr-2">
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-                Stock Transfer
-              </Text>
-              <Text className="text-sm text-text-secondary mt-0.5">
-                Move inventory stock between company warehouses.
-              </Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+              Stock Transfer
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
           </Pressable>
         )}
 
@@ -1743,17 +1617,12 @@ export default function MoreScreen() {
             fetchChallansList();
             setIsChallanModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Logistics & Delivery Challans
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Generate challans and track dispatch transit delivery runs.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Logistics & Delivery Challans
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
@@ -1761,17 +1630,12 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsWarehouseModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Warehouse Management
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Review and register storage warehouses.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Warehouse Management
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
@@ -1779,40 +1643,30 @@ export default function MoreScreen() {
             fetchMovements();
             setIsMovementsModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Stock Movements Log
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Chronological listing of stock additions and subtractions.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Stock Movements Log
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-4" />
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-3" />
 
         <Pressable
           onPress={() => router.push("/barcode-generator" as any)}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Barcode Generator
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Generate EAN-13 barcodes for products — single or bulk
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Barcode Generator
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 
       {/* Staff Operations */}
-      <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+      <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Staff Management
         </Text>
 
@@ -1821,17 +1675,12 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsAttendanceModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl mb-4 flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Staff Attendance Checklist
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Log daily staff attendance status (Present/Absent/Late).
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Staff Attendance Checklist
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
 
         <Pressable
@@ -1840,17 +1689,12 @@ export default function MoreScreen() {
             fetchSalariesHistory();
             setIsSalaryModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 p-5 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <View className="flex-1 pr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Employee Salaries
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Record salary payouts and verify payment slip history.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            Employee Salaries
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 
@@ -1910,41 +1754,39 @@ export default function MoreScreen() {
         </View>
       )}
 
-      {/* Business Profile */}
+      {/* Business Profile — editing lives on the web dashboard only now
+          (rarely-changed setup data: GSTIN, address, bank details). The
+          mobile app just reads activeCompany, which already syncs from
+          whatever's saved on web, so nothing is lost by dropping the
+          in-app edit form — only Printer Settings stays here since
+          Bluetooth/USB pairing can only happen on the physical device. */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
           Business Profile
         </Text>
         <Pressable
-          onPress={openBusinessProfileModal}
+          onPress={() => Linking.openURL("https://app.papayapalette.online/dashboard/settings")}
           className="flex-row justify-between items-center py-3"
         >
           <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Edit Business Details
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              GSTIN, address, phone, and bank details shown on your Tally-style GST invoices.
-            </Text>
+            <Text className="text-sm font-bold text-text-secondary">Edit GSTIN, address, bank details</Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-sm font-bold text-primary">Web Portal</Text>
+            <MaterialCommunityIcons name="open-in-new" size={18} color="#0F7A5F" />
+          </View>
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
           onPress={() => router.push("/printer-settings" as any)}
-          className="flex-row justify-between items-center py-3"
+          className="flex-row justify-between items-center py-2.5"
         >
-          <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-              Printer Settings
-            </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
-              Pair a thermal receipt printer over Bluetooth, USB, or Wi-Fi.
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">
+            Printer Settings
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
         </Pressable>
       </View>
 
