@@ -485,7 +485,7 @@ export default function B2bScreen() {
                   style={{ width: "48%" }}
                 >
                   <Text className={`text-xs font-bold text-center ${invoiceType === t ? "text-white" : "text-on-surface-variant"}`} numberOfLines={1}>
-                    {t === "gst" ? "GST" : t === "retail" ? "Non-GST" : t === "estimate" ? "Estimate" : "Bill of Supply"}
+                    {t === "gst" ? "GST" : t === "retail" ? "Retail" : t === "estimate" ? "Estimate" : "Bill of Supply"}
                   </Text>
                 </Pressable>
               ))}

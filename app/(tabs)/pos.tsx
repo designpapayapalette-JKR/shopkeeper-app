@@ -1275,7 +1275,7 @@ export default function PosScreen() {
         <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Bill Type</Text>
         <View className="flex-row flex-wrap mb-4" style={{ gap: 8 }}>
           {([
-              { key: "retail",   label: "Non-GST", icon: "storefront-outline" },
+              { key: "retail",   label: "Retail", icon: "storefront-outline" },
               { key: "gst",      label: "GST",     icon: "file-document-outline" },
               { key: "estimate", label: "Estimate", icon: "note-edit-outline" },
               { key: "bill_of_supply", label: "Bill of Supply", icon: "file-outline" },
