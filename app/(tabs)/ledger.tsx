@@ -93,6 +93,10 @@ export default function LedgerScreen() {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedBankAccountId, setSelectedBankAccountId] = useState<string | null>(null);
+  // Optional invoice link — lets a specific invoice's payment status update
+  // instead of only the party's overall balance (KNOWLEDGE-BASE.md §6).
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [outstandingInvoices, setOutstandingInvoices] = useState<{ id: string; invoice_number: string; grand_total: string; amount_paid?: string }[]>([]);
 
   const closeRecordPayment = async () => {
     const hasChanges =
@@ -111,12 +115,26 @@ export default function LedgerScreen() {
 
   const openRecordPayment = async () => {
     setSelectedBankAccountId(null);
+    setSelectedInvoiceId(null);
+    setOutstandingInvoices([]);
     setIsRecordingPayment(true);
     try {
       const res = await api.get<{ data: BankAccount[] }>("/bank-accounts");
       setBankAccounts(res.data ?? []);
     } catch (e) {
       console.error("Failed to load bank accounts:", e);
+    }
+    if (selectedParty) {
+      try {
+        const res = await api.get<{ data: any[] }>("/invoices", { params: { partyId: selectedParty.id, limit: 100 } });
+        setOutstandingInvoices(
+          (res.data ?? [])
+            .filter((inv) => inv.type !== "estimate" && inv.payment_status !== "paid")
+            .map((inv) => ({ id: inv.id, invoice_number: inv.invoice_number, grand_total: inv.grand_total, amount_paid: inv.amount_paid }))
+        );
+      } catch (e) {
+        console.error("Failed to load outstanding invoices:", e);
+      }
     }
   };
 
@@ -183,6 +201,7 @@ export default function LedgerScreen() {
       // customer/supplier-specific balance delta from party.type + direction.
       await api.post("/ledger/payments", {
         party_id: selectedParty.id,
+        invoice_id: selectedInvoiceId || undefined,
         bank_account_id: selectedBankAccountId || undefined,
         direction: paymentType === "credit" ? "in" : "out",
         amount: amountNum,
@@ -809,6 +828,39 @@ export default function LedgerScreen() {
                 className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 font-bold text-lg"
               />
             </View>
+
+            {outstandingInvoices.length > 0 && (
+              <View className="mt-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                  Link to Invoice (optional)
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View className="flex-row" style={{ gap: 8 }}>
+                    <Pressable
+                      onPress={() => setSelectedInvoiceId(null)}
+                      className={`px-4 py-2.5 rounded-xl border-2 ${
+                        selectedInvoiceId === null ? "border-primary bg-primary/10" : "border-outline-variant dark:border-outline"
+                      }`}
+                    >
+                      <Text className={`text-xs font-bold ${selectedInvoiceId === null ? "text-primary" : "text-on-surface dark:text-text-primary-dark"}`}>Not linked</Text>
+                    </Pressable>
+                    {outstandingInvoices.map((inv) => (
+                      <Pressable
+                        key={inv.id}
+                        onPress={() => setSelectedInvoiceId(inv.id)}
+                        className={`px-4 py-2.5 rounded-xl border-2 ${
+                          selectedInvoiceId === inv.id ? "border-primary bg-primary/10" : "border-outline-variant dark:border-outline"
+                        }`}
+                      >
+                        <Text className={`text-xs font-bold ${selectedInvoiceId === inv.id ? "text-primary" : "text-on-surface dark:text-text-primary-dark"}`}>
+                          {inv.invoice_number} — ₹{(parseFloat(inv.grand_total) - parseFloat(inv.amount_paid || "0")).toFixed(0)} due
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            )}
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
