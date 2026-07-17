@@ -1,15 +1,28 @@
 import { useFonts } from "expo-font";
+import {
+  Poppins_300Light,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  Poppins_900Black,
+} from "@expo-google-fonts/poppins";
 
-// Gilroy free tier — 2 weights only (Light 300, ExtraBold 800; see
-// assets/fonts/ + the EULA shipped alongside the web projects'
-// public/fonts/Gilroy-EULA.pdf for license terms). Registered under two
-// distinct family names since React Native has no CSS-style font-weight
-// matching within a single family — tailwind.config.js's fontFamily
-// entries pick whichever of these two suits each token's weight.
+// Brand typeface — replaces Gilroy (its free tier only had 2 weights,
+// which wasn't enough for the app's font-medium/semibold/bold/extrabold
+// usage). Poppins is a first-class Google Font (OFL-1.1, unrestricted
+// commercial/redistribution use) via @expo-google-fonts/poppins — no
+// manual file/EULA management needed, unlike the earlier Gilroy setup.
 export function useAppFonts(): [boolean, Error | null] {
   const [loaded, error] = useFonts({
-    "Gilroy-Light": require("../../assets/fonts/Gilroy-Light.otf"),
-    "Gilroy-ExtraBold": require("../../assets/fonts/Gilroy-ExtraBold.otf"),
+    Poppins_300Light,
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+    Poppins_900Black,
   });
   return [loaded, error ?? null];
 }

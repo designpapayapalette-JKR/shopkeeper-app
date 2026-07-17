@@ -91,23 +91,21 @@ module.exports = {
         "touch-target": "44px",
         sm: "8px",
       },
-      // Family names match what src/lib/fonts.ts registers via expo-font.
-      // Only 2 real weights exist (Light 300, ExtraBold 800 — free tier),
-      // so each token below picks whichever is closer to its fontSize
-      // entry's intended fontWeight (see fontSize block just below):
-      // ≥500 -> ExtraBold, ≤400 -> Light. RN has no CSS-style font-weight
-      // matching within one family, unlike the web @font-face setup, so
-      // this mapping has to be explicit here.
+      // Family names match what src/lib/fonts.ts registers via expo-font
+      // (Poppins, full weight range via @expo-google-fonts/poppins). RN
+      // has no CSS-style font-weight matching within one family, unlike
+      // the web @font-face setup, so each token picks its exact weight
+      // directly (matches the fontWeight in the fontSize block below).
       fontFamily: {
-        "headline-md": ["Gilroy-ExtraBold"],
-        "body-lg": ["Gilroy-Light"],
-        caption: ["Gilroy-Light"],
-        "headline-lg": ["Gilroy-ExtraBold"],
-        "numeric-emphasis": ["Gilroy-ExtraBold"],
-        "headline-sm": ["Gilroy-ExtraBold"],
-        "label-md": ["Gilroy-ExtraBold"],
-        "display-lg": ["Gilroy-ExtraBold"],
-        "body-md": ["Gilroy-Light"],
+        "headline-md": ["Poppins_600SemiBold"],
+        "body-lg": ["Poppins_400Regular"],
+        caption: ["Poppins_400Regular"],
+        "headline-lg": ["Poppins_600SemiBold"],
+        "numeric-emphasis": ["Poppins_600SemiBold"],
+        "headline-sm": ["Poppins_600SemiBold"],
+        "label-md": ["Poppins_500Medium"],
+        "display-lg": ["Poppins_700Bold"],
+        "body-md": ["Poppins_400Regular"],
       },
       fontSize: {
         "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
