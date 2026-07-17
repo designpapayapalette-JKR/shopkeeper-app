@@ -86,12 +86,23 @@ function NavigationGuard() {
 
 import { TerminologyProvider } from "../src/lib/terminology-context";
 import { OutletProvider } from "../src/lib/outlet-context";
+import { useAppFonts } from "../src/lib/fonts";
 
 export default function RootLayout() {
+  const [fontsLoaded] = useAppFonts();
+
   useEffect(() => {
     try { startConnectivityMonitoring(); } catch {}
     try { colorScheme.set("light"); } catch {}
   }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0368FE" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider>

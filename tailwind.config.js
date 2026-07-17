@@ -91,20 +91,23 @@ module.exports = {
         "touch-target": "44px",
         sm: "8px",
       },
-      // "Gilroy" here matches the family name the app registers via
-      // expo-font (see src/lib/fonts.ts) — until real Gilroy font files are
-      // loaded there, RN silently falls back to the platform default, same
-      // graceful-degradation behavior as the web @font-face setup.
+      // Family names match what src/lib/fonts.ts registers via expo-font.
+      // Only 2 real weights exist (Light 300, ExtraBold 800 — free tier),
+      // so each token below picks whichever is closer to its fontSize
+      // entry's intended fontWeight (see fontSize block just below):
+      // ≥500 -> ExtraBold, ≤400 -> Light. RN has no CSS-style font-weight
+      // matching within one family, unlike the web @font-face setup, so
+      // this mapping has to be explicit here.
       fontFamily: {
-        "headline-md": ["Gilroy"],
-        "body-lg": ["Gilroy"],
-        caption: ["Gilroy"],
-        "headline-lg": ["Gilroy"],
-        "numeric-emphasis": ["Gilroy"],
-        "headline-sm": ["Gilroy"],
-        "label-md": ["Gilroy"],
-        "display-lg": ["Gilroy"],
-        "body-md": ["Gilroy"],
+        "headline-md": ["Gilroy-ExtraBold"],
+        "body-lg": ["Gilroy-Light"],
+        caption: ["Gilroy-Light"],
+        "headline-lg": ["Gilroy-ExtraBold"],
+        "numeric-emphasis": ["Gilroy-ExtraBold"],
+        "headline-sm": ["Gilroy-ExtraBold"],
+        "label-md": ["Gilroy-ExtraBold"],
+        "display-lg": ["Gilroy-ExtraBold"],
+        "body-md": ["Gilroy-Light"],
       },
       fontSize: {
         "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
