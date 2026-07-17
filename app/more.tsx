@@ -46,7 +46,7 @@ const STAFF_ROLES = [
 
 // Managers run the shop itself (POS/inventory/ledger) and log into this same
 // owner-facing app; staff and field agents only get attendance/tasks/salary,
-// which live in the separate Employee App (agent-app) — see the backend's
+// which live in the separate MMC Agent app — see the backend's
 // attendance.ts/salaries.ts grouping "staff" with "field_agent".
 const AGENT_APP_DOWNLOAD_URL =
   "https://github.com/designpapayapalette-JKR/agent-app/releases/download/beta-latest/agent-app-latest.apk";
@@ -1159,7 +1159,7 @@ export default function MoreScreen() {
         });
         if (ok) {
           const isFieldRole = createdRole === "staff" || createdRole === "field_agent";
-          const appName = isFieldRole ? "Employee App" : "managemycounter App";
+          const appName = isFieldRole ? "MMC Agent" : "MMC Shop";
           const downloadUrl = isFieldRole ? AGENT_APP_DOWNLOAD_URL : APP_DOWNLOAD_URL;
           const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the ${appName}.\n\n1. Download the app: ${downloadUrl}\n2. Log in with:\nEmail: ${createdEmail}\nPassword: ${createdPassword}\n\nPlease change your password after logging in.`;
           const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${createdPhone.replace(/\D/g, "")}`;

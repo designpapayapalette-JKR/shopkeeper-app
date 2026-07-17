@@ -183,7 +183,7 @@ function buildEscPosBill(data: ReceiptData, paperWidth: PaperWidth): string {
   lines.push(`${BOLD_ON}GRAND TOTAL:`.padEnd(colWidth) + `Rs.${data.total.toFixed(2)}${BOLD_OFF}\n`);
   lines.push(`${HR}\n`);
   lines.push(`${ALIGN_CT}Thank you for your business!\n`);
-  lines.push(`Powered by managemycounter\n\n\n`);
+  lines.push(`Powered by MMC Shop\n\n\n`);
 
   return lines.join("");
 }

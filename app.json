@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "managemycounter",
-    "slug": "shopkeeper-app",
-    "scheme": "shopkeeper",
+    "name": "MMC Shop",
+    "slug": "mmc-shop",
+    "scheme": "mmcshop",
     "version": "0.1.0",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
@@ -12,25 +12,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.papayapalette.shopkeeper",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Allow managemycounter App to access your location to verify checkout details and locate nearby network-enabled devices.",
-        "NSCameraUsageDescription": "Allow managemycounter App to access the camera to photograph documents, purchase receipts, and scan product barcode tags.",
-        "NSBluetoothAlwaysUsageDescription": "Allow managemycounter App to access Bluetooth to discover and print billing receipts on thermal tickets printers.",
-        "NSBluetoothPeripheralUsageDescription": "Allow managemycounter App to access Bluetooth to connect to billing printers."
+        "NSLocationWhenInUseUsageDescription": "Allow MMC Shop to access your location to verify checkout details and locate nearby network-enabled devices.",
+        "NSCameraUsageDescription": "Allow MMC Shop to access the camera to photograph documents, purchase receipts, and scan product barcode tags.",
+        "NSBluetoothAlwaysUsageDescription": "Allow MMC Shop to access Bluetooth to discover and print billing receipts on thermal tickets printers.",
+        "NSBluetoothPeripheralUsageDescription": "Allow MMC Shop to access Bluetooth to connect to billing printers."
       }
-    },
-    "android": {
-      "package": "com.papayapalette.shopkeeper",
-      "usesCleartextTraffic": true,
-      "permissions": [
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.CAMERA",
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
-        "android.permission.BLUETOOTH_SCAN",
-        "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.ACCESS_WIFI_STATE"
-      ]
     },
     "plugins": [
       "expo-router",
@@ -40,13 +26,13 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow managemycounter App to access your location to verify checkout details."
+          "locationAlwaysAndWhenInUsePermission": "Allow MMC Shop to access your location to verify checkout details."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow managemycounter App to access the camera to scan product barcodes."
+          "cameraPermission": "Allow MMC Shop to access the camera to scan product barcodes."
         }
       ],
       [
@@ -67,6 +53,30 @@
         }
       ]
     ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF9F6"
+    },
+    "android": {
+      "package": "com.papayapalette.shopkeeper",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF9F6"
+      },
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_WIFI_STATE"
+      ]
+    },
     "experiments": {
       "typedRoutes": true
     },

@@ -96,7 +96,7 @@ export default function AgentsScreen() {
    * field_agent-role staff member, then merges them. Previously this only
    * showed agents who had already sent at least one location ping, so a
    * shop that had just added a field agent (but who hadn't opened the
-   * Employee App / granted location permission yet) saw an empty list and
+   * MMC Agent / granted location permission yet) saw an empty list and
    * no way to tell the difference between "no agents" and "no check-ins
    * yet" — a real gap the founder hit directly.
    */
@@ -272,7 +272,7 @@ export default function AgentsScreen() {
               <Text className="text-on-surface-variant text-sm text-center mt-1">
                 {agents.length === 0
                   ? "Add a field agent from More → Staff to start tracking their location."
-                  : "Locations will appear here once your field agents open the Employee App and share their location."}
+                  : "Locations will appear here once your field agents open the MMC Agent app and share their location."}
               </Text>
             </View>
           ) : (
@@ -358,7 +358,7 @@ export default function AgentsScreen() {
                 No field agents tracked yet
               </Text>
               <Text className="text-on-surface-variant text-sm text-center mt-1 px-8">
-                Agent locations will appear here once the Agent App starts
+                Agent locations will appear here once the MMC Agent app starts
                 pinging.
               </Text>
             </View>

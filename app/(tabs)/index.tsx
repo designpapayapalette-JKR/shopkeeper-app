@@ -8,6 +8,8 @@ import {
   RefreshControl,
   Modal,
   useWindowDimensions,
+  Image,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -62,14 +64,6 @@ interface OverdueParty {
   current_balance: string;
 }
 
-const QUICK_ACTIONS = [
-  { id: "pos", label: "New Bill", icon: "receipt", route: "/pos", primary: true },
-  { id: "scan", label: "Scan", icon: "qrcode-scan", route: "/inventory?openScanner=1", primary: false },
-  { id: "payment", label: "Payment", icon: "cash-multiple", route: "/ledger", primary: false },
-  { id: "purchase", label: "Buy", icon: "cart-check", route: "/more?openPurchase=1", primary: false },
-  { id: "expense", label: "Expense", icon: "wallet-outline", route: "/more?openExpense=1", primary: false },
-] as const;
-
 function timeAgo(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
   if (mins < 1) return "just now";
@@ -90,9 +84,9 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const isTablet = screenWidth >= 768;
-  const [isScanHubOpen, setIsScanHubOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isBrandSwitcherOpen, setIsBrandSwitcherOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<ActivityItem | null>(null);
 
   const [stats, setStats] = useState<DashboardStats>({
     salesToday: 0,
@@ -269,8 +263,8 @@ export default function DashboardScreen() {
         style={{ paddingTop: topInset }}
       >
         <View className="flex-row items-center gap-sm flex-1">
-          <View className="w-10 h-10 rounded-lg items-center justify-center bg-primary dark:bg-primary-dark">
-            <Text className="text-on-primary font-headline-sm text-headline-sm">S</Text>
+          <View className="w-10 h-10 rounded-lg items-center justify-center overflow-hidden">
+            <Image source={require("../../assets/icon.png")} className="w-10 h-10" resizeMode="contain" />
           </View>
           <View className="flex-col flex-1">
             <Text
@@ -330,6 +324,17 @@ export default function DashboardScreen() {
             >
               <MaterialCommunityIcons name="cog-outline" size={20} color="#6e7a74" />
               <Text className="text-base font-semibold text-on-surface dark:text-text-primary-dark">Operations & Settings</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setIsProfileMenuOpen(false);
+                router.push("/scanned-documents" as any);
+              }}
+              className="flex-row items-center px-4 py-3.5 active:bg-surface-container-low"
+              style={{ gap: 10 }}
+            >
+              <MaterialCommunityIcons name="folder-image" size={20} color="#6e7a74" />
+              <Text className="text-base font-semibold text-on-surface dark:text-text-primary-dark">Scanned Documents</Text>
             </Pressable>
             <View className="h-px bg-outline-variant dark:bg-outline" />
             <Pressable
@@ -610,38 +615,7 @@ export default function DashboardScreen() {
             )}
           </View>
 
-          {/* ── Quick Actions ── */}
-          <View style={{ gap: 8 }}>
-            <Text className="font-headline-sm text-headline-sm text-on-surface dark:text-text-primary-dark">
-              Quick Actions
-            </Text>
-            <View className={`${isTablet ? "flex-row flex-wrap" : "flex-row"}`} style={{ gap: 12 }}>
-              {QUICK_ACTIONS.map((action) => (
-                <View key={action.id} className={isTablet ? "items-center" : "flex-1 items-center"} style={{ gap: 4, width: isTablet ? "18%" : undefined }}>
-                  <Pressable
-                    onPress={() => (action.id === "scan" ? setIsScanHubOpen(true) : router.push(action.route as any))}
-                    className={`w-full aspect-square rounded-xl items-center justify-center active:scale-90 ${
-                      action.primary
-                        ? "bg-primary dark:bg-primary-dark shadow-md"
-                        : "bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline"
-                    }`}
-                  >
-                    <MaterialCommunityIcons
-                      name={action.icon}
-                      size={30}
-                      color={action.primary ? "#ffffff" : "#005f49"}
-                    />
-                  </Pressable>
-                  <Text
-                    className="font-label-md text-label-md text-on-surface dark:text-text-primary-dark text-center"
-                    numberOfLines={1}
-                  >
-                    {action.label}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
+
 
           {/* ── This Week ── */}
           {weekTrend.length > 0 && (
@@ -836,56 +810,76 @@ export default function DashboardScreen() {
             )}
           </View>
 
-          {/* ── Recent Activity ── */}
+          {/* ── Recent Transactions — Today ── */}
           <View style={{ gap: 8 }}>
             <Text className="font-headline-sm text-headline-sm text-on-surface dark:text-text-primary-dark">
-              Recent Activity
+              Recent Transactions — Today
             </Text>
             {activity.length === 0 ? (
               <Text className="font-body-md text-body-md text-on-surface-variant dark:text-text-secondary-dark">
-                No activity yet today.
+                No transactions yet today.
               </Text>
             ) : (
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: 12 }}>
                 {activity.map((item, idx) => (
-                  <Pressable
+                  <View
                     key={item.id}
-                    onPress={() => router.push(`/invoice-history?openInvoiceId=${item.id}` as any)}
-                    className="flex-row items-start active:opacity-70"
-                    style={{ gap: 16 }}
+                    className={`flex-row items-center py-3 ${
+                      idx < activity.length - 1
+                        ? "border-b border-outline-variant dark:border-outline"
+                        : ""
+                    }`}
+                    style={{ gap: 10 }}
                   >
-                    <View className="mt-1 w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
-                      <MaterialCommunityIcons name="receipt" size={16} color="#005f49" />
+                    <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center shrink-0">
+                      <MaterialCommunityIcons name="receipt" size={14} color="#005f49" />
                     </View>
-                    <View
-                      className={`flex-1 pb-md flex-row items-center justify-between ${
-                        idx < activity.length - 1
-                          ? "border-b border-outline-variant dark:border-outline"
-                          : ""
-                      }`}
-                    >
-                      <View className="flex-1">
-                        <View className="flex-row justify-between">
-                          <Text
-                            className="font-body-md text-body-md text-on-surface dark:text-text-primary-dark font-medium flex-1"
-                            numberOfLines={1}
-                          >
-                            New bill{" "}
-                            <Text className="text-primary dark:text-primary-dark">
-                              #{item.invoice_number}
-                            </Text>
-                          </Text>
-                          <Text className="font-caption text-caption text-on-surface-variant dark:text-text-secondary-dark">
-                            {timeAgo(item.date_created)}
-                          </Text>
-                        </View>
-                        <Text className="font-label-md text-label-md text-on-surface-variant dark:text-text-secondary-dark">
-                          {formatCurrency(item.grand_total)}
-                        </Text>
-                      </View>
-                      <MaterialCommunityIcons name="chevron-right" size={18} color="#9E9E9E" style={{ marginLeft: 8 }} />
+                    <View className="flex-1 min-w-0">
+                      <Text className="font-body-md text-body-md text-on-surface dark:text-text-primary-dark font-medium" numberOfLines={1}>
+                        #{item.invoice_number}
+                      </Text>
+                      <Text className="font-label-md text-label-md text-on-surface-variant dark:text-text-secondary-dark">
+                        {formatCurrency(item.grand_total)} · {timeAgo(item.date_created)}
+                      </Text>
                     </View>
-                  </Pressable>
+                    <View className="flex-row items-center" style={{ gap: 6 }}>
+                      <Pressable
+                        onPress={() => setSelectedInvoice(item)}
+                        className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center active:opacity-60"
+                      >
+                        <MaterialCommunityIcons name="eye-outline" size={18} color="#005f49" />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => router.push(`/invoice-history?openInvoiceId=${item.id}` as any)}
+                        className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center active:opacity-60"
+                      >
+                        <MaterialCommunityIcons name="pencil-outline" size={18} color="#005f49" />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => {
+                          Alert.alert(
+                            "Delete Invoice",
+                            `Delete invoice #${item.invoice_number}?`,
+                            [
+                              { text: "Cancel", style: "cancel" },
+                              { text: "Delete", style: "destructive", onPress: () => {} },
+                            ]
+                          );
+                        }}
+                        className="w-9 h-9 rounded-full bg-error/10 items-center justify-center active:opacity-60"
+                      >
+                        <MaterialCommunityIcons name="delete-outline" size={18} color="#D64545" />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => {
+                          Alert.alert("Print", `Print preview for #${item.invoice_number}`);
+                        }}
+                        className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center active:opacity-60"
+                      >
+                        <MaterialCommunityIcons name="printer-outline" size={18} color="#005f49" />
+                      </Pressable>
+                    </View>
+                  </View>
                 ))}
               </View>
             )}
@@ -893,62 +887,116 @@ export default function DashboardScreen() {
         </View>
       </ScrollView>
 
-      {/* Scan & Record Hub — camera/scan actions only. Non-camera shortcuts
-          (New Sale, Record Payment, plain Record Purchase) already live in
-          Quick Actions / More, so they don't belong in a "Scan" menu. */}
-      <Modal visible={isScanHubOpen} animationType="slide" transparent onRequestClose={() => setIsScanHubOpen(false)}>
-        <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setIsScanHubOpen(false)}>
+      {/* Invoice Detail Modal */}
+      <Modal visible={!!selectedInvoice} animationType="slide" transparent onRequestClose={() => setSelectedInvoice(null)}>
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setSelectedInvoice(null)}>
           <Pressable
             onPress={(e) => e.stopPropagation()}
-            className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6"
-            style={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
+            className="bg-background dark:bg-bg-dark rounded-t-3xl"
+            style={{ maxHeight: "85%", paddingBottom: Math.max(insets.bottom, 16) + 16 }}
           >
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
-                Scan & Record
+            <View className="px-6 pt-5 pb-3 border-b border-outline-variant dark:border-outline flex-row justify-between items-center">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">
+                Invoice #{selectedInvoice?.invoice_number}
               </Text>
-              <Pressable onPress={() => setIsScanHubOpen(false)} className="w-10 h-10 items-center justify-center">
+              <Pressable onPress={() => setSelectedInvoice(null)} className="w-10 h-10 items-center justify-center">
                 <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
               </Pressable>
             </View>
 
-            <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-              {[
-                { label: "Scan Barcode", icon: "barcode-scan" as const, route: "/inventory?openScanner=1" },
-                { label: "Purchase Bill", icon: "cart-arrow-down" as const, route: "/bill-scanner?category=purchase" },
-                { label: "Product Photo", icon: "package-variant-closed" as const, route: "/bill-scanner?category=product" },
-                { label: "Expense Receipt", icon: "receipt" as const, route: "/bill-scanner?category=expense" },
-              ].map((opt) => (
-                <Pressable
-                  key={opt.label}
-                  onPress={() => {
-                    setIsScanHubOpen(false);
-                    router.push(opt.route as any);
-                  }}
-                  className="items-center"
-                  style={{ width: "30%", gap: 6 }}
-                >
-                  <View className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary-dark/15 items-center justify-center">
-                    <MaterialCommunityIcons name={opt.icon} size={26} color="#0F7A5F" />
-                  </View>
-                  <Text className="text-xs font-bold text-on-surface dark:text-text-primary-dark text-center">
-                    {opt.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <ScrollView className="px-6 pt-4" showsVerticalScrollIndicator={false}>
+              {selectedInvoice && (
+                <>
+                  {/* Invoice Preview Card */}
+                  <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-5 mb-5">
+                    <View className="flex-row justify-between items-start mb-4 pb-3 border-b border-outline-variant dark:border-outline">
+                      <View>
+                        <View className="flex-row items-center gap-2 mb-1">
+                          <Image source={require("../../assets/icon.png")} className="w-6 h-6" resizeMode="contain" />
+                          <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark">MMC Shop</Text>
+                        </View>
+                        <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">GSTIN: 09AAAAA0000A1Z5</Text>
+                      </View>
+                      <View className="items-end">
+                        <Text className="text-sm font-bold text-primary">TAX INVOICE</Text>
+                        <Text className="text-xs text-on-surface-variant">#{selectedInvoice.invoice_number}</Text>
+                      </View>
+                    </View>
 
-            <Pressable
-              onPress={() => {
-                setIsScanHubOpen(false);
-                router.push("/scanned-documents" as any);
-              }}
-              className="flex-row items-center justify-center mt-6 py-3.5 rounded-2xl border border-outline-variant dark:border-outline"
-              style={{ gap: 8 }}
-            >
-              <MaterialCommunityIcons name="folder-image" size={18} color="#0F7A5F" />
-              <Text className="text-primary dark:text-primary-dark font-bold text-sm">View Scanned Documents</Text>
-            </Pressable>
+                    <View className="flex-row justify-between items-center py-3">
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark font-medium">Grand Total</Text>
+                      <Text className="text-xl font-black text-on-surface dark:text-text-primary-dark">
+                        {formatCurrency(selectedInvoice.grand_total)}
+                      </Text>
+                    </View>
+
+                    <View className="pt-3 border-t border-outline-variant dark:border-outline">
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
+                        {new Date(selectedInvoice.date_created).toLocaleDateString("en-IN", {
+                          day: "numeric", month: "short", year: "numeric",
+                          hour: "2-digit", minute: "2-digit",
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Action Buttons */}
+                  <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-3">Actions</Text>
+                  <View className="flex-row flex-wrap" style={{ gap: 10 }}>
+                    <Pressable
+                      onPress={() => {
+                        setSelectedInvoice(null);
+                        router.push(`/invoice-history?openInvoiceId=${selectedInvoice.id}` as any);
+                      }}
+                      className="flex-1 flex-row items-center justify-center py-3.5 rounded-xl bg-primary dark:bg-primary-dark active:opacity-80"
+                      style={{ gap: 8, minWidth: "45%" }}
+                    >
+                      <MaterialCommunityIcons name="eye-outline" size={18} color="#fff" />
+                      <Text className="text-white font-bold text-sm">View Details</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        setSelectedInvoice(null);
+                        router.push(`/invoice-history?openInvoiceId=${selectedInvoice.id}` as any);
+                      }}
+                      className="flex-1 flex-row items-center justify-center py-3.5 rounded-xl border border-primary dark:border-primary-dark active:opacity-80"
+                      style={{ gap: 8, minWidth: "45%" }}
+                    >
+                      <MaterialCommunityIcons name="pencil-outline" size={18} color="#005f49" />
+                      <Text className="text-primary font-bold text-sm">Edit</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        setSelectedInvoice(null);
+                        Alert.alert("Print Preview", `Print preview for #${selectedInvoice.invoice_number}`);
+                      }}
+                      className="flex-1 flex-row items-center justify-center py-3.5 rounded-xl border border-outline-variant dark:border-outline active:opacity-80"
+                      style={{ gap: 8, minWidth: "45%" }}
+                    >
+                      <MaterialCommunityIcons name="printer-outline" size={18} color="#6e7a74" />
+                      <Text className="text-on-surface dark:text-text-primary-dark font-bold text-sm">Print Preview</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        Alert.alert(
+                          "Delete Invoice",
+                          `Delete invoice #${selectedInvoice.invoice_number}? This cannot be undone.`,
+                          [
+                            { text: "Cancel", style: "cancel" },
+                            { text: "Delete", style: "destructive", onPress: () => setSelectedInvoice(null) },
+                          ]
+                        );
+                      }}
+                      className="flex-1 flex-row items-center justify-center py-3.5 rounded-xl border border-error/30 active:opacity-80"
+                      style={{ gap: 8, minWidth: "45%" }}
+                    >
+                      <MaterialCommunityIcons name="delete-outline" size={18} color="#D64545" />
+                      <Text className="text-error font-bold text-sm">Delete</Text>
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>

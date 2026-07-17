@@ -127,7 +127,7 @@ export default function OnboardingScreen() {
       Alert.alert("No Phone Number", "Add a phone number for this member to send their login over WhatsApp.");
       return;
     }
-    const message = `Hi ${member.name}! You've been added to ${activeCompany?.name ?? "our team"} on managemycounter/Employee App.\n\nDownload the Employee App and log in with:\nEmail: ${member.email}\nPassword: ${member.tempPassword}\n\nPlease change your password after logging in.`;
+    const message = `Hi ${member.name}! You've been added to ${activeCompany?.name ?? "our team"} on MMC Shop.\n\nDownload the MMC Agent app and log in with:\nEmail: ${member.email}\nPassword: ${member.tempPassword}\n\nPlease change your password after logging in.`;
     const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${member.phone.replace(/\D/g, "")}`;
     Linking.canOpenURL(url).then((supported) => {
       if (supported) {
@@ -213,7 +213,7 @@ export default function OnboardingScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-1">Add your team</Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-6">
-            Optional — each person gets their own login for the Employee App, sent straight to their WhatsApp. You can add more anytime from More {"→"} Staff.
+            Optional — each person gets their own login for the MMC Agent app, sent straight to their WhatsApp. You can add more anytime from More {"→"} Staff.
           </Text>
 
           <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4 mb-5">

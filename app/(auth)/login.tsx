@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/lib/auth-context";
@@ -70,11 +71,11 @@ export default function LoginScreen() {
         <View className="px-6 py-12 justify-center flex-1 max-w-md mx-auto w-full">
           {/* Logo / Header */}
           <View className="items-center mb-10">
-            <View className="w-16 h-16 bg-primary dark:bg-primary-dark rounded-2xl items-center justify-center shadow-lg mb-4">
-              <Text className="text-white text-3xl font-bold">S</Text>
+            <View className="w-16 h-16 rounded-2xl items-center justify-center shadow-lg mb-4 overflow-hidden">
+              <Image source={require("../../assets/icon.png")} className="w-16 h-16" resizeMode="contain" />
             </View>
             <Text className="text-3xl font-extrabold text-text-primary dark:text-text-primary-dark text-center tracking-tight">
-              managemycounter
+              MMC Shop
             </Text>
             <Text className="text-text-secondary dark:text-text-secondary-dark text-center mt-2 font-medium">
               Manage your business with ease
