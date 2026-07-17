@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MMC Shop",
-    "slug": "mmc-shop",
+    "slug": "shopkeeper-app",
     "scheme": "mmcshop",
     "version": "0.1.0",
     "orientation": "default",
