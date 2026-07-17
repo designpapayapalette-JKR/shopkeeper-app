@@ -114,7 +114,7 @@ export function generateReceiptHtml(data: ReceiptData, template?: TemplateConfig
 
   // CSS color overrides from config
   const primaryColor = (cfg("primaryColor") as string) || "#000";
-  const accentColor = (cfg("accentColor") as string) || "#0F7A5F";
+  const accentColor = (cfg("accentColor") as string) || "#0368FE";
 
   const itemsHtml = data.items
     .map(

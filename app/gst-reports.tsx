@@ -302,7 +302,7 @@ export default function GstReportsScreen() {
                 </View>
               ))}
               <Pressable onPress={handleExportHsn} disabled={exporting} className="border border-primary py-3.5 rounded-xl items-center mt-2">
-                {exporting ? <ActivityIndicator color="#0F7A5F" /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
+                {exporting ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
               </Pressable>
             </>
           )}
@@ -315,7 +315,7 @@ export default function GstReportsScreen() {
           <Text className="font-bold text-on-surface dark:text-text-primary-dark mb-2 mt-3">B2C Sales ({gstSummary.sales_b2_c.length})</Text>
           <Text className="font-bold text-on-surface dark:text-text-primary-dark mb-2 mt-3">Purchases ({gstSummary.purchase_register.length})</Text>
           <Pressable onPress={handleExportGst} disabled={exporting} className="border border-primary py-3.5 rounded-xl items-center mt-4">
-            {exporting ? <ActivityIndicator color="#0F7A5F" /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
+            {exporting ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
           </Pressable>
         </View>
       )}
@@ -340,7 +340,7 @@ export default function GstReportsScreen() {
 
           {/* Action buttons */}
           <Pressable onPress={handleExportDayBook} disabled={exporting} className="border border-primary dark:border-primary-dark py-3.5 rounded-xl items-center mb-6">
-            {exporting ? <ActivityIndicator color="#0F7A5F" /> : <Text className="text-primary dark:text-primary-dark font-bold text-sm">Export & Share Day Book CSV</Text>}
+            {exporting ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary dark:text-primary-dark font-bold text-sm">Export & Share Day Book CSV</Text>}
           </Pressable>
 
           {/* Detailed Lists */}

@@ -28,6 +28,7 @@ import { useBottomInset } from "../src/lib/useBottomInset";
 import { isValidGstin } from "../src/lib/gstin";
 import { useTerminology, TerminologyLang } from "../src/lib/terminology-context";
 import { useOutlet } from "../src/lib/outlet-context";
+import { StatePicker } from "../src/components/StatePicker";
 
 // Not meant to be memorable — it's shared with the new employee over
 // WhatsApp and they're expected to change it after first login.
@@ -1285,49 +1286,49 @@ export default function MoreScreen() {
 
         <Pressable onPress={() => router.push("/purchase-entry" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Record Purchase</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/credit-note" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Credit Note</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/debit-note" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Debit Note</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/recurring-invoices" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Recurring Invoices</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/bank-reconciliation" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Reconciliation</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/balance-sheet" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Balance Sheet & Stock Valuation</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/financial-year" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Financial Year Closing</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1343,7 +1344,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             {t("bankAccounts")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1355,7 +1356,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Scanned Documents
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1367,7 +1368,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Invoice History
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1379,7 +1380,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Purchase History
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1391,7 +1392,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             {t("expenses")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1403,7 +1404,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             {t("dayBook")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1415,7 +1416,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             {t("activityLog")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1427,7 +1428,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Support Tickets
           </Text>
-          <MaterialCommunityIcons name="headset" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="headset" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1439,7 +1440,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             {t("recycleBin")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1456,7 +1457,7 @@ export default function MoreScreen() {
             Manage Employees
           </Text>
           <View className="flex-row items-center" style={{ gap: 4 }}>
-            <MaterialCommunityIcons name="account-group" size={16} color="#0F7A5F" />
+            <MaterialCommunityIcons name="account-group" size={16} color="#0368FE" />
             <Text className="text-primary font-bold text-base">Manage</Text>
           </View>
         </Pressable>
@@ -1474,7 +1475,7 @@ export default function MoreScreen() {
             Add New Employee
           </Text>
           <View className="flex-row items-center" style={{ gap: 4 }}>
-            <MaterialCommunityIcons name="plus" size={16} color="#0F7A5F" />
+            <MaterialCommunityIcons name="plus" size={16} color="#0368FE" />
             <Text className="text-primary font-bold text-base">Add</Text>
           </View>
         </Pressable>
@@ -1491,7 +1492,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Dispatch Agent Task
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1511,7 +1512,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Sales Performance Report
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1524,7 +1525,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Inventory Stock Levels
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1537,7 +1538,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Ledger Outstanding Summary
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-3" />
@@ -1549,7 +1550,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             GST & Compliance Reports
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1559,7 +1560,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Aging Report
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1569,7 +1570,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             P&L Statement
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1579,7 +1580,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Payment History
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1599,7 +1600,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Record Purchase Bill
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         {enabledModules.includes("warehouse") && (
@@ -1613,7 +1614,7 @@ export default function MoreScreen() {
             <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
               Stock Transfer
             </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
           </Pressable>
         )}
 
@@ -1628,7 +1629,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Logistics & Delivery Challans
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1641,7 +1642,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Warehouse Management
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1654,7 +1655,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Stock Movements Log
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-3" />
@@ -1666,7 +1667,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Barcode Generator
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1686,7 +1687,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Staff Attendance Checklist
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
         <Pressable
@@ -1700,7 +1701,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Employee Salaries
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1755,7 +1756,7 @@ export default function MoreScreen() {
                 {selectedOutlet ? selectedOutlet.type.replace("_", " ") : "Cross-outlet access"}
               </Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={22} color="#0F7A5F" />
+            <MaterialCommunityIcons name="chevron-right" size={22} color="#0368FE" />
           </Pressable>
         </View>
       )}
@@ -1779,7 +1780,7 @@ export default function MoreScreen() {
           </View>
           <View className="flex-row items-center gap-1.5">
             <Text className="text-sm font-bold text-primary">Web Portal</Text>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#0F7A5F" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color="#0368FE" />
           </View>
         </Pressable>
 
@@ -1794,7 +1795,7 @@ export default function MoreScreen() {
           </View>
           <View className="flex-row items-center gap-1.5">
             <Text className="text-sm font-bold text-primary">Web Portal</Text>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#0F7A5F" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color="#0368FE" />
           </View>
         </Pressable>
 
@@ -1807,7 +1808,7 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">
             Printer Settings
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1853,7 +1854,7 @@ export default function MoreScreen() {
           className="flex-row items-center justify-between py-2"
         >
           <Text className="text-sm font-bold text-primary">Manage in Web Portal</Text>
-          <MaterialCommunityIcons name="open-in-new" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="open-in-new" size={20} color="#0368FE" />
         </Pressable>
       </View>
 
@@ -1900,7 +1901,7 @@ export default function MoreScreen() {
                         <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
                         <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
                       </View>
-                      <MaterialCommunityIcons name="check-circle" size={20} color="#0F7A5F" />
+                      <MaterialCommunityIcons name="check-circle" size={20} color="#0368FE" />
                     </View>
                   );
                 }
@@ -1918,12 +1919,12 @@ export default function MoreScreen() {
                       </Text>
                     </View>
                     {savingModuleKey === mod.key ? (
-                      <ActivityIndicator size="small" color="#0F7A5F" />
+                      <ActivityIndicator size="small" color="#0368FE" />
                     ) : (
                       <MaterialCommunityIcons
                         name={enabled ? "toggle-switch" : "toggle-switch-off-outline"}
                         size={30}
-                        color={enabled ? "#0F7A5F" : "#9E9E9E"}
+                        color={enabled ? "#0368FE" : "#9E9E9E"}
                       />
                     )}
                   </Pressable>
@@ -1964,7 +1965,7 @@ export default function MoreScreen() {
             <Text className="text-primary font-bold text-base">
               {pinLoginAvailable ? "Change" : "Set Up"}
             </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
           </View>
         </Pressable>
 
@@ -1999,7 +2000,7 @@ export default function MoreScreen() {
         <SafeAreaProvider>
         {loading ? (
           <View className="flex-1 justify-center items-center bg-background dark:bg-background-dark">
-            <ActivityIndicator size="large" color="#0F7A5F" />
+            <ActivityIndicator size="large" color="#0368FE" />
           </View>
         ) : (
           <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -2345,7 +2346,7 @@ export default function MoreScreen() {
               onPress={() => router.push("/bill-scanner?category=expense" as any)}
               className="mb-6 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-2xl p-5 items-center bg-surface dark:bg-zinc-900 active:opacity-80"
             >
-              <MaterialCommunityIcons name="camera-plus-outline" size={28} color="#0F7A5F" />
+              <MaterialCommunityIcons name="camera-plus-outline" size={28} color="#0368FE" />
               <Text className="text-primary dark:text-primary-dark font-bold text-sm mt-2">Attach Bill Photo</Text>
               <Text className="text-text-secondary text-xs mt-0.5">Optional — helps during approval</Text>
             </Pressable>
@@ -2631,7 +2632,7 @@ export default function MoreScreen() {
                   className="border border-dashed border-gray-300 dark:border-zinc-700 rounded-xl py-5 items-center justify-center flex-row"
                   style={{ gap: 8 }}
                 >
-                  <MaterialCommunityIcons name="camera-outline" size={18} color="#0F7A5F" />
+                  <MaterialCommunityIcons name="camera-outline" size={18} color="#0368FE" />
                   <Text className="text-primary dark:text-primary-dark font-bold text-sm">Attach Receipt Photo</Text>
                 </Pressable>
               )}
@@ -2887,7 +2888,7 @@ export default function MoreScreen() {
 
           {loading ? (
             <View className="flex-grow justify-center items-center py-20">
-              <ActivityIndicator size="large" color="#0F7A5F" />
+              <ActivityIndicator size="large" color="#0368FE" />
             </View>
           ) : challans.length === 0 ? (
             <View className="flex-grow justify-center items-center py-20">
@@ -3430,7 +3431,7 @@ export default function MoreScreen() {
 
           {loading ? (
             <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#0F7A5F" />
+              <ActivityIndicator size="large" color="#0368FE" />
             </View>
           ) : movements.length === 0 ? (
             <View className="flex-1 justify-center items-center py-20">
@@ -3503,9 +3504,30 @@ export default function MoreScreen() {
 
           <View className="space-y-4">
             {[
-              { label: "Business Name *", value: bizName, setter: setBizName, placeholder: "Your Shop / Company Name" },
-              { label: "GSTIN", value: bizGstin, setter: setBizGstin, placeholder: "15-character GSTIN", autoCapitalize: "characters" as const },
-              { label: "State", value: bizState, setter: setBizState, placeholder: "e.g. Maharashtra" },
+              { label: "Business Name *", value: bizName, setter: setBizName, placeholder: "Your Shop / Company Name", keyboardType: "default" as const },
+              { label: "GSTIN", value: bizGstin, setter: setBizGstin, placeholder: "15-character GSTIN", autoCapitalize: "characters" as const, keyboardType: "default" as const },
+            ].map((field) => (
+              <View className="mt-4" key={field.label}>
+                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                  {field.label}
+                </Text>
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.setter}
+                  placeholder={field.placeholder}
+                  keyboardType={field.keyboardType}
+                  autoCapitalize={field.autoCapitalize}
+                  className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                />
+              </View>
+            ))}
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                State
+              </Text>
+              <StatePicker value={bizState} onChange={setBizState} />
+            </View>
+            {[
               { label: "Address", value: bizAddress, setter: setBizAddress, placeholder: "Shop address for invoices" },
               { label: "Phone", value: bizPhone, setter: setBizPhone, placeholder: "10-digit mobile number", keyboardType: "phone-pad" as const },
               { label: "Bank Name", value: bizBankName, setter: setBizBankName, placeholder: "e.g. HDFC Bank" },
@@ -3871,7 +3893,7 @@ export default function MoreScreen() {
             </View>
             {outlets.length === 0 ? (
               <View className="py-8 items-center">
-                <ActivityIndicator size="small" color="#0F7A5F" />
+                <ActivityIndicator size="small" color="#0368FE" />
                 <Text className="text-sm text-text-secondary mt-3">Loading outlets...</Text>
               </View>
             ) : (
@@ -3886,7 +3908,7 @@ export default function MoreScreen() {
                     >
                       <View
                         className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                        style={{ backgroundColor: isActive ? "#0F7A5F" : "#E5E7EB" }}
+                        style={{ backgroundColor: isActive ? "#0368FE" : "#E5E7EB" }}
                       >
                         <MaterialCommunityIcons
                           name={isActive ? "store-check" : "store-outline"}
@@ -3903,7 +3925,7 @@ export default function MoreScreen() {
                         </Text>
                       </View>
                       {isActive && (
-                        <MaterialCommunityIcons name="check-circle" size={22} color="#0F7A5F" />
+                        <MaterialCommunityIcons name="check-circle" size={22} color="#0368FE" />
                       )}
                     </Pressable>
                   );

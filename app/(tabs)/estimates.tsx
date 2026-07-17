@@ -214,7 +214,7 @@ export default function EstimatesScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
         {checkoutResult ? (
           <View className="flex-1 items-center justify-center px-6">
-            <MaterialCommunityIcons name="check-circle-outline" size={64} color="#0F7A5F" />
+            <MaterialCommunityIcons name="check-circle-outline" size={64} color="#0368FE" />
             <Text className="text-xl font-bold text-green-700 mt-4">Estimate Created</Text>
             <Text className="text-base text-gray-600 mt-1">#{checkoutResult.invoiceNumber}</Text>
             <Text className="text-lg font-bold text-green-600 mt-2">₹{Number(checkoutResult.grandTotal).toLocaleString("en-IN")}</Text>
@@ -316,7 +316,7 @@ export default function EstimatesScreen() {
                 />
               </View>
               <Pressable onPress={() => setApplyGst(!applyGst)} className="flex-row items-center gap-2">
-                <MaterialCommunityIcons name={applyGst ? "checkbox-marked" : "checkbox-blank-outline"} size={20} color="#0F7A5F" />
+                <MaterialCommunityIcons name={applyGst ? "checkbox-marked" : "checkbox-blank-outline"} size={20} color="#0368FE" />
                 <Text className="text-sm font-medium">Apply GST (18%)</Text>
               </Pressable>
             </View>

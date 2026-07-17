@@ -150,7 +150,7 @@ export default function SupportTicketsScreen() {
       <View style={{ flex: 1, backgroundColor: "#F9FAFB", paddingTop: topInset }}>
         <View className="flex-row items-center px-4 py-3 border-b border-gray-200 bg-white">
           <Pressable onPress={() => setSelected(null)} className="mr-3 p-1">
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#0F7A5F" />
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#0368FE" />
           </Pressable>
           <View className="flex-1">
             <Text className="text-base font-bold text-gray-900" numberOfLines={1}>{selected.title}</Text>
@@ -199,7 +199,7 @@ export default function SupportTicketsScreen() {
             <Pressable
               onPress={sendMessage}
               disabled={sending || !message.trim()}
-              className="bg-[#0F7A5F] rounded-xl p-3"
+              className="bg-[#0368FE] rounded-xl p-3"
               style={{ opacity: sending || !message.trim() ? 0.5 : 1 }}
             >
               <MaterialCommunityIcons name="send" size={20} color="white" />
@@ -215,7 +215,7 @@ export default function SupportTicketsScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
         <Text className="text-lg font-bold text-gray-900">Support Tickets</Text>
-        <Pressable onPress={() => setShowCreate(true)} className="bg-[#0F7A5F] rounded-xl px-4 py-2 flex-row items-center gap-1">
+        <Pressable onPress={() => setShowCreate(true)} className="bg-[#0368FE] rounded-xl px-4 py-2 flex-row items-center gap-1">
           <MaterialCommunityIcons name="plus" size={18} color="white" />
           <Text className="text-sm font-bold text-white">New</Text>
         </Pressable>
@@ -224,14 +224,14 @@ export default function SupportTicketsScreen() {
       {/* List */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : tickets.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <MaterialCommunityIcons name="headset" size={48} color="#D1D5DB" />
           <Text className="text-base text-gray-400 mt-4 text-center">No support tickets yet</Text>
           <Text className="text-sm text-gray-400 mt-1 text-center">Create one and our team will get back to you.</Text>
-          <Pressable onPress={() => setShowCreate(true)} className="mt-6 bg-[#0F7A5F] rounded-xl px-6 py-3">
+          <Pressable onPress={() => setShowCreate(true)} className="mt-6 bg-[#0368FE] rounded-xl px-6 py-3">
             <Text className="text-sm font-bold text-white">Create Ticket</Text>
           </Pressable>
         </View>
@@ -277,9 +277,9 @@ export default function SupportTicketsScreen() {
                 <Pressable
                   key={p}
                   onPress={() => setCreateForm(f => ({ ...f, priority: p }))}
-                  className={`px-4 py-2 rounded-xl border ${createForm.priority === p ? "border-[#0F7A5F] bg-[#F0FDF4]" : "border-gray-200"}`}
+                  className={`px-4 py-2 rounded-xl border ${createForm.priority === p ? "border-[#0368FE] bg-[#F0FDF4]" : "border-gray-200"}`}
                 >
-                  <Text className={`text-sm font-semibold capitalize ${createForm.priority === p ? "text-[#0F7A5F]" : "text-gray-500"}`}>
+                  <Text className={`text-sm font-semibold capitalize ${createForm.priority === p ? "text-[#0368FE]" : "text-gray-500"}`}>
                     {p}
                   </Text>
                 </Pressable>
@@ -293,7 +293,7 @@ export default function SupportTicketsScreen() {
               <Pressable
                 onPress={createTicket}
                 disabled={creating || !createForm.title.trim() || !createForm.description.trim()}
-                className="flex-1 bg-[#0F7A5F] py-3 rounded-xl"
+                className="flex-1 bg-[#0368FE] py-3 rounded-xl"
                 style={{ opacity: creating || !createForm.title.trim() || !createForm.description.trim() ? 0.5 : 1 }}
               >
                 <Text className="text-sm font-bold text-white text-center">

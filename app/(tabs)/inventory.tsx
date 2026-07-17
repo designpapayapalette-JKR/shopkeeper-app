@@ -648,7 +648,7 @@ export default function InventoryScreen() {
             onPress={() => router.push("/more?openTransfer=1" as any)}
             className="w-11 h-11 rounded-xl bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
           >
-            <MaterialCommunityIcons name="swap-horizontal" size={19} color="#0F7A5F" />
+            <MaterialCommunityIcons name="swap-horizontal" size={19} color="#0368FE" />
           </Pressable>
           <Pressable
             onPress={handleScanBarcode}
@@ -660,7 +660,7 @@ export default function InventoryScreen() {
             onPress={() => setIsBulkImportOpen(true)}
             className="w-11 h-11 rounded-xl bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
           >
-            <MaterialCommunityIcons name="tray-arrow-up" size={19} color="#0F7A5F" />
+            <MaterialCommunityIcons name="tray-arrow-up" size={19} color="#0368FE" />
           </Pressable>
           <Pressable
             onPress={() => setIsAdding(true)}
@@ -741,7 +741,7 @@ export default function InventoryScreen() {
                 >
                   {opt.label}
                 </Text>
-                {sortKey === opt.key && <MaterialCommunityIcons name="check" size={18} color="#0F7A5F" />}
+                {sortKey === opt.key && <MaterialCommunityIcons name="check" size={18} color="#0368FE" />}
               </Pressable>
             ))}
           </Pressable>
@@ -800,7 +800,7 @@ export default function InventoryScreen() {
           onPress={openAddWarehouse}
           className="px-4 py-2.5 rounded-xl border border-dashed border-outline-variant dark:border-outline flex-row items-center"
         >
-          <MaterialCommunityIcons name="plus" size={14} color="#0F7A5F" style={{ marginRight: 5 }} />
+          <MaterialCommunityIcons name="plus" size={14} color="#0368FE" style={{ marginRight: 5 }} />
           <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Location</Text>
         </Pressable>
         {warehouses.length > 0 && (
@@ -816,7 +816,7 @@ export default function InventoryScreen() {
       {/* Catalog List */}
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : products.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20">
@@ -852,7 +852,7 @@ export default function InventoryScreen() {
             return (
               <View
                 className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-2xl border border-outline-variant dark:border-outline shadow-sm mb-3"
-                style={isVariant ? { marginLeft: 24, borderLeftWidth: 3, borderLeftColor: "#0F7A5F" } : undefined}
+                style={isVariant ? { marginLeft: 24, borderLeftWidth: 3, borderLeftColor: "#0368FE" } : undefined}
               >
                 {/* Single compact row: avatar, name, price, stock, quick actions */}
                 <View className="flex-row items-center">
@@ -938,7 +938,7 @@ export default function InventoryScreen() {
                       className="flex-row items-center bg-primary/10 px-2.5 py-1.5 rounded-lg"
                       style={{ gap: 3 }}
                     >
-                      <MaterialCommunityIcons name="clipboard-edit-outline" size={14} color="#0F7A5F" />
+                      <MaterialCommunityIcons name="clipboard-edit-outline" size={14} color="#0368FE" />
                       <Text className="text-sm font-bold text-primary">Adjust</Text>
                     </Pressable>
                   )}
@@ -951,7 +951,7 @@ export default function InventoryScreen() {
                       <Text className="text-sm font-bold text-primary">
                         {variantCount} variant{variantCount !== 1 ? "s" : ""}
                       </Text>
-                      <MaterialCommunityIcons name={isGroupExpanded ? "chevron-up" : "chevron-down"} size={14} color="#0F7A5F" />
+                      <MaterialCommunityIcons name={isGroupExpanded ? "chevron-up" : "chevron-down"} size={14} color="#0368FE" />
                     </Pressable>
                   )}
                   {hasDetails && (
@@ -1286,7 +1286,7 @@ export default function InventoryScreen() {
                 <MaterialCommunityIcons
                   name={newProductTracksSerials ? "toggle-switch" : "toggle-switch-off-outline"}
                   size={26}
-                  color={newProductTracksSerials ? "#0F7A5F" : "#9E9E9E"}
+                  color={newProductTracksSerials ? "#0368FE" : "#9E9E9E"}
                 />
               </Pressable>
             </View>
@@ -1616,7 +1616,7 @@ export default function InventoryScreen() {
                     }}
                     className="w-10 h-10 items-center justify-center"
                   >
-                    <MaterialCommunityIcons name="pencil-outline" size={20} color="#3B7DD8" />
+                    <MaterialCommunityIcons name="pencil-outline" size={20} color="#0368FE" />
                   </Pressable>
                   <Pressable onPress={() => handleDeleteWarehouse(w)} className="w-10 h-10 items-center justify-center">
                     <MaterialCommunityIcons name="trash-can-outline" size={20} color="#D64545" />
@@ -1651,7 +1651,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 180,
     borderWidth: 2,
-    borderColor: "#22B58A",
+    borderColor: "#03A8FE",
     backgroundColor: "transparent",
     borderRadius: 16,
   },

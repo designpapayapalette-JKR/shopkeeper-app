@@ -133,7 +133,7 @@ export default function BillScannerScreen() {
               disabled={capturing}
               className="w-20 h-20 rounded-full bg-white items-center justify-center border-4 border-white/40"
             >
-              {capturing ? <ActivityIndicator color="#0F7A5F" /> : <View className="w-16 h-16 rounded-full bg-primary" />}
+              {capturing ? <ActivityIndicator color="#0368FE" /> : <View className="w-16 h-16 rounded-full bg-primary" />}
             </Pressable>
           </View>
         </>

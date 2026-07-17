@@ -142,7 +142,7 @@ export default function RecurringInvoicesScreen() {
       </View>
 
       {loading ? (
-        <View className="py-10 items-center"><ActivityIndicator color="#0F7A5F" /></View>
+        <View className="py-10 items-center"><ActivityIndicator color="#0368FE" /></View>
       ) : templates.length === 0 ? (
         <View className="py-10 items-center">
           <Text className="text-sm text-text-secondary">No recurring invoices scheduled yet.</Text>

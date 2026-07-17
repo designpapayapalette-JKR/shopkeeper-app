@@ -198,7 +198,7 @@ export default function AgentsScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background dark:bg-bg-dark justify-center items-center">
-        <ActivityIndicator size="large" color="#0F7A5F" />
+        <ActivityIndicator size="large" color="#0368FE" />
         <Text className="text-on-surface-variant mt-3 text-sm">
           Loading agent locations…
         </Text>
@@ -241,7 +241,7 @@ export default function AgentsScreen() {
                   <MaterialCommunityIcons
                     name={mode === "map" ? "map-outline" : "format-list-bulleted"}
                     size={16}
-                    color={viewMode === mode ? "#005f49" : "#3e4944"}
+                    color={viewMode === mode ? "#0368FE" : "#3e4944"}
                   />
                   <Text
                     className={`text-sm font-bold capitalize ${

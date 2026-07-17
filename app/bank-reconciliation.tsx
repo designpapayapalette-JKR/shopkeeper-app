@@ -164,7 +164,7 @@ export default function BankReconciliationScreen() {
       <Text className="text-xs text-text-secondary mb-4">CSV columns required: date, description, amount (positive = money in, negative = money out).</Text>
 
       {loading ? (
-        <View className="py-10 items-center"><ActivityIndicator color="#0F7A5F" /></View>
+        <View className="py-10 items-center"><ActivityIndicator color="#0368FE" /></View>
       ) : lines.length === 0 ? (
         <View className="py-10 items-center">
           <Text className="text-sm text-text-secondary">No unmatched statement lines.</Text>
@@ -199,7 +199,7 @@ export default function BankReconciliationScreen() {
               </Pressable>
             </View>
             {suggestLoading ? (
-              <ActivityIndicator color="#0F7A5F" />
+              <ActivityIndicator color="#0368FE" />
             ) : suggestions.length === 0 ? (
               <Text className="text-sm text-text-secondary py-6 text-center">No candidate payments found nearby.</Text>
             ) : (

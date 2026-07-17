@@ -253,7 +253,7 @@ export default function PrinterSettingsScreen() {
             disabled={scanning}
             className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl py-3.5 items-center mb-4"
           >
-            {scanning ? <ActivityIndicator color="#0F7A5F" /> : <Text className="text-primary font-bold text-base">Scan for Bluetooth Printers</Text>}
+            {scanning ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Scan for Bluetooth Printers</Text>}
           </Pressable>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-3">
             Note: the printer must already be paired in your phone's Android Bluetooth settings before it will show up here.
@@ -274,7 +274,7 @@ export default function PrinterSettingsScreen() {
                 <Text className="font-bold text-on-surface dark:text-text-primary-dark">{d.device_name || "Unnamed Printer"}</Text>
                 <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{d.inner_mac_address}</Text>
               </View>
-              {connectingKey === d.inner_mac_address ? <ActivityIndicator size="small" color="#0F7A5F" /> : <Text className="text-primary font-bold">Add</Text>}
+              {connectingKey === d.inner_mac_address ? <ActivityIndicator size="small" color="#0368FE" /> : <Text className="text-primary font-bold">Add</Text>}
             </Pressable>
           ))}
         </View>
@@ -287,7 +287,7 @@ export default function PrinterSettingsScreen() {
             disabled={scanning}
             className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl py-3.5 items-center mb-4"
           >
-            {scanning ? <ActivityIndicator color="#0F7A5F" /> : <Text className="text-primary font-bold text-base">Scan for USB Printers</Text>}
+            {scanning ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Scan for USB Printers</Text>}
           </Pressable>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-3">
             Connect your printer via a USB-OTG cable before scanning.
@@ -310,7 +310,7 @@ export default function PrinterSettingsScreen() {
                   <Text className="font-bold text-on-surface dark:text-text-primary-dark">{d.device_name || "USB Printer"}</Text>
                   <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Vendor {d.vendor_id} · Product {d.product_id}</Text>
                 </View>
-                {connectingKey === key ? <ActivityIndicator size="small" color="#0F7A5F" /> : <Text className="text-primary font-bold">Add</Text>}
+                {connectingKey === key ? <ActivityIndicator size="small" color="#0368FE" /> : <Text className="text-primary font-bold">Add</Text>}
               </Pressable>
             );
           })}

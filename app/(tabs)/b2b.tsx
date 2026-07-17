@@ -223,7 +223,7 @@ export default function B2bScreen() {
       <Pressable
         onPress={() => addToCart(item)}
         className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-4 mb-3 active:opacity-75"
-        style={inCart ? { borderColor: "#0F7A5F", borderWidth: 2 } : undefined}
+        style={inCart ? { borderColor: "#0368FE", borderWidth: 2 } : undefined}
       >
         <View className="flex-row justify-between items-start mb-1">
           <Text numberOfLines={2} className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
@@ -250,7 +250,7 @@ export default function B2bScreen() {
                 <Text className="text-primary dark:text-primary-dark text-xs font-bold">{inCart.quantity}</Text>
               </View>
             )}
-            <MaterialCommunityIcons name="plus-circle" size={24} color="#0F7A5F" />
+            <MaterialCommunityIcons name="plus-circle" size={24} color="#0368FE" />
           </View>
         </View>
       </Pressable>
@@ -260,7 +260,7 @@ export default function B2bScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-background dark:bg-bg-dark">
-        <ActivityIndicator size="large" color="#0F7A5F" />
+        <ActivityIndicator size="large" color="#0368FE" />
       </View>
     );
   }
@@ -289,7 +289,7 @@ export default function B2bScreen() {
         >
           <View className="flex-row items-center flex-1">
             <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center mr-3">
-              <MaterialCommunityIcons name="account-tie" size={20} color="#0F7A5F" />
+              <MaterialCommunityIcons name="account-tie" size={20} color="#0368FE" />
             </View>
             <View className="flex-1">
               <Text className="text-xs font-bold text-primary uppercase tracking-widest">Customer</Text>
@@ -367,7 +367,7 @@ export default function B2bScreen() {
               className="bg-white px-4 py-2 rounded-lg flex-row items-center gap-1"
             >
               <Text className="text-primary font-black">Review</Text>
-              <MaterialCommunityIcons name="arrow-right" size={16} color="#0F7A5F" />
+              <MaterialCommunityIcons name="arrow-right" size={16} color="#0368FE" />
             </Pressable>
           </View>
         </View>
@@ -391,13 +391,13 @@ export default function B2bScreen() {
               className="bg-primary/10 dark:bg-primary-dark/20 rounded-2xl border border-primary/30 p-4 flex-row items-center gap-3 active:opacity-75"
             >
               <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center">
-                <MaterialCommunityIcons name="account-plus" size={20} color="#0F7A5F" />
+                <MaterialCommunityIcons name="account-plus" size={20} color="#0368FE" />
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Party</Text>
                 <Text className="text-xs text-on-surface-variant">Name, GST, credit limit, and notes</Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+              <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
             </Pressable>
           </View>
 
@@ -501,7 +501,7 @@ export default function B2bScreen() {
               <MaterialCommunityIcons
                 name={applyRoundOff ? "toggle-switch" : "toggle-switch-off-outline"}
                 size={26}
-                color={applyRoundOff ? "#0F7A5F" : "#9E9E9E"}
+                color={applyRoundOff ? "#0368FE" : "#9E9E9E"}
               />
             </Pressable>
 

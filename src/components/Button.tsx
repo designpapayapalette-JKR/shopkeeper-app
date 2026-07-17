@@ -73,7 +73,7 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "outline" || variant === "ghost" ? "#005f49" : "white"} size="small" />
+        <ActivityIndicator color={variant === "outline" || variant === "ghost" ? "#0368FE" : "white"} size="small" />
       ) : (
         <>
           {icon && icon}

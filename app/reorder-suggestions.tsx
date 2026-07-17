@@ -114,7 +114,7 @@ export default function ReorderSuggestionsScreen() {
         <View className="flex-row justify-between items-center mb-2">
           <Text className="text-xl font-black text-text-primary">Reorder Suggestions</Text>
           {!loading && (
-            <Pressable onPress={load}><MaterialCommunityIcons name="refresh" size={22} color="#0F7A5F" /></Pressable>
+            <Pressable onPress={load}><MaterialCommunityIcons name="refresh" size={22} color="#0368FE" /></Pressable>
           )}
         </View>
         <Text className="text-sm text-text-secondary mb-4">
@@ -154,7 +154,7 @@ export default function ReorderSuggestionsScreen() {
                 className="bg-surface rounded-xl border border-gray-100 p-4 mb-2 flex-row items-center"
               >
                 <View className="w-6 h-6 rounded-md border-2 mr-3 items-center justify-center"
-                  style={{ borderColor: selection.has(s.product_id) ? "#0F7A5F" : "#ccc", backgroundColor: selection.has(s.product_id) ? "#0F7A5F" : "transparent" }}
+                  style={{ borderColor: selection.has(s.product_id) ? "#0368FE" : "#ccc", backgroundColor: selection.has(s.product_id) ? "#0368FE" : "transparent" }}
                 >
                   {selection.has(s.product_id) && <MaterialCommunityIcons name="check" size={14} color="white" />}
                 </View>

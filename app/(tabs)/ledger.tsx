@@ -25,6 +25,7 @@ import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
 import BulkUploadCard from "../../src/components/BulkUploadCard";
 import type { BankAccount } from "../bank-accounts";
 import { useTerminology } from "../../src/lib/terminology-context";
+import { StatePicker } from "../../src/components/StatePicker";
 
 interface Party {
   id: string;
@@ -84,6 +85,33 @@ export default function LedgerScreen() {
   const [newPartyPan, setNewPartyPan] = useState("");
   const [newPartyAadhaar, setNewPartyAadhaar] = useState("");
   const [addPartyLoading, setAddPartyLoading] = useState(false);
+  const [gstinAutoFilled, setGstinAutoFilled] = useState(false);
+
+  // GSTIN auto-fill: mirrors the web ledger page — once a full 15-character
+  // GSTIN is typed, check whether this company already has a party saved
+  // with the same GSTIN and offer to fill name/address/state/phone from it
+  // instead of making the user re-type it. Only fills fields still blank.
+  useEffect(() => {
+    if (editingParty) return;
+    const gstin = newPartyGstin.trim().toUpperCase();
+    if (gstin.length !== 15) { setGstinAutoFilled(false); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get<{ data: { name?: string; address?: string; state?: string; phone?: string } | null }>(
+          `/parties/lookup-by-gstin/${gstin}`
+        );
+        const match = res.data;
+        if (!match) return;
+        if (!newPartyName.trim()) setNewPartyName(match.name || "");
+        if (!newPartyAddress.trim()) setNewPartyAddress(match.address || "");
+        if (!newPartyState.trim() && match.state) setNewPartyState(match.state);
+        if (!newPartyPhone.trim() && match.phone) setNewPartyPhone(match.phone);
+        setGstinAutoFilled(true);
+      } catch { /* silent — auto-fill is a convenience, not a required step */ }
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newPartyGstin, editingParty]);
 
   // Record Payment Modal State
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
@@ -239,6 +267,7 @@ export default function LedgerScreen() {
     setNewPartyAddress("");
     setNewPartyPan("");
     setNewPartyAadhaar("");
+    setGstinAutoFilled(false);
   };
 
   const handleOpenEditParty = (party: Party) => {
@@ -286,6 +315,10 @@ export default function LedgerScreen() {
   const handleAddParty = async () => {
     if (!newPartyName) {
       Alert.alert("Required Fields", "Name is required.");
+      return;
+    }
+    if (newPartyCategory === "b2b" && !newPartyGstin.trim()) {
+      Alert.alert("Required Fields", "GSTIN is required for a B2B account to issue a valid tax invoice.");
       return;
     }
     if (!user?.company_id) return;
@@ -404,7 +437,7 @@ export default function LedgerScreen() {
           className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3.5 py-2.5 rounded-xl shrink-0"
           style={{ gap: 6 }}
         >
-          <MaterialCommunityIcons name="view-list-outline" size={16} color="#0F7A5F" />
+          <MaterialCommunityIcons name="view-list-outline" size={16} color="#0368FE" />
           <Text className="text-sm font-bold text-primary dark:text-primary-dark">All Ledger</Text>
         </Pressable>
       </View>
@@ -461,7 +494,7 @@ export default function LedgerScreen() {
       {/* List */}
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : filteredParties.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20">
@@ -544,7 +577,7 @@ export default function LedgerScreen() {
                       className="flex-row items-center bg-primary/10 px-2.5 py-1.5 rounded-lg"
                       style={{ gap: 3 }}
                     >
-                      <MaterialCommunityIcons name="book-account-outline" size={13} color="#0F7A5F" />
+                      <MaterialCommunityIcons name="book-account-outline" size={13} color="#0368FE" />
                       <Text className="text-xs font-bold text-primary dark:text-primary-dark">Ledger</Text>
                     </Pressable>
                   </View>
@@ -564,7 +597,7 @@ export default function LedgerScreen() {
           onPress={() => setIsBulkImportOpen(true)}
           className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-5 py-4 rounded-2xl items-center justify-center"
         >
-          <MaterialCommunityIcons name="tray-arrow-up" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="tray-arrow-up" size={20} color="#0368FE" />
         </Pressable>
         <Pressable
           onPress={() => setIsAddingParty(true)}
@@ -697,7 +730,7 @@ export default function LedgerScreen() {
             {/* Entries timeline */}
             {entriesLoading ? (
               <View className="flex-grow justify-center items-center py-20">
-                <ActivityIndicator size="large" color="#0F7A5F" />
+                <ActivityIndicator size="large" color="#0368FE" />
               </View>
             ) : ledgerEntries.length === 0 ? (
               <View className="flex-grow justify-center items-center py-20">
@@ -961,6 +994,9 @@ export default function LedgerScreen() {
 
           {/* Form fields */}
           <View className="space-y-4">
+            <Text className="text-xs font-extrabold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-widest">
+              Basic Info
+            </Text>
             <View>
               <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Name *
@@ -987,21 +1023,6 @@ export default function LedgerScreen() {
                 className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
-
-            {!editingParty && (
-              <View className="mt-4">
-                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                  State (For GST)
-                </Text>
-                <TextInput
-                  value={newPartyState}
-                  onChangeText={setNewPartyState}
-                  placeholder="e.g. Maharashtra"
-                  placeholderTextColor="#A0A0A0"
-                  className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
-                />
-              </View>
-            )}
 
             <View className="mt-4">
               <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
@@ -1032,10 +1053,14 @@ export default function LedgerScreen() {
               </View>
             </View>
 
+            <Text className="text-xs font-extrabold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-widest mt-6">
+              Tax & Billing
+            </Text>
+
             {newPartyCategory === "b2b" && (
               <View className="mt-4">
                 <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-                  GSTIN
+                  GSTIN *
                 </Text>
                 <TextInput
                   value={newPartyGstin}
@@ -1046,6 +1071,24 @@ export default function LedgerScreen() {
                   maxLength={15}
                   className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
                 />
+                {gstinAutoFilled ? (
+                  <Text className="text-xs text-green-600 dark:text-green-400 mt-1.5">
+                    ✓ Filled from an existing record with this GSTIN.
+                  </Text>
+                ) : (
+                  <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-1.5">
+                    Required for a B2B account to issue a valid tax invoice.
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {!editingParty && (
+              <View className="mt-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                  State (For GST)
+                </Text>
+                <StatePicker value={newPartyState} onChange={setNewPartyState} />
               </View>
             )}
 
@@ -1093,6 +1136,10 @@ export default function LedgerScreen() {
                 className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
+
+            <Text className="text-xs font-extrabold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-widest mt-6">
+              Credit Terms
+            </Text>
 
             {!editingParty && (
               <View className="mt-4">

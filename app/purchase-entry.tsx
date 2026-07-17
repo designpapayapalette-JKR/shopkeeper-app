@@ -133,7 +133,7 @@ export default function PurchaseEntryScreen() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-bg-dark">
-        <ActivityIndicator color="#0F7A5F" />
+        <ActivityIndicator color="#0368FE" />
       </View>
     );
   }

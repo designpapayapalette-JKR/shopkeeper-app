@@ -107,7 +107,7 @@ function numberToIndianWords(amount: number): string {
 export function generateTallyInvoiceHtml(data: TallyInvoiceData, template?: TemplateConfig): string {
   const cfg = (k: keyof TemplateConfig): boolean | string | undefined => template?.[k];
   const primaryColor = (cfg("primaryColor") as string) || "#111";
-  const accentColor = (cfg("accentColor") as string) || "#0F7A5F";
+  const accentColor = (cfg("accentColor") as string) || "#0368FE";
 
   const isGst = data.invoiceType === "gst";
   const isInterstate = data.igst > 0;

@@ -114,9 +114,9 @@ function NativeAgentMapView({
                   width: 44,
                   height: 44,
                   borderRadius: 22,
-                  backgroundColor: isSelected ? "#0F7A5F" : "#1F2937",
+                  backgroundColor: isSelected ? "#0368FE" : "#1F2937",
                   borderWidth: 3,
-                  borderColor: isSelected ? "#22B58A" : "#374151",
+                  borderColor: isSelected ? "#03A8FE" : "#374151",
                   justifyContent: "center",
                   alignItems: "center",
                   shadowColor: "#000",
@@ -145,7 +145,7 @@ function NativeAgentMapView({
                   borderTopWidth: 8,
                   borderLeftColor: "transparent",
                   borderRightColor: "transparent",
-                  borderTopColor: isSelected ? "#0F7A5F" : "#1F2937",
+                  borderTopColor: isSelected ? "#0368FE" : "#1F2937",
                   marginTop: -1,
                 }}
               />
@@ -199,7 +199,7 @@ function NativeAgentMapView({
                 <Text
                   style={{
                     fontSize: 12,
-                    color: "#0F7A5F",
+                    color: "#0368FE",
                     fontWeight: "700",
                     marginTop: 4,
                   }}

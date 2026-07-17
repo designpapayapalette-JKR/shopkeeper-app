@@ -12,7 +12,7 @@ const TRACK_HEIGHT = 28;
 const THUMB_SIZE = 22;
 const THUMB_MARGIN = 3;
 const TRACK_OFF = "#D1D5DB";
-const TRACK_ON = "#0F7A5F";
+const TRACK_ON = "#0368FE";
 
 export default function ToggleSwitch({
   value,

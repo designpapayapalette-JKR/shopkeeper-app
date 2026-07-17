@@ -49,7 +49,7 @@ export default function BalanceSheetScreen() {
 
       {loading && (
         <View className="py-10 items-center">
-          <ActivityIndicator color="#0F7A5F" />
+          <ActivityIndicator color="#0368FE" />
         </View>
       )}
 

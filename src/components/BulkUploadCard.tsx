@@ -96,7 +96,7 @@ export default function BulkUploadCard({ entityLabel, columns, mapRowToPayload, 
   return (
     <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
       <View className="flex-row items-center mb-1" style={{ gap: 8 }}>
-        <MaterialCommunityIcons name="tray-arrow-up" size={20} color="#0F7A5F" />
+        <MaterialCommunityIcons name="tray-arrow-up" size={20} color="#0368FE" />
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
           Bulk Import {entityLabel}
         </Text>
@@ -113,10 +113,10 @@ export default function BulkUploadCard({ entityLabel, columns, mapRowToPayload, 
           style={{ gap: 6 }}
         >
           {downloading ? (
-            <ActivityIndicator color="#0F7A5F" size="small" />
+            <ActivityIndicator color="#0368FE" size="small" />
           ) : (
             <>
-              <MaterialCommunityIcons name="download-outline" size={16} color="#0F7A5F" />
+              <MaterialCommunityIcons name="download-outline" size={16} color="#0368FE" />
               <Text className="text-primary font-bold text-sm">Download Template</Text>
             </>
           )}

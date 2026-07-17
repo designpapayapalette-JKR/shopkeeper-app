@@ -70,7 +70,7 @@ export default function ScannedDocumentsScreen() {
         style={{ gap: 12, paddingTop: topInset }}
       >
         <Pressable onPress={() => router.back()} className="w-touch-target h-touch-target items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#005f49" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
         </Pressable>
         <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Scanned Documents</Text>
       </View>

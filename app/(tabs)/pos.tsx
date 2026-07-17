@@ -438,7 +438,7 @@ export default function PosScreen() {
     if (loading) {
       return (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       );
     }
@@ -466,7 +466,7 @@ export default function PosScreen() {
                   key={item.id}
                   onPress={() => addToCart(item)}
                   className="flex-1 bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline overflow-hidden active:opacity-80"
-                  style={inCart ? { borderColor: "#0F7A5F", borderWidth: 2 } : undefined}
+                  style={inCart ? { borderColor: "#0368FE", borderWidth: 2 } : undefined}
                 >
                   <View className="p-3">
                     <Text numberOfLines={2} className="font-bold text-sm text-on-surface dark:text-text-primary-dark leading-snug min-h-[2.5em]">
@@ -488,7 +488,7 @@ export default function PosScreen() {
                   </View>
                   {inCart && (
                     <View className="bg-primary/10 dark:bg-primary-dark/10 px-2 py-1 flex-row items-center justify-center" style={{ gap: 4 }}>
-                      <MaterialCommunityIcons name="check-circle" size={12} color="#0F7A5F" />
+                      <MaterialCommunityIcons name="check-circle" size={12} color="#0368FE" />
                       <Text className="text-xs font-bold text-primary dark:text-primary-dark">{inCart.quantity}</Text>
                     </View>
                   )}
@@ -1082,7 +1082,7 @@ export default function PosScreen() {
 
   const BILL_TYPE_COLORS: Record<string, string> = {
     retail: "#6B21A8",
-    gst:    "#0F7A5F",
+    gst:    "#0368FE",
     estimate: "#B45309",
     bill_of_supply: "#334155",
   };
@@ -1167,7 +1167,7 @@ export default function PosScreen() {
       >
         <View className="flex-row items-center flex-1 mr-3">
           <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mr-3">
-            <MaterialCommunityIcons name="account" size={20} color="#005f49" />
+            <MaterialCommunityIcons name="account" size={20} color="#0368FE" />
           </View>
           <View className="flex-1">
             <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Customer</Text>
@@ -1245,11 +1245,11 @@ export default function PosScreen() {
                     className="flex-row items-center bg-primary/10 px-2.5 py-1 rounded-lg"
                     style={{ gap: 4 }}
                   >
-                    <MaterialCommunityIcons name="percent-outline" size={12} color="#0F7A5F" />
+                    <MaterialCommunityIcons name="percent-outline" size={12} color="#0368FE" />
                     <Text className="text-xs font-bold text-primary dark:text-primary-dark">
                       GST {effectiveTaxRate(item)}% {item.customTaxRate ? "(custom)" : ""}
                     </Text>
-                    <MaterialCommunityIcons name="pencil" size={11} color="#0F7A5F" />
+                    <MaterialCommunityIcons name="pencil" size={11} color="#0368FE" />
                   </Pressable>
                 )}
                 <View className="flex-row items-center bg-surface-container rounded-lg" style={{ gap: 2 }}>
@@ -1336,7 +1336,7 @@ export default function PosScreen() {
           <MaterialCommunityIcons
             name={applyRoundOff ? "toggle-switch" : "toggle-switch-off-outline"}
             size={26}
-            color={applyRoundOff ? "#0F7A5F" : "#9E9E9E"}
+            color={applyRoundOff ? "#0368FE" : "#9E9E9E"}
           />
         </Pressable>
 
@@ -1350,7 +1350,7 @@ export default function PosScreen() {
             }`}
           >
             <View className="flex-row items-center" style={{ gap: 8 }}>
-              <MaterialCommunityIcons name="percent-outline" size={16} color={estimateWithGst ? "#0F7A5F" : "#6e7a74"} />
+              <MaterialCommunityIcons name="percent-outline" size={16} color={estimateWithGst ? "#0368FE" : "#6e7a74"} />
               <Text className={`text-sm font-bold ${estimateWithGst ? "text-primary dark:text-primary-dark" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
                 Include GST in this estimate
               </Text>
@@ -1358,7 +1358,7 @@ export default function PosScreen() {
             <MaterialCommunityIcons
               name={estimateWithGst ? "toggle-switch" : "toggle-switch-off-outline"}
               size={26}
-              color={estimateWithGst ? "#0F7A5F" : "#9E9E9E"}
+              color={estimateWithGst ? "#0368FE" : "#9E9E9E"}
             />
           </Pressable>
         )}
@@ -1384,7 +1384,7 @@ export default function PosScreen() {
                   <MaterialCommunityIcons
                     name={sp.method === "cash" ? "cash" : sp.method === "upi" ? "cellphone" : "book-account-outline"}
                     size={16}
-                    color="#0F7A5F"
+                    color="#0368FE"
                   />
                   <Text className="text-xs font-bold text-on-surface-variant capitalize">{sp.method}</Text>
                   <MaterialCommunityIcons name="chevron-down" size={14} color="#6B7280" />
@@ -1416,7 +1416,7 @@ export default function PosScreen() {
               className="flex-row items-center justify-center py-2 rounded-xl border border-dashed border-outline-variant"
               style={{ gap: 4 }}
             >
-              <MaterialCommunityIcons name="plus" size={14} color="#0F7A5F" />
+              <MaterialCommunityIcons name="plus" size={14} color="#0368FE" />
               <Text className="text-xs font-bold text-primary">Add split payment</Text>
             </Pressable>
             <Text className="text-xs text-on-surface-variant text-right">
@@ -1461,7 +1461,7 @@ export default function PosScreen() {
               <Image source={{ uri: activeCompany.upi_qr_url }} style={{ width: 140, height: 140 }} className="rounded-lg" />
             ) : (
               <View style={{ width: 140, height: 140 }} className="items-center justify-center rounded-lg bg-white border border-outline-variant">
-                <MaterialCommunityIcons name="qrcode" size={48} color="#0f7a5f" />
+                <MaterialCommunityIcons name="qrcode" size={48} color="#0368fe" />
                 <Text className="text-[9px] text-center mt-1 px-2 text-on-surface-variant">Upload QR in Settings</Text>
               </View>
             )}
@@ -1482,7 +1482,7 @@ export default function PosScreen() {
           <MaterialCommunityIcons
             name={isSplitPayment ? "toggle-switch" : "toggle-switch-off-outline"}
             size={18}
-            color={isSplitPayment ? "#0F7A5F" : "#9E9E9E"}
+            color={isSplitPayment ? "#0368FE" : "#9E9E9E"}
           />
           <Text className={`text-xs font-semibold ${isSplitPayment ? "text-primary" : "text-on-surface-variant"}`}>
             Split payment
@@ -1704,7 +1704,7 @@ export default function PosScreen() {
                 className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
               />
               <Pressable onPress={handleScanBarcode} className="ml-2 w-8 h-8 items-center justify-center">
-                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0F7A5F" />
+                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0368FE" />
               </Pressable>
             </View>
             {categories.length > 0 && (
@@ -1730,7 +1730,7 @@ export default function PosScreen() {
               renderPosProductGrid()
             ) : loading ? (
               <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#0F7A5F" />
+                <ActivityIndicator size="large" color="#0368FE" />
               </View>
             ) : (
               <FlatList
@@ -1804,7 +1804,7 @@ export default function PosScreen() {
                 </Pressable>
                 {selectedParty && (
                   <Pressable onPress={() => setIsSelectingParty(true)} className="bg-primary/10 dark:bg-primary-dark/10 px-3 py-1.5 rounded-full flex-row items-center" style={{ gap: 4 }}>
-                    <MaterialCommunityIcons name="account" size={14} color="#005f49" />
+                    <MaterialCommunityIcons name="account" size={14} color="#0368FE" />
                     <Text className="text-primary dark:text-primary-dark text-sm font-bold">{selectedParty.name}</Text>
                     {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
                       <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-500" : "text-green-600"}`}>
@@ -1834,7 +1834,7 @@ export default function PosScreen() {
                 className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
               />
               <Pressable onPress={handleScanBarcode} className="ml-2 w-8 h-8 items-center justify-center">
-                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0F7A5F" />
+                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0368FE" />
               </Pressable>
             </View>
           </View>
@@ -1866,7 +1866,7 @@ export default function PosScreen() {
           <View className="flex-1 px-5">
             {loading ? (
               <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#0F7A5F" />
+                <ActivityIndicator size="large" color="#0368FE" />
               </View>
             ) : (
               <FlatList
@@ -2219,7 +2219,7 @@ export default function PosScreen() {
 
           {heldBillsLoading ? (
             <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#0F7A5F" />
+              <ActivityIndicator size="large" color="#0368FE" />
             </View>
           ) : heldBills.length === 0 ? (
             <View className="flex-1 justify-center items-center">
@@ -2290,7 +2290,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 180,
     borderWidth: 2,
-    borderColor: "#22B58A",
+    borderColor: "#03A8FE",
     backgroundColor: "transparent",
     borderRadius: 16,
   },

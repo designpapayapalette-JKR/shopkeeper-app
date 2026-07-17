@@ -156,7 +156,7 @@ export default function PurchaseHistoryScreen() {
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20">

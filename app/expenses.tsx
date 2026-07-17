@@ -131,7 +131,7 @@ export default function ExpensesScreen() {
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       <View className="px-6 pb-4 flex-row items-center" style={{ gap: 12 }}>
         <Pressable onPress={() => router.back()} className="w-10 h-10 items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0F7A5F" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
         </Pressable>
         <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Expenses</Text>
       </View>
@@ -163,7 +163,7 @@ export default function ExpensesScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
@@ -189,7 +189,7 @@ export default function ExpensesScreen() {
               style={{ gap: 12 }}
             >
               <View className="w-11 h-11 rounded-full bg-primary/10 items-center justify-center">
-                <MaterialCommunityIcons name={categoryIcon(item.category)} size={20} color="#0F7A5F" />
+                <MaterialCommunityIcons name={categoryIcon(item.category)} size={20} color="#0368FE" />
               </View>
               <View className="flex-1">
                 <Text className="font-bold text-on-surface dark:text-text-primary-dark capitalize">{item.category}</Text>

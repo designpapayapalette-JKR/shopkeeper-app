@@ -558,14 +558,14 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
           className="flex-row items-center justify-center bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl py-3 active:opacity-80"
           style={{ gap: 6 }}
         >
-          <MaterialCommunityIcons name="file-document-edit-outline" size={16} color="#0F7A5F" />
+          <MaterialCommunityIcons name="file-document-edit-outline" size={16} color="#0368FE" />
           <Text className="text-sm font-bold text-primary dark:text-primary-dark">GST Returns</Text>
         </Pressable>
       </View>
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20">
@@ -598,7 +598,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
                     ₹{parseFloat(item.grand_total).toFixed(2)}
                   </Text>
                   {openingId === item.id ? (
-                    <ActivityIndicator size="small" color="#0F7A5F" style={{ marginTop: 4 }} />
+                    <ActivityIndicator size="small" color="#0368FE" style={{ marginTop: 4 }} />
                   ) : (
                     <Text className="text-sm text-primary font-bold mt-1 uppercase">
                       {item.payment_status === "unpaid" ? "Hold" : item.payment_status === "partial" ? "Partial Paid" : item.payment_status}
@@ -614,7 +614,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
                     className="flex-1 py-2.5 items-center border-r border-gray-100 dark:border-zinc-800"
                   >
                     {settingStatusId === item.id ? (
-                      <ActivityIndicator size="small" color="#0F7A5F" />
+                      <ActivityIndicator size="small" color="#0368FE" />
                     ) : (
                       <Text className="text-sm font-bold text-primary">Hold</Text>
                     )}
@@ -906,10 +906,10 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
                     style={{ gap: 8 }}
                   >
                     {previewBusy === "share" ? (
-                      <ActivityIndicator color="#0F7A5F" />
+                      <ActivityIndicator color="#0368FE" />
                     ) : (
                       <>
-                        <MaterialCommunityIcons name="share-variant-outline" size={18} color="#0F7A5F" />
+                        <MaterialCommunityIcons name="share-variant-outline" size={18} color="#0368FE" />
                         <Text className="text-primary dark:text-primary-dark font-bold text-base">Share</Text>
                       </>
                     )}
@@ -933,7 +933,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
 
           <View className="px-5 pt-4 pb-3">
             <View className="bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 flex-row items-center" style={{ gap: 8 }}>
-              <MaterialCommunityIcons name="calendar-month" size={18} color="#0F7A5F" />
+              <MaterialCommunityIcons name="calendar-month" size={18} color="#0368FE" />
               <TextInput
                 value={gstrMonth}
                 onChangeText={(t) => setGstrMonth(t)}
@@ -953,7 +953,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
 
           {gstrLoading ? (
             <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#0F7A5F" />
+              <ActivityIndicator size="large" color="#0368FE" />
             </View>
           ) : !gstrData.gstr1 && !gstrData.gstr3b ? (
             <View className="flex-1 justify-center items-center px-5">
@@ -1089,7 +1089,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
               <Pressable
                 onPress={() => partialModalInvoice && handleSetPaymentStatus(partialModalInvoice, "partial", Number(partialAmount) || 0)}
                 disabled={settingStatusId === partialModalInvoice?.id}
-                className="flex-1 bg-[#0F7A5F] py-3 rounded-xl"
+                className="flex-1 bg-[#0368FE] py-3 rounded-xl"
               >
                 <Text className="text-sm font-bold text-white text-center">Save</Text>
               </Pressable>

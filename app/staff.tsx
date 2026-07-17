@@ -316,7 +316,7 @@ export default function StaffScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center pb-20">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : staff.length === 0 ? (
         <View className="flex-1 items-center justify-center pb-20 px-6">

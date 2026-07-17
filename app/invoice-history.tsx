@@ -197,7 +197,7 @@ export default function InvoiceHistoryScreen() {
     <View className="bg-surface dark:bg-surface-dark border border-gray-100 dark:border-zinc-800 rounded-2xl p-4 mx-4 mb-3">
       <View className="flex-row justify-between items-center mb-2">
         <Text className="font-mono text-sm font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>{item.purchase_number}</Text>
-        <MaterialCommunityIcons name="truck-delivery" size={18} color="#0F7A5F" />
+        <MaterialCommunityIcons name="truck-delivery" size={18} color="#0368FE" />
       </View>
       <View className="flex-row justify-between items-center">
         <View className="flex-1 mr-2">
@@ -225,7 +225,7 @@ export default function InvoiceHistoryScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : activeTab === "sales" ? (
         invoices.length === 0 ? (
@@ -272,7 +272,7 @@ export default function InvoiceHistoryScreen() {
             </View>
 
             {detailLoading || !detailInvoice ? (
-              <ActivityIndicator color="#0F7A5F" />
+              <ActivityIndicator color="#0368FE" />
             ) : (
               <ScrollView>
                 <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-1" numberOfLines={1}>Customer: {detailInvoice.party?.name || "Walk-in Customer"}</Text>

@@ -261,10 +261,10 @@ export default function OnboardingScreen() {
               style={{ gap: 6 }}
             >
               {addingMember ? (
-                <ActivityIndicator color="#0F7A5F" size="small" />
+                <ActivityIndicator color="#0368FE" size="small" />
               ) : (
                 <>
-                  <MaterialCommunityIcons name="plus" size={16} color="#0F7A5F" />
+                  <MaterialCommunityIcons name="plus" size={16} color="#0368FE" />
                   <Text className="text-primary dark:text-primary-dark font-bold text-sm">Create Login & Add</Text>
                 </>
               )}
@@ -311,7 +311,7 @@ export default function OnboardingScreen() {
       {step === 2 && (
         <View className="flex-1 items-center justify-center px-4" style={{ paddingBottom: bottomInset }}>
           <View className="w-20 h-20 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mb-6">
-            <MaterialCommunityIcons name="check-circle" size={44} color="#0F7A5F" />
+            <MaterialCommunityIcons name="check-circle" size={44} color="#0368FE" />
           </View>
           <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-2 text-center">You're all set!</Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mb-8">

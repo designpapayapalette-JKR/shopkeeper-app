@@ -149,7 +149,7 @@ export default function BankAccountsScreen() {
             onPress={() => setIsBulkImportOpen(true)}
             className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3 py-2.5 rounded-xl items-center justify-center"
           >
-            <MaterialCommunityIcons name="tray-arrow-up" size={18} color="#0F7A5F" />
+            <MaterialCommunityIcons name="tray-arrow-up" size={18} color="#0368FE" />
           </Pressable>
           <Pressable
             onPress={() => setIsAdding(true)}
@@ -164,7 +164,7 @@ export default function BankAccountsScreen() {
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : accounts.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20 px-6">

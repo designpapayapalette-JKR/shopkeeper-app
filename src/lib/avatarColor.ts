@@ -4,7 +4,7 @@
 // reference billing apps for scannable list rows.
 const PALETTE = [
   { bg: "#FDE8D7", text: "#B5651D" }, // tan
-  { bg: "#DCEEE8", text: "#0F7A5F" }, // teal
+  { bg: "#DCEEE8", text: "#0368FE" }, // teal
   { bg: "#FBE1E6", text: "#B0345C" }, // pink
   { bg: "#E3E6FB", text: "#3B4CB0" }, // indigo
   { bg: "#FFF3C4", text: "#8A6D00" }, // amber

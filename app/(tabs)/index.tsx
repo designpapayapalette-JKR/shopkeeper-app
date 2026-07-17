@@ -296,7 +296,7 @@ export default function DashboardScreen() {
             onPress={() => router.push("/pos" as any)}
             className="w-touch-target h-touch-target items-center justify-center rounded-full active:bg-surface-container-low"
           >
-            <MaterialCommunityIcons name="barcode-scan" size={22} color="#005f49" />
+            <MaterialCommunityIcons name="barcode-scan" size={22} color="#0368FE" />
           </Pressable>
           <Pressable
             onPress={() => setIsProfileMenuOpen(true)}
@@ -384,7 +384,7 @@ export default function DashboardScreen() {
                   <Text className={`text-base font-bold ${activeBrand === null ? "text-primary dark:text-primary-dark" : "text-on-surface dark:text-text-primary-dark"}`}>
                     All Brands
                   </Text>
-                  {activeBrand === null && <MaterialCommunityIcons name="check" size={18} color="#0F7A5F" />}
+                  {activeBrand === null && <MaterialCommunityIcons name="check" size={18} color="#0368FE" />}
                 </Pressable>
                 {availableBrands.map((brand) => (
                   <Pressable
@@ -397,7 +397,7 @@ export default function DashboardScreen() {
                     <Text className={`text-base font-bold ${activeBrand?.id === brand.id ? "text-primary dark:text-primary-dark" : "text-on-surface dark:text-text-primary-dark"}`}>
                       {brand.name}
                     </Text>
-                    {activeBrand?.id === brand.id && <MaterialCommunityIcons name="check" size={18} color="#0F7A5F" />}
+                    {activeBrand?.id === brand.id && <MaterialCommunityIcons name="check" size={18} color="#0368FE" />}
                   </Pressable>
                 ))}
               </ScrollView>
@@ -414,13 +414,13 @@ export default function DashboardScreen() {
           className="bg-primary/10 dark:bg-primary-dark/10 border-b border-primary/20 px-margin-mobile py-3 flex-row items-center justify-between"
         >
           <View className="flex-row items-center flex-1 mr-3" style={{ gap: 10 }}>
-            <MaterialCommunityIcons name="rocket-launch-outline" size={20} color="#0F7A5F" />
+            <MaterialCommunityIcons name="rocket-launch-outline" size={20} color="#0368FE" />
             <View className="flex-1">
               <Text className="font-bold text-sm text-primary dark:text-primary-dark">Finish setting up your business</Text>
               <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">Add GSTIN, address & your team — 2 minutes</Text>
             </View>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0F7A5F" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       )}
 
@@ -528,7 +528,7 @@ export default function DashboardScreen() {
 
             {statsLoading ? (
               <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-8 border border-outline-variant items-center">
-                <ActivityIndicator size="small" color="#0F7A5F" />
+                <ActivityIndicator size="small" color="#0368FE" />
               </View>
             ) : (
               <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -724,7 +724,7 @@ export default function DashboardScreen() {
                       className="bg-primary/10 px-3 py-2 rounded-lg flex-row items-center"
                       style={{ gap: 4 }}
                     >
-                      <MaterialCommunityIcons name="whatsapp" size={14} color="#0F7A5F" />
+                      <MaterialCommunityIcons name="whatsapp" size={14} color="#0368FE" />
                       <Text className="text-xs font-bold text-primary dark:text-primary-dark">Remind</Text>
                     </Pressable>
                   </View>
@@ -832,7 +832,7 @@ export default function DashboardScreen() {
                     style={{ gap: 10 }}
                   >
                     <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center shrink-0">
-                      <MaterialCommunityIcons name="receipt" size={14} color="#005f49" />
+                      <MaterialCommunityIcons name="receipt" size={14} color="#0368FE" />
                     </View>
                     <View className="flex-1 min-w-0">
                       <Text className="font-body-md text-body-md text-on-surface dark:text-text-primary-dark font-medium" numberOfLines={1}>
@@ -847,13 +847,13 @@ export default function DashboardScreen() {
                         onPress={() => setSelectedInvoice(item)}
                         className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center active:opacity-60"
                       >
-                        <MaterialCommunityIcons name="eye-outline" size={18} color="#005f49" />
+                        <MaterialCommunityIcons name="eye-outline" size={18} color="#0368FE" />
                       </Pressable>
                       <Pressable
                         onPress={() => router.push(`/invoice-history?openInvoiceId=${item.id}` as any)}
                         className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center active:opacity-60"
                       >
-                        <MaterialCommunityIcons name="pencil-outline" size={18} color="#005f49" />
+                        <MaterialCommunityIcons name="pencil-outline" size={18} color="#0368FE" />
                       </Pressable>
                       <Pressable
                         onPress={() => {
@@ -876,7 +876,7 @@ export default function DashboardScreen() {
                         }}
                         className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center active:opacity-60"
                       >
-                        <MaterialCommunityIcons name="printer-outline" size={18} color="#005f49" />
+                        <MaterialCommunityIcons name="printer-outline" size={18} color="#0368FE" />
                       </Pressable>
                     </View>
                   </View>
@@ -962,7 +962,7 @@ export default function DashboardScreen() {
                       className="flex-1 flex-row items-center justify-center py-3.5 rounded-xl border border-primary dark:border-primary-dark active:opacity-80"
                       style={{ gap: 8, minWidth: "45%" }}
                     >
-                      <MaterialCommunityIcons name="pencil-outline" size={18} color="#005f49" />
+                      <MaterialCommunityIcons name="pencil-outline" size={18} color="#0368FE" />
                       <Text className="text-primary font-bold text-sm">Edit</Text>
                     </Pressable>
                     <Pressable

@@ -62,7 +62,7 @@ export default function FinancialYearScreen() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-bg-dark">
-        <ActivityIndicator color="#0F7A5F" />
+        <ActivityIndicator color="#0368FE" />
       </View>
     );
   }
@@ -97,9 +97,9 @@ export default function FinancialYearScreen() {
           className="border border-primary py-3.5 rounded-xl items-center flex-row justify-center mt-5"
           style={{ gap: 6, opacity: closing ? 0.5 : 1 }}
         >
-          {closing ? <ActivityIndicator color="#0F7A5F" size="small" /> : (
+          {closing ? <ActivityIndicator color="#0368FE" size="small" /> : (
             <>
-              <MaterialCommunityIcons name="lock-outline" size={16} color="#0F7A5F" />
+              <MaterialCommunityIcons name="lock-outline" size={16} color="#0368FE" />
               <Text className="text-primary font-bold">Close FY {priorFyLabel}</Text>
             </>
           )}

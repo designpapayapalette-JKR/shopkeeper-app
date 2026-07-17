@@ -4,9 +4,9 @@
 // NativeWind className tokens (bg-primary, text-on-surface, etc.) elsewhere.
 
 export const colors = {
-  primary: "#005f49",
-  primaryDark: "#22B58A",
-  primaryContainer: "#0f7a5f",
+  primary: "#0368FE",
+  primaryDark: "#03A8FE",
+  primaryContainer: "#004CFA",
   secondary: "#835400",
   secondaryDark: "#F0AE4E",
   secondaryContainer: "#feb64e",
@@ -31,5 +31,5 @@ export const colors = {
   textSecondaryDark: "#A0A0A0",
   success: "#2E9E5B",
   error: "#D64545",
-  info: "#3B7DD8",
+  info: "#0368FE",
 } as const;

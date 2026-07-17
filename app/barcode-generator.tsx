@@ -131,7 +131,7 @@ export default function BarcodeGeneratorScreen() {
     <ScrollView className="flex-1">
       <View className="px-6 pb-4 flex-row items-center" style={{ gap: 12 }}>
         <Pressable onPress={() => router.back()} className="w-10 h-10 items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0F7A5F" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
         </Pressable>
         <View>
           <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">
@@ -180,14 +180,14 @@ export default function BarcodeGeneratorScreen() {
           disabled={generating}
           className="px-4 py-3.5 rounded-2xl bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline flex-row items-center active:opacity-80"
         >
-          <MaterialCommunityIcons name="auto-fix" size={18} color="#0F7A5F" />
+          <MaterialCommunityIcons name="auto-fix" size={18} color="#0368FE" />
           <Text className="ml-1.5 font-bold text-sm text-primary">All Missing</Text>
         </Pressable>
       </View>
 
       {loading ? (
         <View className="py-20 items-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : (
         <View className="px-6 mb-8" style={{ gap: 10 }}>
@@ -249,7 +249,7 @@ export default function BarcodeGeneratorScreen() {
                       <MaterialCommunityIcons
                         name={viewBarcodeId === product.id ? "chevron-up" : "chevron-down"}
                         size={18}
-                        color="#0F7A5F"
+                        color="#0368FE"
                       />
                       <Text className="ml-1 text-primary text-sm font-semibold">
                         {viewBarcodeId === product.id ? "Hide Barcode" : "View Barcode Label"}

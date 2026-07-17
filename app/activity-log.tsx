@@ -82,7 +82,7 @@ function navigateToEntity(router: ReturnType<typeof useRouter>, entry: LogEntry)
 
 const ACTION_META: Record<LogEntry["action"], { icon: keyof typeof MaterialCommunityIcons.glyphMap; color: string; verb: string }> = {
   create: { icon: "plus-circle-outline", color: "#2E9E5B", verb: "created" },
-  update: { icon: "pencil-outline", color: "#3B7DD8", verb: "updated" },
+  update: { icon: "pencil-outline", color: "#0368FE", verb: "updated" },
   delete: { icon: "trash-can-outline", color: "#D64545", verb: "deleted" },
   restore: { icon: "backup-restore", color: "#835400", verb: "restored" },
 };
@@ -131,7 +131,7 @@ export default function ActivityLogScreen() {
     <View className="flex-1 bg-background dark:bg-bg-dark">
       <View className="bg-surface-container-lowest dark:bg-surface-dark border-b border-outline-variant dark:border-outline flex-row items-center px-margin-mobile pb-3" style={{ gap: 12, paddingTop: topInset }}>
         <Pressable onPress={() => router.back()} className="w-touch-target h-touch-target items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#005f49" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
         </Pressable>
         <Text className="font-headline-md text-headline-md text-on-surface dark:text-text-primary-dark">
           Activity Log
@@ -140,7 +140,7 @@ export default function ActivityLogScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0F7A5F" />
+          <ActivityIndicator size="large" color="#0368FE" />
         </View>
       ) : (
         <FlatList

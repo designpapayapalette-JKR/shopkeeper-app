@@ -19,7 +19,7 @@ function TabIcon({
     <MaterialCommunityIcons
       name={focused ? active : inactive}
       size={focused ? 24 : 22}
-      color={focused ? "#0F7A5F" : "#9E9E9E"}
+      color={focused ? "#0368FE" : "#9E9E9E"}
     />
   );
 }
@@ -42,7 +42,7 @@ export default function TabsLayout() {
       paddingBottom: 8 + insets.bottom,
       paddingTop: 8,
     },
-    tabBarActiveTintColor: "#0F7A5F",
+    tabBarActiveTintColor: "#0368FE",
     tabBarInactiveTintColor: "#9E9E9E",
     tabBarLabelStyle: {
       fontSize: 10.5,
