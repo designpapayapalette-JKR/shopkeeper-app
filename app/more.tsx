@@ -177,7 +177,10 @@ export default function MoreScreen() {
   // minimal counterpart so the Scan Hub's "Photograph Expense" option has
   // somewhere real to land.
   const [isExpenseModal, setIsExpenseModal] = useState(false);
-  const [expenseCategory, setExpenseCategory] = useState<"travel" | "fuel" | "food" | "other">("other");
+  // Free-form — real expense taxonomies vary by trade (KNOWLEDGE-BASE.md
+  // §7), not a fixed set.
+  const [expenseCategory, setExpenseCategory] = useState("Other");
+  const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<string[]>(["Travel", "Fuel", "Food", "Other"]);
   const [expenseAmount, setExpenseAmount] = useState("");
   const [expenseNotes, setExpenseNotes] = useState("");
   const [expenseSubmitting, setExpenseSubmitting] = useState(false);
@@ -225,6 +228,9 @@ export default function MoreScreen() {
       .then((res) => setMobileModules(Array.isArray(res?.data) ? res.data : []))
       .catch(() => {})
       .finally(() => setMobileModulesLoaded(true));
+    api.get<{ data: string[] }>("/expenses/categories")
+      .then((res) => { if (res.data) setExpenseCategoryOptions(res.data); })
+      .catch(() => {});
   }, []);
 
   const toggleMobileModule = async (key: string) => {
@@ -2351,22 +2357,28 @@ export default function MoreScreen() {
                 Category
               </Text>
               <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                {(["travel", "fuel", "food", "other"] as const).map((cat) => (
+                {expenseCategoryOptions.map((cat) => (
                   <Pressable
                     key={cat}
                     onPress={() => setExpenseCategory(cat)}
                     className={`px-4 py-3 rounded-xl border ${
-                      expenseCategory === cat
+                      expenseCategory.toLowerCase() === cat.toLowerCase()
                         ? "bg-primary border-primary dark:bg-primary-dark"
                         : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
                     }`}
                   >
-                    <Text className={`text-sm font-bold capitalize ${expenseCategory === cat ? "text-white" : "text-text-secondary"}`}>
+                    <Text className={`text-sm font-bold ${expenseCategory.toLowerCase() === cat.toLowerCase() ? "text-white" : "text-text-secondary"}`}>
                       {cat}
                     </Text>
                   </Pressable>
                 ))}
               </View>
+              <TextInput
+                value={expenseCategory}
+                onChangeText={setExpenseCategory}
+                placeholder="Or type a custom category..."
+                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-medium mt-2"
+              />
             </View>
 
             <View className="mt-4">

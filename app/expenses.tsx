@@ -9,7 +9,9 @@ import { api, ApiError } from "../src/lib/api";
 interface ExpenseRecord {
   id: string;
   amount: string;
-  category: "travel" | "fuel" | "food" | "other";
+  // Free-form — real expense taxonomies vary by trade (KNOWLEDGE-BASE.md
+  // §7), not a fixed set.
+  category: string;
   date: string;
   notes: string | null;
   status: "submitted" | "approved" | "rejected" | "reimbursed";
@@ -24,12 +26,21 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "year", label: "This Year" },
 ];
 
-const CATEGORY_ICON: Record<ExpenseRecord["category"], keyof typeof MaterialCommunityIcons.glyphMap> = {
+const CATEGORY_ICON: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
   travel: "car-outline",
   fuel: "gas-station-outline",
   food: "food-outline",
+  rent: "home-outline",
+  utilities: "flash-outline",
+  salaries: "account-cash-outline",
+  marketing: "bullhorn-outline",
+  maintenance: "wrench-outline",
+  packaging: "package-variant-closed",
   other: "receipt",
 };
+function categoryIcon(category: string): keyof typeof MaterialCommunityIcons.glyphMap {
+  return CATEGORY_ICON[category.toLowerCase()] ?? "receipt";
+}
 
 function startOfPeriod(period: PeriodKey): Date {
   const now = new Date();
@@ -53,6 +64,7 @@ export default function ExpensesScreen() {
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(["Travel", "Fuel", "Food", "Other"]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [viewingUri, setViewingUri] = useState<string | null>(null);
@@ -101,6 +113,9 @@ export default function ExpensesScreen() {
 
   useEffect(() => {
     load();
+    api.get<{ data: string[] }>("/expenses/categories")
+      .then((res) => { if (res.data) setCategoryOptions(res.data); })
+      .catch(() => {});
   }, [load]);
 
   const filtered = useMemo(() => {
@@ -174,7 +189,7 @@ export default function ExpensesScreen() {
               style={{ gap: 12 }}
             >
               <View className="w-11 h-11 rounded-full bg-primary/10 items-center justify-center">
-                <MaterialCommunityIcons name={CATEGORY_ICON[item.category]} size={20} color="#0F7A5F" />
+                <MaterialCommunityIcons name={categoryIcon(item.category)} size={20} color="#0F7A5F" />
               </View>
               <View className="flex-1">
                 <Text className="font-bold text-on-surface dark:text-text-primary-dark capitalize">{item.category}</Text>
@@ -211,18 +226,25 @@ export default function ExpensesScreen() {
             />
 
             <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Category</Text>
-            <View className="flex-row gap-2 mb-4">
-              {(["travel", "fuel", "food", "other"] as const).map((c) => (
-                <Pressable
-                  key={c} onPress={() => setEditCategory(c)}
-                  className={`px-4 py-2.5 rounded-xl border-2 ${
-                    editCategory === c ? "border-primary bg-primary/10" : "border-outline-variant dark:border-outline"
-                  }`}
-                >
-                  <Text className={`text-sm font-bold capitalize ${editCategory === c ? "text-primary" : "text-on-surface dark:text-text-primary-dark"}`}>{c}</Text>
-                </Pressable>
-              ))}
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
+              <View className="flex-row gap-2">
+                {categoryOptions.map((c) => (
+                  <Pressable
+                    key={c} onPress={() => setEditCategory(c)}
+                    className={`px-4 py-2.5 rounded-xl border-2 ${
+                      editCategory.toLowerCase() === c.toLowerCase() ? "border-primary bg-primary/10" : "border-outline-variant dark:border-outline"
+                    }`}
+                  >
+                    <Text className={`text-sm font-bold ${editCategory.toLowerCase() === c.toLowerCase() ? "text-primary" : "text-on-surface dark:text-text-primary-dark"}`}>{c}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
+            <TextInput
+              value={editCategory} onChangeText={setEditCategory}
+              placeholder="Or type a custom category..."
+              className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-sm font-medium mb-4"
+            />
 
             <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Notes</Text>
             <TextInput
