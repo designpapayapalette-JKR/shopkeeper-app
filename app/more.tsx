@@ -1272,13 +1272,12 @@ export default function MoreScreen() {
       </View>
 
       {/* ══════════════════════ OPERATIONS ══════════════════════
-          Day-to-day workflows a shopkeeper reaches for often: history,
-          staff, reports, inventory movement. */}
+          Day-to-day workflows a shopkeeper reaches for often at the counter. */}
       <Text className="text-sm font-black text-primary dark:text-primary-dark uppercase tracking-widest mb-3">
         Operations
       </Text>
 
-      {/* Purchases, Returns & Compliance */}
+      {/* Purchases, Returns & Compliance — daily counter workflows */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Purchases, Returns & Compliance
@@ -1309,58 +1308,13 @@ export default function MoreScreen() {
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Recurring Invoices</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
-        <Pressable onPress={() => router.push("/bank-reconciliation" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Reconciliation</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
-        </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
-        <Pressable onPress={() => router.push("/balance-sheet" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Balance Sheet & Stock Valuation</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
-        </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
-        <Pressable onPress={() => router.push("/financial-year" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Financial Year Closing</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
-        </Pressable>
       </View>
 
-      {/* Data & Activity */}
+      {/* Data & Activity — daily lookups & sharing */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Data & Activity
         </Text>
-        <Pressable
-          onPress={() => router.push("/bank-accounts" as any)}
-          className="flex-row justify-between items-center py-2.5"
-        >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            {t("bankAccounts")}
-          </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
-        </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
-        <Pressable
-          onPress={() => router.push("/scanned-documents" as any)}
-          className="flex-row justify-between items-center py-2.5"
-        >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Scanned Documents
-          </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
-        </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
         <Pressable
           onPress={() => router.push("/invoice-history" as any)}
           className="flex-row justify-between items-center py-2.5"
@@ -1410,18 +1364,6 @@ export default function MoreScreen() {
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
-          onPress={() => router.push("/activity-log" as any)}
-          className="flex-row justify-between items-center py-2.5"
-        >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            {t("activityLog")}
-          </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
-        </Pressable>
-
-        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
-
-        <Pressable
           onPress={() => router.push("/support-tickets" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
@@ -1444,7 +1386,7 @@ export default function MoreScreen() {
         </Pressable>
       </View>
 
-      {/* Staff & Employees */}
+      {/* Staff & Employees — daily team management */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
           Staff & Employees
@@ -1496,10 +1438,15 @@ export default function MoreScreen() {
         </Pressable>
       </View>
 
-      {/* Business Reports & Analytics */}
+      {/* Reports & Admin — desk-based, compliance, configuration (web-first) */}
+      <Text className="text-sm font-black text-primary dark:text-primary-dark uppercase tracking-widest mb-3 mt-2">
+        Reports & Admin
+      </Text>
+
+      {/* Financial Reports */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
         <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
-          Business Reports & Analytics
+          Financial Reports
         </Text>
 
         <Pressable
@@ -1533,7 +1480,7 @@ export default function MoreScreen() {
             fetchSetupData();
             setIsLedgerReportModal(true);
           }}
-          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
+          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
             Ledger Outstanding Summary
@@ -1574,12 +1521,97 @@ export default function MoreScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => router.push("/payment-history" as any)}
+          onPress={() => router.push("/balance-sheet" as any)}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-2"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Payment History
+            Balance Sheet & Stock Valuation
           </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+      </View>
+
+      {/* Compliance & Configuration */}
+      <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+          Compliance & Configuration
+        </Text>
+
+        <Pressable
+          onPress={() => router.push("/bank-reconciliation" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Reconciliation</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/financial-year" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Financial Year Closing</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/barcode-generator" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Barcode Generator</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/printer-settings" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Printer Settings</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/scanned-documents" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Scanned Documents Archive</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/activity-log" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Activity Log</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/bank-accounts" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Accounts</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/reorder-suggestions" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Reorder Suggestions</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
