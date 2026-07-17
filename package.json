@@ -41,7 +41,7 @@
     "i18next": "^26.3.6",
     "js-sha256": "^0.11.1",
     "metro": "^0.84.2",
-    "nativewind": "4.1.23",
+    "nativewind": "4.2.6",
     "qrcode-generator": "^2.0.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
