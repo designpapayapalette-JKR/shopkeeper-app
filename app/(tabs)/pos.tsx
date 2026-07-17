@@ -48,6 +48,7 @@ interface Product {
   tax_rate: string;
   stock_quantity?: string;
   category?: { name: string } | null;
+  tracks_serials?: boolean;
 }
 
 interface Party {
@@ -77,6 +78,9 @@ interface CartItem {
   // Per-item discount — a flat discount amount applied to this line item,
   // complementary to the bill-level discountPercent.
   discount?: number;
+  // Comma/newline-separated serial numbers, only meaningful when
+  // product.tracks_serials — mirrors the web POS pattern.
+  serialNumbers?: string;
 }
 
 export default function PosScreen() {
@@ -827,6 +831,9 @@ export default function PosScreen() {
           price: parseFloat(item.product.price),
           tax_rate: shouldApplyTax ? effectiveTaxRate(item) : 0,
           discount: item.discount || 0,
+          serial_numbers: item.serialNumbers
+            ? item.serialNumbers.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
+            : undefined,
         })),
       };
 
@@ -1262,6 +1269,19 @@ export default function PosScreen() {
                   <Text className="text-[10px] text-on-surface-variant mr-1">off</Text>
                 </View>
               </View>
+              {item.product.tracks_serials && (
+                <TextInput
+                  value={item.serialNumbers || ""}
+                  onChangeText={(val) => {
+                    setCart((prev) => prev.map((c) =>
+                      c.product.id === item.product.id ? { ...c, serialNumbers: val } : c
+                    ));
+                  }}
+                  placeholder={`Serial number(s) for ${item.quantity} unit(s), comma-separated`}
+                  placeholderTextColor="#9E9E9E"
+                  className="text-xs text-on-surface dark:text-text-primary-dark bg-surface-container rounded-lg px-2.5 py-2 mt-2"
+                />
+              )}
             </View>
           ))}
         </View>
