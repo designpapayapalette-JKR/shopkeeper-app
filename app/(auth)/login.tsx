@@ -84,8 +84,8 @@ export default function LoginScreen() {
 
           {/* Form Card */}
           <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-xl">
-            <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              {isPinLogin ? "Staff Quick PIN Login" : "Sign In to Account"}
+            <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark mb-4">
+              {isPinLogin ? "Quick PIN Login" : "Sign In"}
             </Text>
 
             {error && (
@@ -104,15 +104,16 @@ export default function LoginScreen() {
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
-                    placeholder="Enter your email"
+                    placeholder="you@business.com"
                     placeholderTextColor="#A0A0A0"
                     autoCapitalize="none"
                     keyboardType="email-address"
+                    autoCorrect={false}
                     className="bg-background dark:bg-background-dark text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium focus:border-primary dark:focus:border-primary-dark"
                   />
                 </View>
 
-                <View className="mt-4">
+                <View>
                   <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                     Password
                   </Text>
@@ -123,8 +124,15 @@ export default function LoginScreen() {
                     placeholderTextColor="#A0A0A0"
                     secureTextEntry
                     autoCapitalize="none"
+                    autoCorrect={false}
                     className="bg-background dark:bg-background-dark text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium focus:border-primary dark:focus:border-primary-dark"
                   />
+                </View>
+
+                <View className="pt-1">
+                  <Text className="text-xs text-text-secondary dark:text-text-secondary-dark">
+                    Having trouble? Use email login (or request access).
+                  </Text>
                 </View>
               </View>
             ) : (
@@ -143,6 +151,9 @@ export default function LoginScreen() {
                   keyboardType="number-pad"
                   className="bg-background dark:bg-background-dark text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary dark:focus:border-primary-dark"
                 />
+                <Text className="text-xs text-text-secondary dark:text-text-secondary-dark mt-3">
+                  Tip: Switch to email login if your session expired.
+                </Text>
               </View>
             )}
 
@@ -151,6 +162,8 @@ export default function LoginScreen() {
               onPress={handleLogin}
               disabled={loading}
               className="bg-primary dark:bg-primary-dark mt-6 py-5 rounded-xl items-center active:opacity-90 shadow-md"
+              accessibilityRole="button"
+              accessibilityLabel={isPinLogin ? "Enter Shop with PIN" : "Sign In"}
             >
               {loading ? (
                 <ActivityIndicator color="white" />
@@ -170,6 +183,8 @@ export default function LoginScreen() {
                   setError(null);
                 }}
                 className="mt-6 py-3 items-center"
+                accessibilityRole="button"
+                accessibilityLabel={isPinLogin ? "Switch to email login" : "Switch to quick PIN login"}
               >
                 <Text className="text-primary dark:text-primary-dark font-semibold text-base">
                   {isPinLogin ? "Use Email & Password" : "Use Quick PIN"}
@@ -178,11 +193,22 @@ export default function LoginScreen() {
             )}
 
             {!isPinLogin && (
-              <Pressable onPress={() => router.push("/(auth)/register" as any)} className="mt-3 py-3 items-center">
-                <Text className="text-primary dark:text-primary-dark font-semibold text-base">
-                  Have an invite code? Sign Up
+              <>
+                <Pressable
+                  onPress={() => router.push("/(auth)/register" as any)}
+                  className="mt-4 py-3 items-center"
+                  accessibilityRole="button"
+                  accessibilityLabel="Sign up with invite code"
+                >
+                  <Text className="text-primary dark:text-primary-dark font-semibold text-base">
+                    Have an invite code? Sign Up
+                  </Text>
+                </Pressable>
+
+                <Text className="text-xs text-text-secondary dark:text-text-secondary-dark mt-4 text-center">
+                  Need help? Contact support via your admin.
                 </Text>
-              </Pressable>
+              </>
             )}
           </View>
         </View>

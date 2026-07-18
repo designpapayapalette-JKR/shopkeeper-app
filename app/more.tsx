@@ -216,6 +216,8 @@ export default function MoreScreen() {
   // Module Configuration
   const { enabledModules, refresh: refreshEnabledModules } = useEnabledModules();
   const isOwner = user?.role === "owner";
+  const isOwnerOrManager = user?.role === "owner" || user?.role === "manager";
+  const canManageWarehouse = isOwnerOrManager && enabledModules.includes("warehouse");
   // The raw mobile-specific selection (as opposed to `enabledModules` above,
   // which is already merged with the web fallback) — an empty array here
   // means "not configured, using the web module list as fallback", and the
@@ -838,6 +840,10 @@ export default function MoreScreen() {
   };
 
   const handleCreateWarehouse = async () => {
+    if (!canManageWarehouse) {
+      Alert.alert("Not allowed", "You don't have access to manage warehouses.");
+      return;
+    }
     if (!newWhName) {
       Alert.alert("Required Fields", "Warehouse Name is required.");
       return;
@@ -889,6 +895,10 @@ export default function MoreScreen() {
   };
 
   const handleStockTransfer = async () => {
+    if (!canManageWarehouse) {
+      Alert.alert("Not allowed", "You don't have access to transfer stock.");
+      return;
+    }
     if (!transferProductId || !transferSourceWhId || !transferDestWhId || !transferQuantity) {
       Alert.alert("Required Fields", "All fields with * are required.");
       return;
@@ -1635,7 +1645,7 @@ export default function MoreScreen() {
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
-        {enabledModules.includes("warehouse") && (
+        {canManageWarehouse && (
           <Pressable
             onPress={() => {
               fetchSetupData();
@@ -1664,18 +1674,20 @@ export default function MoreScreen() {
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 
-        <Pressable
-          onPress={() => {
-            fetchSetupData();
-            setIsWarehouseModal(true);
-          }}
-          className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
-        >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
-            Warehouse Management
-          </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
-        </Pressable>
+        {canManageWarehouse && (
+          <Pressable
+            onPress={() => {
+              fetchSetupData();
+              setIsWarehouseModal(true);
+            }}
+            className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
+          >
+            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+              Warehouse Management
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          </Pressable>
+        )}
 
         <Pressable
           onPress={() => {
@@ -2453,7 +2465,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Warehouse Management Modal */}
-      <Modal visible={isWarehouseModal} animationType="slide" onRequestClose={closeWarehouseModal}>
+      <Modal visible={isWarehouseModal && canManageWarehouse} animationType="slide" onRequestClose={closeWarehouseModal}>
         <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
@@ -2518,7 +2530,7 @@ export default function MoreScreen() {
       </Modal>
 
       {/* Stock Transfer Modal */}
-      <Modal visible={isTransferModal} animationType="slide" onRequestClose={closeTransferModal}>
+      <Modal visible={isTransferModal && canManageWarehouse} animationType="slide" onRequestClose={closeTransferModal}>
         <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>

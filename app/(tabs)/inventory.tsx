@@ -21,6 +21,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../../src/lib/api";
 import { useAuth } from "../../src/lib/auth-context";
+import { useEnabledModules } from "../../src/lib/useEnabledModules";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
@@ -57,7 +58,11 @@ interface Warehouse {
 
 export default function InventoryScreen() {
   const { user, activeBrand } = useAuth();
+  const { enabledModules } = useEnabledModules();
   const { t } = useTerminology();
+
+  const isOwnerOrManager = user?.role === "owner" || user?.role === "manager";
+  const canManageWarehouses = isOwnerOrManager && enabledModules.includes("warehouse");
   const router = useRouter();
   const confirm = useConfirm();
   const topInset = useTopInset();
@@ -114,7 +119,10 @@ export default function InventoryScreen() {
   const [isManagingWarehouses, setIsManagingWarehouses] = useState(false);
 
   const fetchWarehouses = () => {
-    if (!user?.company_id) return;
+    // Warehouse selector & stock-in-warehouse view should only be available
+    // to users who can manage warehouses; otherwise we keep the UI read-only.
+    if (!user?.company_id || !canManageWarehouses) return;
+
     api
       .get<{ data: Warehouse[] }>("/warehouses")
       .then((res) => setWarehouses(res.data ?? []))
@@ -123,7 +131,7 @@ export default function InventoryScreen() {
       });
   };
 
-  useEffect(fetchWarehouses, [user]);
+  useEffect(fetchWarehouses, [user, canManageWarehouses]);
 
   const resetWarehouseForm = () => {
     setEditingWarehouseId(null);
@@ -150,6 +158,10 @@ export default function InventoryScreen() {
   };
 
   const openAddWarehouse = () => {
+    if (!canManageWarehouses) {
+      Alert.alert("Not allowed", "You don't have access to manage warehouses.");
+      return;
+    }
     setEditingWarehouseId(null);
     setNewWarehouseName("");
     setNewWarehouseLocation("");
@@ -157,6 +169,10 @@ export default function InventoryScreen() {
   };
 
   const openEditWarehouse = (w: Warehouse) => {
+    if (!canManageWarehouses) {
+      Alert.alert("Not allowed", "You don't have access to manage warehouses.");
+      return;
+    }
     setEditingWarehouseId(w.id);
     setNewWarehouseName(w.name);
     setNewWarehouseLocation(w.location ?? "");
@@ -164,6 +180,10 @@ export default function InventoryScreen() {
   };
 
   const handleAddWarehouse = async () => {
+    if (!canManageWarehouses) {
+      Alert.alert("Not allowed", "You don't have access to manage warehouses.");
+      return;
+    }
     if (!newWarehouseName.trim()) {
       Alert.alert("Required Field", "Give this location a name (e.g. Godown, Warehouse 2).");
       return;
@@ -190,6 +210,10 @@ export default function InventoryScreen() {
   };
 
   const handleDeleteWarehouse = async (w: Warehouse) => {
+    if (!canManageWarehouses) {
+      Alert.alert("Not allowed", "You don't have access to manage warehouses.");
+      return;
+    }
     const ok = await confirm({
       title: `Delete "${w.name}"?`,
       message:
@@ -513,6 +537,10 @@ export default function InventoryScreen() {
   const [adjustLoading, setAdjustLoading] = useState(false);
 
   const handleStockAdjust = async () => {
+    if (!canManageWarehouses) {
+      Alert.alert("Not allowed", "You don't have access to adjust stock.");
+      return;
+    }
     if (!adjustTarget || !adjustQuantity || !adjustReason.trim()) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -796,20 +824,24 @@ export default function InventoryScreen() {
             </Text>
           </Pressable>
         ))}
-        <Pressable
-          onPress={openAddWarehouse}
-          className="px-4 py-2.5 rounded-xl border border-dashed border-outline-variant dark:border-outline flex-row items-center"
-        >
-          <MaterialCommunityIcons name="plus" size={14} color="#0368FE" style={{ marginRight: 5 }} />
-          <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Location</Text>
-        </Pressable>
-        {warehouses.length > 0 && (
-          <Pressable
-            onPress={() => setIsManagingWarehouses(true)}
-            className="px-3 py-2.5 rounded-xl border border-outline-variant dark:border-outline flex-row items-center"
-          >
-            <MaterialCommunityIcons name="cog-outline" size={14} color="#6B7280" />
-          </Pressable>
+        {canManageWarehouses && (
+          <>
+            <Pressable
+              onPress={openAddWarehouse}
+              className="px-4 py-2.5 rounded-xl border border-dashed border-outline-variant dark:border-outline flex-row items-center"
+            >
+              <MaterialCommunityIcons name="plus" size={14} color="#0368FE" style={{ marginRight: 5 }} />
+              <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Location</Text>
+            </Pressable>
+            {warehouses.length > 0 && (
+              <Pressable
+                onPress={() => setIsManagingWarehouses(true)}
+                className="px-3 py-2.5 rounded-xl border border-outline-variant dark:border-outline flex-row items-center"
+              >
+                <MaterialCommunityIcons name="cog-outline" size={14} color="#6B7280" />
+              </Pressable>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -927,7 +959,7 @@ export default function InventoryScreen() {
 
                 {/* Second row: quick stock +/-, variant toggle, details toggle — only what's actionable, nothing decorative */}
                 <View className="flex-row items-center mt-2.5 pt-2.5 border-t border-outline-variant dark:border-outline" style={{ gap: 8 }}>
-                  {!activeWarehouseId && (
+                  {!activeWarehouseId && canManageWarehouses && (
                     <Pressable
                       onPress={() => {
                         setAdjustTarget(item);
@@ -1579,7 +1611,7 @@ export default function InventoryScreen() {
 
       {/* Manage Locations Modal — edit/delete existing warehouses */}
       <Modal
-        visible={isManagingWarehouses}
+        visible={isManagingWarehouses && canManageWarehouses}
         animationType="slide"
         transparent
         onRequestClose={() => setIsManagingWarehouses(false)}

@@ -264,7 +264,7 @@ export default function InvoiceHistoryScreen() {
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6 pb-10" style={{ maxHeight: "80%" }}>
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>
-                {detailInvoice?.invoiceNumber || "Invoice"}
+                {detailInvoice?.invoiceNumber || detailInvoice?.invoice_number || "Invoice"}
               </Text>
               <Pressable onPress={() => setDetailInvoiceId(null)}>
                 <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
