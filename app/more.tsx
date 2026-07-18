@@ -1816,7 +1816,7 @@ export default function MoreScreen() {
           Business Profile
         </Text>
         <Pressable
-          onPress={() => Linking.openURL("https://app.papayapalette.online/dashboard/settings")}
+          onPress={() => Linking.openURL("https://app.managemycounter.com/dashboard/settings")}
           className="flex-row justify-between items-center py-3"
         >
           <View className="flex-1 mr-2">
@@ -1831,7 +1831,7 @@ export default function MoreScreen() {
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
-          onPress={() => Linking.openURL("https://app.papayapalette.online/dashboard/settings")}
+          onPress={() => Linking.openURL("https://app.managemycounter.com/dashboard/settings")}
           className="flex-row justify-between items-center py-2.5"
         >
           <View className="flex-1 mr-2">
@@ -1894,7 +1894,7 @@ export default function MoreScreen() {
         )}
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
         <Pressable
-          onPress={() => Linking.openURL("https://admin.papayapalette.online/dashboard/billing")}
+          onPress={() => Linking.openURL("https://admin.managemycounter.com/dashboard/billing")}
           className="flex-row items-center justify-between py-2"
         >
           <Text className="text-sm font-bold text-primary">Manage in Web Portal</Text>
