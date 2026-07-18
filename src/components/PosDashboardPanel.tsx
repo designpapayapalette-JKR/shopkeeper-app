@@ -484,7 +484,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
           <>
             <View className="flex-row" style={{ gap: 8 }}>
               <View className="flex-1 bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl p-3">
-                <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">Today's Sales</Text>
+                <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">Today&apos;s Sales</Text>
                 <Text className="text-lg font-black text-primary dark:text-primary-dark mt-1">₹{summary.today_sales_total.toFixed(0)}</Text>
               </View>
               <View className="flex-1 bg-surface dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl p-3">
@@ -958,7 +958,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
           ) : !gstrData.gstr1 && !gstrData.gstr3b ? (
             <View className="flex-1 justify-center items-center px-5">
               <MaterialCommunityIcons name="file-document-outline" size={64} color="#D0D0D0" />
-              <Text className="text-on-surface-variant dark:text-text-secondary-dark text-base mt-4 text-center">Tap "Load" to generate GSTR-1 and GSTR-3B for this period.</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark text-base mt-4 text-center">Tap &quot;Load&quot; to generate GSTR-1 and GSTR-3B for this period.</Text>
             </View>
           ) : (
             <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>

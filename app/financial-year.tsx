@@ -72,7 +72,7 @@ export default function FinancialYearScreen() {
     <ScrollView className="flex-1 px-4">
       <Text className="text-xl font-black text-text-primary mb-1">Financial Year Closing</Text>
       <Text className="text-sm text-text-secondary mb-4">
-        India's financial year runs April–March. Closing a past year blocks new backdated transactions — it never deletes or alters existing records.
+        India&apos;s financial year runs April–March. Closing a past year blocks new backdated transactions — it never deletes or alters existing records.
       </Text>
 
       <View className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-4">

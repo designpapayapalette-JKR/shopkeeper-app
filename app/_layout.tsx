@@ -10,6 +10,10 @@ import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
 import { syncQueuedSales } from "../src/lib/offlineQueue";
 import { startConnectivityMonitoring } from "../src/lib/connectivity";
 
+import { TerminologyProvider } from "../src/lib/terminology-context";
+import { OutletProvider } from "../src/lib/outlet-context";
+import { useAppFonts } from "../src/lib/fonts";
+
 // The app is light-theme only — several screens have incomplete `dark:`
 // class coverage (a card gets a dark background but its text stays the
 // light-mode color, making it unreadable), and auditing every screen for
@@ -83,10 +87,6 @@ function NavigationGuard() {
     </Stack>
   );
 }
-
-import { TerminologyProvider } from "../src/lib/terminology-context";
-import { OutletProvider } from "../src/lib/outlet-context";
-import { useAppFonts } from "../src/lib/fonts";
 
 export default function RootLayout() {
   const [fontsLoaded] = useAppFonts();

@@ -1911,13 +1911,13 @@ export default function MoreScreen() {
         </Text>
         <Text className="text-sm text-text-secondary mb-4">
           {isOwner
-            ? "Choose which modules appear in this app. This is separate from the web dashboard's module list."
+            ? "Choose which modules appear in this app. This is separate from the web dashboard&apos;s module list."
             : "Modules currently enabled for your business. Only the shop owner can change these."}
         </Text>
         {mobileModulesLoaded && isOwner && mobileModules.length === 0 && (
           <View className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5 mb-4">
             <Text className="text-xs text-text-secondary">
-              No mobile-specific selection yet — this app is currently using the web dashboard's module list. Toggling any module below starts a mobile-only selection.
+              No mobile-specific selection yet — this app is currently using the web dashboard&apos;s module list. Toggling any module below starts a mobile-only selection.
             </Text>
           </View>
         )}

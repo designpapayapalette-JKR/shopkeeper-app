@@ -71,7 +71,6 @@ export default function ScreenShell({
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         // On Android we rely on ScrollView + keyboardShouldPersistTaps,
         // but this prop helps with some manufacturers' keyboard overlays.
-        // eslint-disable-next-line react-native/no-inline-styles
         style={{ flex: 1 }}
       >
         {content}

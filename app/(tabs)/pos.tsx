@@ -172,6 +172,12 @@ export default function PosScreen() {
   // receivables tracking and aging reports.
   const CREDIT_PERIODS = [7, 15, 30, 45, 60] as const;
   const [creditPeriod, setCreditPeriod] = useState<number | null>(null);
+  // Set alongside creditPeriod, in the same event handler — "N days from
+  // now" is inherently a function of the current time, so there's no pure
+  // way to derive it during render; computing it where the period is
+  // actually picked (an event handler, not render) is the correct place
+  // for that impure Date read.
+  const [creditDueDateLabel, setCreditDueDateLabel] = useState("");
 
   // Switching company-wide mode changes what a *new* bill defaults to.
   // Guarded by an empty cart so it never yanks the bill type out from under
@@ -278,6 +284,7 @@ export default function PosScreen() {
       setDiscountType("flat");
       setExtraCharge("");
       setCreditPeriod(null);
+      setCreditDueDateLabel("");
       setEstimateWithGst(false);
       setIsSplitPayment(false);
       setSplitPayments([]);
@@ -859,6 +866,7 @@ export default function PosScreen() {
           setIsSplitPayment(false);
           setSplitPayments([]);
           setCreditPeriod(null);
+          setCreditDueDateLabel("");
           setEstimateWithGst(false);
           Alert.alert(
             "Saved Offline",
@@ -888,6 +896,7 @@ export default function PosScreen() {
         setIsSplitPayment(false);
         setSplitPayments([]);
         setCreditPeriod(null);
+        setCreditDueDateLabel("");
         setEstimateWithGst(false);
       };
 
@@ -1434,7 +1443,10 @@ export default function PosScreen() {
                 key={opt.key}
                 onPress={() => {
                   setPaymentMode(opt.key);
-                  if (opt.key !== "credit") setCreditPeriod(null);
+                  if (opt.key !== "credit") {
+                    setCreditPeriod(null);
+                    setCreditDueDateLabel("");
+                  }
                 }}
                 className={`flex-1 py-2.5 rounded-xl items-center border ${
                   paymentMode === opt.key
@@ -1525,7 +1537,11 @@ export default function PosScreen() {
                 {CREDIT_PERIODS.map((days) => (
                   <Pressable
                     key={days}
-                    onPress={() => setCreditPeriod(creditPeriod === days ? null : days)}
+                    onPress={() => {
+                      const next = creditPeriod === days ? null : days;
+                      setCreditPeriod(next);
+                      setCreditDueDateLabel(next ? new Date(Date.now() + next * 86400000).toLocaleDateString() : "");
+                    }}
                     className={`py-2 px-3 rounded-xl border ${
                       creditPeriod === days
                         ? "bg-primary dark:bg-primary-dark border-primary"
@@ -1540,7 +1556,7 @@ export default function PosScreen() {
               </View>
               {creditPeriod && (
                 <Text className="text-xs text-on-surface-variant mt-1">
-                  Due by {new Date(Date.now() + creditPeriod * 86400000).toLocaleDateString()}
+                  Due by {creditDueDateLabel}
                 </Text>
               )}
             </View>
@@ -1651,7 +1667,7 @@ export default function PosScreen() {
       {isOffline && (
         <View className="bg-amber-500 px-4 py-2 flex-row items-center justify-center" style={{ gap: 6, paddingTop: topInset }}>
           <MaterialCommunityIcons name="wifi-off" size={14} color="white" />
-          <Text className="text-white text-xs font-bold">You're offline — showing cached data</Text>
+          <Text className="text-white text-xs font-bold">You&apos;re offline — showing cached data</Text>
         </View>
       )}
       {isTablet ? (
@@ -1749,7 +1765,7 @@ export default function PosScreen() {
                       }}
                       className="bg-primary dark:bg-primary-dark px-5 py-3 rounded-xl"
                     >
-                      <Text className="text-white font-bold text-sm">+ Add "{productSearch || "New Product"}"</Text>
+                      <Text className="text-white font-bold text-sm">+ Add &quot;{productSearch || "New Product"}&quot;</Text>
                     </Pressable>
                   </View>
                 }
@@ -1885,7 +1901,7 @@ export default function PosScreen() {
                       }}
                       className="bg-primary dark:bg-primary-dark px-5 py-3 rounded-xl"
                     >
-                      <Text className="text-white font-bold text-sm">+ Add "{productSearch || "New Product"}"</Text>
+                      <Text className="text-white font-bold text-sm">+ Add &quot;{productSearch || "New Product"}&quot;</Text>
                     </Pressable>
                   </View>
                 }
@@ -2168,7 +2184,7 @@ export default function PosScreen() {
           <Pressable className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
             <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-1">GST Rate for this bill</Text>
             <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">
-              Only changes this item on this sale — the product's saved GST rate stays the same.
+              Only changes this item on this sale — the product&apos;s saved GST rate stays the same.
             </Text>
             <GstRatePicker value={gstEditValue} onChange={setGstEditValue} />
             <Pressable

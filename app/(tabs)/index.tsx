@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Text,
   View,
@@ -105,10 +105,17 @@ export default function DashboardScreen() {
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const [syncingNow, setSyncingNow] = useState(false);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const yesterdayStr = new Date(Date.now() - 86_400_000)
-    .toISOString()
-    .slice(0, 10);
+  // Computed once per mount rather than on every render — calling
+  // Date.now()/new Date() directly in the render body is an impure read,
+  // and the screen doesn't need these to tick live within a session.
+  const { todayStr, yesterdayStr } = useMemo(() => {
+    const today = new Date();
+    const yesterday = new Date(today.getTime() - 86_400_000);
+    return {
+      todayStr: today.toISOString().slice(0, 10),
+      yesterdayStr: yesterday.toISOString().slice(0, 10),
+    };
+  }, []);
 
   const loadStats = useCallback(async () => {
     if (!user?.company_id) return;
@@ -513,11 +520,11 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 96 }}
       >
         <View className="px-margin-mobile pt-lg" style={{ gap: 24 }}>
-          {/* ── Today's Snapshot ── */}
+          {/* ── Today&apos;s Snapshot ── */}
           <View style={{ gap: 8 }}>
             <View className="flex-row justify-between items-center">
               <Text className="font-headline-sm text-headline-sm text-on-surface dark:text-text-primary-dark">
-                Today's Snapshot
+                Today&apos;s Snapshot
               </Text>
               <Pressable onPress={() => router.push("/more?openReport=1" as any)}>
                 <Text className="text-primary dark:text-primary-dark font-label-md text-label-md">

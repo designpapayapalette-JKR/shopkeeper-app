@@ -7,8 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
-} from "react-native";
-import { PermissionsAndroid, Platform } from "react-native";
+ PermissionsAndroid, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   scanBluetoothPrinters,
@@ -24,6 +23,36 @@ import {
 } from "../src/lib/thermalPrinter";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+
+// Module scope, not defined inside the screen component's render body — a
+// component declared during render is a new function identity every time,
+// which makes React remount (not update) its subtree on every re-render.
+function PaperWidthPicker({ pendingPaperWidth, setPendingPaperWidth }: { pendingPaperWidth: PaperWidth; setPendingPaperWidth: (w: PaperWidth) => void }) {
+  return (
+    <View className="mb-4">
+      <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+        Paper Width
+      </Text>
+      <View className="flex-row" style={{ gap: 8 }}>
+        {(["58", "80"] as const).map((w) => (
+          <Pressable
+            key={w}
+            onPress={() => setPendingPaperWidth(w)}
+            className={`flex-1 py-3 rounded-xl border items-center ${
+              pendingPaperWidth === w
+                ? "bg-primary border-primary dark:bg-primary-dark"
+                : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
+            }`}
+          >
+            <Text className={`text-sm font-bold ${pendingPaperWidth === w ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>
+              {w}mm
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 const TABS: { key: PrinterConnectionType; label: string }[] = [
   { key: "bluetooth", label: "Bluetooth" },
@@ -141,31 +170,6 @@ export default function PrinterSettingsScreen() {
     await loadSaved();
   };
 
-  const PaperWidthPicker = () => (
-    <View className="mb-4">
-      <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
-        Paper Width
-      </Text>
-      <View className="flex-row" style={{ gap: 8 }}>
-        {(["58", "80"] as const).map((w) => (
-          <Pressable
-            key={w}
-            onPress={() => setPendingPaperWidth(w)}
-            className={`flex-1 py-3 rounded-xl border items-center ${
-              pendingPaperWidth === w
-                ? "bg-primary border-primary dark:bg-primary-dark"
-                : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
-            }`}
-          >
-            <Text className={`text-sm font-bold ${pendingPaperWidth === w ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>
-              {w}mm
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
     <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 40 + bottomInset }}>
@@ -244,7 +248,7 @@ export default function PrinterSettingsScreen() {
         ))}
       </View>
 
-      <PaperWidthPicker />
+      <PaperWidthPicker pendingPaperWidth={pendingPaperWidth} setPendingPaperWidth={setPendingPaperWidth} />
 
       {activeTab === "bluetooth" && (
         <View>
@@ -256,7 +260,7 @@ export default function PrinterSettingsScreen() {
             {scanning ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Scan for Bluetooth Printers</Text>}
           </Pressable>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-3">
-            Note: the printer must already be paired in your phone's Android Bluetooth settings before it will show up here.
+            Note: the printer must already be paired in your phone&apos;s Android Bluetooth settings before it will show up here.
           </Text>
           {bleDevices.map((d) => (
             <Pressable

@@ -44,7 +44,7 @@ function ExpoGoFallback() {
         Live map needs the full app build
       </Text>
       <Text className="text-text-secondary text-sm text-center mt-1">
-        Expo Go can't load native maps. Switch to List view above, or open a
+        Expo Go can&apos;t load native maps. Switch to List view above, or open a
         dev-client / installed build to see the live map.
       </Text>
     </View>

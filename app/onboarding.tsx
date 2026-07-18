@@ -170,7 +170,7 @@ export default function OnboardingScreen() {
 
       {step === 0 && (
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-1">Let's set up your business</Text>
+          <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-1">Let&apos;s set up your business</Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-6">
             This appears on every GST invoice you print or share. You can change it later from More {"→"} Business Profile.
           </Text>
@@ -313,9 +313,9 @@ export default function OnboardingScreen() {
           <View className="w-20 h-20 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mb-6">
             <MaterialCommunityIcons name="check-circle" size={44} color="#0368FE" />
           </View>
-          <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-2 text-center">You're all set!</Text>
+          <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-2 text-center">You&apos;re all set!</Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mb-8">
-            Your business details are saved{addedMembers.length > 0 ? ` and ${addedMembers.length} team member${addedMembers.length > 1 ? "s" : ""} added` : ""}. You're ready to start billing.
+            Your business details are saved{addedMembers.length > 0 ? ` and ${addedMembers.length} team member${addedMembers.length > 1 ? "s" : ""} added` : ""}. You&apos;re ready to start billing.
           </Text>
           <Pressable
             onPress={async () => {

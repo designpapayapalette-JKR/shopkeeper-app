@@ -4,6 +4,20 @@ import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+// Module scope, not defined inside PnlReportScreen — a component declared
+// inside another component's render body is a new function identity every
+// render, which makes React remount (not update) its subtree each time.
+function Row({ label, amount, positive = true, bold = false }: { label: string; amount: number; positive?: boolean; bold?: boolean }) {
+  return (
+    <View className="flex-row justify-between items-center py-3 border-b border-gray-50">
+      <Text className={`text-sm ${bold ? "font-black" : "font-medium"} text-text-primary`}>{label}</Text>
+      <Text className={`text-sm ${bold ? "font-black" : "font-bold"} ${amount >= 0 ? "text-green-600" : "text-red-500"}`}>
+        ₹{Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+      </Text>
+    </View>
+  );
+}
+
 export default function PnlReportScreen() {
   const topInset = useTopInset();
   const today = () => new Date().toISOString().slice(0, 10);
@@ -27,15 +41,6 @@ export default function PnlReportScreen() {
       setLoading(false);
     }
   };
-
-  const Row = ({ label, amount, positive = true, bold = false }: { label: string; amount: number; positive?: boolean; bold?: boolean }) => (
-    <View className="flex-row justify-between items-center py-3 border-b border-gray-50">
-      <Text className={`text-sm ${bold ? "font-black" : "font-medium"} text-text-primary`}>{label}</Text>
-      <Text className={`text-sm ${bold ? "font-black" : "font-bold"} ${amount >= 0 ? "text-green-600" : "text-red-500"}`}>
-        ₹{Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-      </Text>
-    </View>
-  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
