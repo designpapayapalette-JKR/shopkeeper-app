@@ -288,6 +288,13 @@ export default function PosScreen() {
       setEstimateWithGst(false);
       setIsSplitPayment(false);
       setSplitPayments([]);
+      // Leftover search text/inline-edit state from before parking made the
+      // screen look "stuck" on the old bill instead of returning to a clean
+      // POS screen — same class of gap as handleCheckout's finishSale below.
+      setProductSearch("");
+      setPartySearch("");
+      setQtyEditItemId(null);
+      setGstEditProductId(null);
       Alert.alert("Bill Parked", "The sale has been saved. You can resume it anytime from Held Bills.");
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to park bill.");
@@ -324,6 +331,10 @@ export default function PosScreen() {
     setPaymentMode(data.payment_mode || "cash");
     setExtraCharge(data.extra_charge || "");
     setEstimateWithGst(data.estimate_with_gst || false);
+    setProductSearch("");
+    setPartySearch("");
+    setQtyEditItemId(null);
+    setGstEditProductId(null);
 
     // Set customer if linked
     if (bill.party_id) {
@@ -868,6 +879,10 @@ export default function PosScreen() {
           setCreditPeriod(null);
           setCreditDueDateLabel("");
           setEstimateWithGst(false);
+          setProductSearch("");
+          setPartySearch("");
+          setQtyEditItemId(null);
+          setGstEditProductId(null);
           Alert.alert(
             "Saved Offline",
             "No internet connection — this sale has been saved on your phone and will sync automatically once you're back online. The receipt can be printed after it syncs."
@@ -898,6 +913,10 @@ export default function PosScreen() {
         setCreditPeriod(null);
         setCreditDueDateLabel("");
         setEstimateWithGst(false);
+        setProductSearch("");
+        setPartySearch("");
+        setQtyEditItemId(null);
+        setGstEditProductId(null);
       };
 
       const buildReceiptData = (): ReceiptData => {
