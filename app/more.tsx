@@ -2016,6 +2016,23 @@ export default function MoreScreen() {
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
+          onPress={() => router.push("/account-security" as any)}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              Account Security
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Email verification and two-factor authentication.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
           onPress={async () => {
             const ok = await confirm({
               title: "Sign out?",

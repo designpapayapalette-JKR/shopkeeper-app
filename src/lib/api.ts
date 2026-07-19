@@ -6,7 +6,7 @@ import { toCamelCase, toSnakeCase } from "./caseConvert";
 // a hard throw that crashes the entire bundle on launch, default to the
 // production URL. Callers should validate at point-of-use if needed.
 export const apiUrl =
-  process.env.EXPO_PUBLIC_API_URL || "https://api.papayapalette.online";
+  process.env.EXPO_PUBLIC_API_URL || "https://api.managemycounter.com";
 
 // Cached outlet ID — set by outlet-context on change so every API request
 // doesn't need an async SecureStore read. This is updated by the outlet
@@ -174,10 +174,24 @@ export const api = {
   get: <T = unknown>(path: string, options?: RequestOptions) => request<T>("GET", path, undefined, options),
   post: <T = unknown>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>("POST", path, body, options),
+  put: <T = unknown>(path: string, body?: unknown, options?: RequestOptions) =>
+    request<T>("PUT", path, body, options),
   patch: <T = unknown>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>("PATCH", path, body, options),
   delete: <T = unknown>(path: string, options?: RequestOptions) => request<T>("DELETE", path, undefined, options),
 };
+
+// Thrown by login() when the account has email 2FA enabled — password was
+// correct, but a session isn't issued yet. Callers (auth-context) catch
+// this specifically and hand pendingToken to verifyTwoFactor() once the
+// user enters the emailed code.
+export class TwoFactorRequiredError extends Error {
+  pendingToken: string;
+  constructor(pendingToken: string) {
+    super("Two-factor verification required");
+    this.pendingToken = pendingToken;
+  }
+}
 
 // These three responses carry the raw token pair (accessToken/refreshToken/
 // expiresAt), which must stay in the exact shape SecureStore/refresh logic
@@ -186,8 +200,41 @@ export const api = {
 // request() already ran toSnakeCase on the whole payload.
 export async function login(email: string, password: string) {
   const json: any = await request<any>("POST", "/auth/login", { email, password }, { skipAuth: true });
+  // toSnakeCase() replaces each uppercase letter independently, so the
+  // server's "requires2FA" (no snake_case-friendly word boundary before
+  // consecutive caps) becomes "requires2_f_a", not "requires_2fa". Verified
+  // against caseConvert.ts's actual regex rather than guessed.
+  if (json.requires2_f_a) {
+    throw new TwoFactorRequiredError(json.pending_token);
+  }
   await setAuthData({ accessToken: json.access_token, refreshToken: json.refresh_token, expiresAt: json.expires_at });
   return json.user;
+}
+
+export async function verifyTwoFactor(pendingToken: string, code: string) {
+  const json: any = await request<any>("POST", "/auth/2fa/verify", { pendingToken, code }, { skipAuth: true });
+  await setAuthData({ accessToken: json.access_token, refreshToken: json.refresh_token, expiresAt: json.expires_at });
+  return json.user;
+}
+
+export async function resendTwoFactorCode(pendingToken: string): Promise<void> {
+  await request("POST", "/auth/2fa/resend", { pendingToken }, { skipAuth: true });
+}
+
+export async function enableTwoFactor(): Promise<void> {
+  await request("POST", "/auth/2fa/enable");
+}
+
+export async function disableTwoFactor(password: string): Promise<void> {
+  await request("POST", "/auth/2fa/disable", { password });
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await request("POST", "/auth/forgot-password", { email }, { skipAuth: true });
+}
+
+export async function resendVerificationEmail(): Promise<void> {
+  await request("POST", "/auth/verify-email/resend");
 }
 
 export async function registerCompany(data: {

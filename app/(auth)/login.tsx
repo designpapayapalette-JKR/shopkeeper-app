@@ -12,16 +12,23 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/lib/auth-context";
+import { TwoFactorRequiredError, resendTwoFactorCode } from "../../src/lib/api";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, unlockWithPin, pinLoginAvailable } = useAuth();
+  const { login, verifyTwoFactor, unlockWithPin, pinLoginAvailable } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pin, setPin] = useState("");
   const [isPinLogin, setIsPinLogin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Set when login() throws TwoFactorRequiredError — switches the form to
+  // the code-entry step instead of the usual email/password fields.
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   const handleLogin = async () => {
     setError(null);
@@ -50,10 +57,39 @@ export default function LoginScreen() {
       try {
         await login(email, password);
       } catch (err: any) {
-        setError(err.message || "Invalid email or password.");
+        if (err instanceof TwoFactorRequiredError) {
+          setPendingToken(err.pendingToken);
+        } else {
+          setError(err.message || "Invalid email or password.");
+        }
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!pendingToken) return;
+    setError(null);
+    setLoading(true);
+    try {
+      await verifyTwoFactor(pendingToken, otpCode.trim());
+    } catch (err: any) {
+      setError(err.message || "Invalid or expired code.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!pendingToken) return;
+    setResendMsg(null);
+    setError(null);
+    try {
+      await resendTwoFactorCode(pendingToken);
+      setResendMsg("A new code has been sent.");
+    } catch (err: any) {
+      setError(err.message || "Failed to resend code.");
     }
   };
 
@@ -82,7 +118,62 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          {/* Form Card */}
+          {/* 2FA Code Entry — replaces the normal card while a login is pending verification */}
+          {pendingToken ? (
+            <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-xl">
+              <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark mb-1">
+                Enter Verification Code
+              </Text>
+              <Text className="text-text-secondary dark:text-text-secondary-dark text-sm font-medium mb-4">
+                We sent a 6-digit code to {email}. It expires in 10 minutes.
+              </Text>
+
+              {error && (
+                <View className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-4 rounded-xl mb-4">
+                  <Text className="text-error font-semibold text-base">{error}</Text>
+                </View>
+              )}
+              {resendMsg && !error && (
+                <View className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-4 rounded-xl mb-4">
+                  <Text className="text-primary dark:text-primary-dark font-semibold text-sm">{resendMsg}</Text>
+                </View>
+              )}
+
+              <TextInput
+                value={otpCode}
+                onChangeText={(v) => setOtpCode(v.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="number-pad"
+                maxLength={6}
+                autoFocus
+                className="bg-background dark:bg-background-dark text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary dark:focus:border-primary-dark"
+              />
+
+              <Pressable
+                onPress={handleVerifyCode}
+                disabled={loading || otpCode.length !== 6}
+                className="bg-primary dark:bg-primary-dark mt-6 py-5 rounded-xl items-center active:opacity-90 shadow-md"
+                accessibilityRole="button"
+                accessibilityLabel="Verify & Log In"
+              >
+                {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">Verify & Log In</Text>}
+              </Pressable>
+
+              <Pressable onPress={handleResendCode} className="mt-4 py-3 items-center" accessibilityRole="button" accessibilityLabel="Resend code">
+                <Text className="text-primary dark:text-primary-dark font-semibold text-base">Resend Code</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => { setPendingToken(null); setOtpCode(""); setError(null); setResendMsg(null); }}
+                className="py-3 items-center"
+                accessibilityRole="button"
+                accessibilityLabel="Back to log in"
+              >
+                <Text className="text-text-secondary dark:text-text-secondary-dark font-semibold text-sm">Back to log in</Text>
+              </Pressable>
+            </View>
+          ) : (
           <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-xl">
             <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark mb-4">
               {isPinLogin ? "Quick PIN Login" : "Sign In"}
@@ -195,8 +286,19 @@ export default function LoginScreen() {
             {!isPinLogin && (
               <>
                 <Pressable
-                  onPress={() => router.push("/(auth)/register" as any)}
+                  onPress={() => router.push("/(auth)/forgot-password" as any)}
                   className="mt-4 py-3 items-center"
+                  accessibilityRole="button"
+                  accessibilityLabel="Forgot password"
+                >
+                  <Text className="text-primary dark:text-primary-dark font-semibold text-base">
+                    Forgot password?
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => router.push("/(auth)/register" as any)}
+                  className="mt-2 py-3 items-center"
                   accessibilityRole="button"
                   accessibilityLabel="Sign up with invite code"
                 >
@@ -211,6 +313,7 @@ export default function LoginScreen() {
               </>
             )}
           </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

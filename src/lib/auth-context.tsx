@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { api, login as apiLogin, logout as apiLogout, registerCompany as apiRegisterCompany, fetchMe, hasStoredSession } from "./api";
+import { api, login as apiLogin, logout as apiLogout, registerCompany as apiRegisterCompany, fetchMe, hasStoredSession, verifyTwoFactor as apiVerifyTwoFactor } from "./api";
 import { setPin, verifyPin, hasPin, setLastUserId, getLastUserId } from "./pin";
 import { registerForPushNotifications } from "./pushNotifications";
 
@@ -12,6 +12,7 @@ interface AuthContextType {
   availableBrands: any[];
   setActiveBrand: (brand: any | null) => void;
   login: (email: string, password: string) => Promise<void>;
+  verifyTwoFactor: (pendingToken: string, code: string) => Promise<void>;
   register: (data: {
     companyName: string;
     state?: string;
@@ -136,6 +137,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Second step of a 2FA login: exchanges the pendingToken (thrown as
+  // TwoFactorRequiredError by login() above) plus the emailed code for a
+  // real session — mirrors login()'s post-success setup exactly.
+  const verifyTwoFactor = async (pendingToken: string, code: string) => {
+    try {
+      const me = await apiVerifyTwoFactor(pendingToken, code);
+      setUser(me);
+      setIsAuthenticated(true);
+      await setLastUserId(me.id);
+      setPinLoginAvailable(await hasPin(me.id));
+      if (me.company_id) {
+        await fetchTenantData();
+      }
+      registerForPushNotifications().catch((e) => {
+        console.warn("[Auth] Push registration failed during 2FA verify:", e);
+      });
+    } catch (error) {
+      setIsAuthenticated(false);
+      setUser(null);
+      setActiveCompany(null);
+      setActiveBrand(null);
+      setAvailableBrands([]);
+      throw error;
+    }
+  };
+
   const register = async (data: {
     companyName: string;
     state?: string;
@@ -222,6 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         availableBrands,
         setActiveBrand,
         login,
+        verifyTwoFactor,
         register,
         logout,
         refreshBrands,
