@@ -2054,6 +2054,44 @@ export default function MoreScreen() {
           </View>
           <MaterialCommunityIcons name="logout" size={20} color="#D64545" />
         </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={async () => {
+            const ok = await confirm({
+              title: "Delete my account?",
+              message: isOwner
+                ? "We'll send this request to our support team for review, since your company's GST records may need to be retained by law. Personal login data is removed within 30 days."
+                : "We'll remove your personal login and profile data within 30 days. This won't delete your company's business records.",
+              confirmLabel: "Request Deletion",
+              destructive: true,
+            });
+            if (!ok) return;
+            try {
+              await api.post("/account/deletion-request", {
+                name: `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "managemycounter user",
+                email: user?.email,
+                scope: isOwner ? "entire_company" : "own_account",
+                reason: "Requested from the mobile app (Settings > Delete My Account).",
+              });
+              Alert.alert("Request received", "We've emailed you a confirmation. Your data will be processed within 30 days.");
+            } catch (e) {
+              Alert.alert("Something went wrong", "Please try again, or email hello@managemycounter.com directly.");
+            }
+          }}
+          className="flex-row justify-between items-center py-3"
+        >
+          <View className="flex-1 mr-2">
+            <Text className="text-lg font-bold text-error">
+              Delete My Account
+            </Text>
+            <Text className="text-sm text-text-secondary mt-0.5">
+              Request deletion of your account and data.
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="trash-can-outline" size={20} color="#D64545" />
+        </Pressable>
       </View>
 
       {/* Record Purchase Modal */}
