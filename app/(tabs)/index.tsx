@@ -278,7 +278,7 @@ export default function DashboardScreen() {
               className="font-headline-md text-headline-md text-primary dark:text-primary-dark font-bold"
               numberOfLines={1}
             >
-              SwiftRetail
+              {activeCompany?.name ?? "managemycounter"}
             </Text>
             <Pressable
               onPress={() => setIsBrandSwitcherOpen(true)}
@@ -296,6 +296,17 @@ export default function DashboardScreen() {
                 color="#6e7a74"
               />
             </Pressable>
+            {/* Which counter (if any) + who's signed in — matters once a
+                store runs more than one till, so a biller can confirm
+                they're on the right counter before ringing up a sale. */}
+            {(user?.counter?.name || user?.first_name) && (
+              <Text
+                className="font-caption text-caption text-on-surface-variant dark:text-text-secondary-dark"
+                numberOfLines={1}
+              >
+                {[user?.counter?.name, user?.first_name].filter(Boolean).join(" · ")}
+              </Text>
+            )}
           </View>
         </View>
         <View className="flex-row items-center gap-sm">
