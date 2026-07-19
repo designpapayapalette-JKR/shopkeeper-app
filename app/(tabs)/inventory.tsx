@@ -29,6 +29,13 @@ import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
 import BulkUploadCard from "../../src/components/BulkUploadCard";
 import { GstRatePicker } from "../../src/components/GstRatePicker";
 import { useTerminology } from "../../src/lib/terminology-context";
+import {
+  useProductAttributeDefs,
+  ProductCustomFieldsFormSection,
+  loadProductCustomFieldValues,
+  saveProductCustomFieldValues,
+  CustomFieldValue,
+} from "../../src/components/ProductCustomFields";
 
 interface Product {
   id: string;
@@ -48,6 +55,9 @@ interface Product {
   unit?: string;
   pack_unit?: string | null;
   pack_size?: string | null;
+  is_pinned?: boolean;
+  rack_number?: string;
+  shelf_number?: string;
 }
 
 interface Warehouse {
@@ -57,9 +67,11 @@ interface Warehouse {
 }
 
 export default function InventoryScreen() {
-  const { user, activeBrand } = useAuth();
+  const { user, activeBrand, activeCompany } = useAuth();
   const { enabledModules } = useEnabledModules();
   const { t } = useTerminology();
+
+  const { defs: customFieldDefs, loading: customFieldDefsLoading } = useProductAttributeDefs();
 
   const isOwnerOrManager = user?.role === "owner" || user?.role === "manager";
   const canManageWarehouses = isOwnerOrManager && enabledModules.includes("warehouse");
@@ -293,20 +305,24 @@ export default function InventoryScreen() {
   const [newProductSku, setNewProductSku] = useState("");
   const [newProductBarcode, setNewProductBarcode] = useState("");
   const [newProductHsn, setNewProductHsn] = useState("");
-  const [newProductTax, setNewProductTax] = useState("18.00");
+  const [newProductTax, setNewProductTax] = useState(activeCompany?.default_product_gst_rate?.toString() || "18.00");
   const [newProductPrice, setNewProductPrice] = useState("");
   const [newProductMrp, setNewProductMrp] = useState("");
   const [newProductCost, setNewProductCost] = useState("");
   const [newProductStock, setNewProductStock] = useState("");
   const [newProductReorderLevel, setNewProductReorderLevel] = useState("");
-  const [newProductUnit, setNewProductUnit] = useState("pcs");
+  const [newProductUnit, setNewProductUnit] = useState(activeCompany?.default_unit_of_measure || "pcs");
   const [newProductPackUnit, setNewProductPackUnit] = useState("");
   const [newProductPackSize, setNewProductPackSize] = useState("");
   const [newProductTracksSerials, setNewProductTracksSerials] = useState(false);
+  const [newProductRackNumber, setNewProductRackNumber] = useState("");
+  const [newProductShelfNumber, setNewProductShelfNumber] = useState("");
   const [newProductParentId, setNewProductParentId] = useState<string | null>(null);
   const [newProductVariantLabel, setNewProductVariantLabel] = useState("");
   const [parentPickerSearch, setParentPickerSearch] = useState("");
   const [addLoading, setAddLoading] = useState(false);
+  const [newProductCustomFields, setNewProductCustomFields] = useState<CustomFieldValue[]>([]);
+  const [editCustomFieldsLoading, setEditCustomFieldsLoading] = useState(false);
 
   // Edit Product Modal State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -315,7 +331,11 @@ export default function InventoryScreen() {
   const [editProductMrp, setEditProductMrp] = useState("");
   const [editProductCost, setEditProductCost] = useState("");
   const [editProductTax, setEditProductTax] = useState("");
+  const [editProductIsPinned, setEditProductIsPinned] = useState(false);
+  const [editProductRackNumber, setEditProductRackNumber] = useState("");
+  const [editProductShelfNumber, setEditProductShelfNumber] = useState("");
   const [editLoading, setEditLoading] = useState(false);
+  const [editProductCustomFields, setEditProductCustomFields] = useState<CustomFieldValue[]>([]);
 
   const fetchProducts = async () => {
     if (!user?.company_id) return;
@@ -417,6 +437,8 @@ export default function InventoryScreen() {
         pack_unit: newProductPackUnit.trim() || undefined,
         pack_size: newProductPackSize ? parseFloat(newProductPackSize) : undefined,
         tracks_serials: newProductTracksSerials,
+        rack_number: newProductRackNumber.trim() || undefined,
+        shelf_number: newProductShelfNumber.trim() || undefined,
         parent_product_id: newProductParentId || undefined,
         variant_label: newProductParentId ? newProductVariantLabel.trim() || undefined : undefined,
       };
@@ -425,7 +447,15 @@ export default function InventoryScreen() {
         payload.brand_id = activeBrand.id;
       }
 
-      await api.post("/products", payload);
+      const res = await api.post<{ data: { id: string } }>("/products", payload);
+      const newProductId = res?.data?.id;
+      if (newProductId && newProductCustomFields.length > 0) {
+        try {
+          await saveProductCustomFieldValues(newProductId, newProductCustomFields);
+        } catch (e) {
+          console.error("[Inventory] Failed to save custom fields for new product:", e);
+        }
+      }
       Alert.alert("Success", "Product added successfully.");
 
       resetAddProductForm();
@@ -445,19 +475,22 @@ export default function InventoryScreen() {
     setNewProductSku("");
     setNewProductBarcode("");
     setNewProductHsn("");
-    setNewProductTax("18.00");
+    setNewProductTax(activeCompany?.default_product_gst_rate?.toString() || "18.00");
     setNewProductPrice("");
     setNewProductMrp("");
     setNewProductCost("");
     setNewProductStock("");
     setNewProductReorderLevel("");
-    setNewProductUnit("pcs");
+    setNewProductUnit(activeCompany?.default_unit_of_measure || "pcs");
     setNewProductPackUnit("");
     setNewProductPackSize("");
     setNewProductTracksSerials(false);
+    setNewProductRackNumber("");
+    setNewProductShelfNumber("");
     setNewProductParentId(null);
     setNewProductVariantLabel("");
     setParentPickerSearch("");
+    setNewProductCustomFields([]);
   };
 
   const closeAddProduct = async () => {
@@ -473,10 +506,13 @@ export default function InventoryScreen() {
       newProductReorderLevel.trim() !== "" ||
       newProductPackUnit.trim() !== "" ||
       newProductPackSize.trim() !== "" ||
+      newProductRackNumber.trim() !== "" ||
+      newProductShelfNumber.trim() !== "" ||
       newProductParentId !== null ||
       newProductVariantLabel.trim() !== "" ||
       newProductTax !== "18.00" ||
-      newProductUnit !== "pcs";
+      newProductUnit !== "pcs" ||
+      newProductCustomFields.length > 0;
     if (hasChanges) {
       const ok = await confirm({
         title: "Discard changes?",
@@ -498,6 +534,14 @@ export default function InventoryScreen() {
     setEditProductMrp(p.mrp || "");
     setEditProductCost(p.cost || "");
     setEditProductTax(p.tax_rate || "18.00");
+    setEditProductIsPinned(Boolean(p.is_pinned));
+    setEditProductRackNumber(p.rack_number || "");
+    setEditProductShelfNumber(p.shelf_number || "");
+    setEditCustomFieldsLoading(true);
+    loadProductCustomFieldValues(p.id).then((vals) => {
+      setEditProductCustomFields(vals);
+      setEditCustomFieldsLoading(false);
+    });
   };
 
   const handleEditProduct = async () => {
@@ -513,7 +557,15 @@ export default function InventoryScreen() {
         mrp: editProductMrp ? parseFloat(editProductMrp) : null,
         cost: editProductCost || undefined,
         tax_rate: editProductTax || undefined,
+        is_pinned: editProductIsPinned,
+        rack_number: editProductRackNumber.trim() || null,
+        shelf_number: editProductShelfNumber.trim() || null,
       });
+      try {
+        await saveProductCustomFieldValues(editingProduct.id, editProductCustomFields);
+      } catch (e) {
+        console.error("[Inventory] Failed to save custom fields for edit:", e);
+      }
       Alert.alert("Success", "Product updated successfully.");
       resetEditProductForm();
       fetchProducts();
@@ -531,6 +583,9 @@ export default function InventoryScreen() {
     setEditProductMrp("");
     setEditProductCost("");
     setEditProductTax("");
+    setEditProductRackNumber("");
+    setEditProductShelfNumber("");
+    setEditProductCustomFields([]);
   };
 
   const closeEditProduct = async () => {
@@ -540,7 +595,10 @@ export default function InventoryScreen() {
         editProductPrice !== editingProduct.price ||
         editProductMrp !== (editingProduct.mrp || "") ||
         editProductCost !== (editingProduct.cost || "") ||
-        editProductTax !== (editingProduct.tax_rate || "18.00");
+        editProductTax !== (editingProduct.tax_rate || "18.00") ||
+        editProductRackNumber !== (editingProduct.rack_number || "") ||
+        editProductShelfNumber !== (editingProduct.shelf_number || "") ||
+        editProductCustomFields.some((v) => v.value_text != null || v.value_number != null || v.value_json != null);
       if (hasChanges) {
         const ok = await confirm({
           title: "Discard changes?",
@@ -772,6 +830,22 @@ export default function InventoryScreen() {
         >
           <MaterialCommunityIcons name="cart-outline" size={15} color="#fff" />
           <Text className="text-sm font-bold text-white">Reorder</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/gst-rate-tools" as any)}
+          className="flex-row items-center px-3.5 py-2.5 rounded-xl border bg-amber-500 border-amber-500"
+          style={{ gap: 5 }}
+        >
+          <MaterialCommunityIcons name="tag-outline" size={15} color="#fff" />
+          <Text className="text-sm font-bold text-white">GST</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/bulk-price-update" as any)}
+          className="flex-row items-center px-3.5 py-2.5 rounded-xl border bg-purple-500 border-purple-500"
+          style={{ gap: 5 }}
+        >
+          <MaterialCommunityIcons name="currency-inr" size={15} color="#fff" />
+          <Text className="text-sm font-bold text-white">Price</Text>
         </Pressable>
       </View>
 
@@ -1368,6 +1442,28 @@ export default function InventoryScreen() {
                   color={newProductTracksSerials ? "#0368FE" : "#9E9E9E"}
                 />
               </Pressable>
+
+              <View className="mt-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Rack Number</Text>
+                <TextInput
+                  value={newProductRackNumber}
+                  onChangeText={setNewProductRackNumber}
+                  placeholder="e.g. A-01"
+                  placeholderTextColor="#A0A0A0"
+                  className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+                />
+              </View>
+
+              <View className="mt-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Shelf Number</Text>
+                <TextInput
+                  value={newProductShelfNumber}
+                  onChangeText={setNewProductShelfNumber}
+                  placeholder="e.g. Shelf B"
+                  placeholderTextColor="#A0A0A0"
+                  className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+                />
+              </View>
             </View>
 
             <View className="mt-6 pt-4 border-t border-outline-variant dark:border-outline">
@@ -1422,6 +1518,14 @@ export default function InventoryScreen() {
               )}
             </View>
           </View>
+
+          {!customFieldDefsLoading && customFieldDefs.length > 0 && (
+            <ProductCustomFieldsFormSection
+              defs={customFieldDefs}
+              values={newProductCustomFields}
+              onChange={setNewProductCustomFields}
+            />
+          )}
 
           {/* Form Actions */}
           <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
@@ -1496,7 +1600,39 @@ export default function InventoryScreen() {
               <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">GST Rate (%)</Text>
               <GstRatePicker value={editProductTax} onChange={setEditProductTax} />
             </View>
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Rack Number</Text>
+              <TextInput
+                value={editProductRackNumber}
+                onChangeText={setEditProductRackNumber}
+                placeholder="e.g. A-01"
+                placeholderTextColor="#A0A0A0"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
+            <View className="mt-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Shelf Number</Text>
+              <TextInput
+                value={editProductShelfNumber}
+                onChangeText={setEditProductShelfNumber}
+                placeholder="e.g. Shelf B"
+                placeholderTextColor="#A0A0A0"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+              />
+            </View>
           </View>
+
+          {editCustomFieldsLoading ? (
+            <View className="mt-6 pt-4 border-t border-outline-variant dark:border-outline items-center py-4">
+              <ActivityIndicator size="small" color="#0368FE" />
+            </View>
+          ) : !customFieldDefsLoading && customFieldDefs.length > 0 && (
+            <ProductCustomFieldsFormSection
+              defs={customFieldDefs}
+              values={editProductCustomFields}
+              onChange={setEditProductCustomFields}
+            />
+          )}
           
           <View className="flex-row justify-between mt-8" style={{ marginBottom: bottomInset }}>
             <Pressable

@@ -180,7 +180,7 @@ export default function MoreScreen() {
   const [isExpenseModal, setIsExpenseModal] = useState(false);
   // Free-form — real expense taxonomies vary by trade (KNOWLEDGE-BASE.md
   // §7), not a fixed set.
-  const [expenseCategory, setExpenseCategory] = useState("Other");
+  const [expenseCategory, setExpenseCategory] = useState(activeCompany?.default_expense_category || "Other");
   const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<string[]>(["Travel", "Fuel", "Food", "Other"]);
   const [expenseAmount, setExpenseAmount] = useState("");
   const [expenseNotes, setExpenseNotes] = useState("");
@@ -417,7 +417,7 @@ export default function MoreScreen() {
   const [newStaffEmail, setNewStaffEmail] = useState("");
   const [newStaffPhone, setNewStaffPhone] = useState("");
   const [newStaffPassword, setNewStaffPassword] = useState("");
-  const [newStaffRole, setNewStaffRole] = useState<string>("");
+  const [newStaffRole, setNewStaffRole] = useState<string>(activeCompany?.default_staff_role || "");
   const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
   const [addStaffLoading, setAddStaffLoading] = useState(false);
 
@@ -526,11 +526,11 @@ export default function MoreScreen() {
   const resetExpenseForm = () => {
     setExpenseAmount("");
     setExpenseNotes("");
-    setExpenseCategory("other");
+    setExpenseCategory(activeCompany?.default_expense_category || "Other");
   };
 
   const closeExpenseModal = async () => {
-    const hasChanges = expenseAmount.trim() !== "" || expenseNotes.trim() !== "" || expenseCategory !== "other";
+    const hasChanges = expenseAmount.trim() !== "" || expenseNotes.trim() !== "" || expenseCategory !== (activeCompany?.default_expense_category || "Other");
     if (hasChanges && !(await confirmDiscard())) return;
     setIsExpenseModal(false);
     resetExpenseForm();
@@ -708,7 +708,7 @@ export default function MoreScreen() {
         setAttendanceMap(initialMap);
 
         setRoles(STAFF_ROLES);
-        if (!newStaffRole) setNewStaffRole(STAFF_ROLES[0].id);
+        if (!newStaffRole) setNewStaffRole(activeCompany?.default_staff_role || STAFF_ROLES[0].id);
       } catch (e) {
         console.error("Failed to load staff (expected for non-manager roles):", e);
       }
@@ -1118,7 +1118,7 @@ export default function MoreScreen() {
     setNewStaffEmail("");
     setNewStaffPhone("");
     setNewStaffPassword("");
-    setNewStaffRole(STAFF_ROLES[0].id);
+    setNewStaffRole(activeCompany?.default_staff_role || STAFF_ROLES[0].id);
   };
 
   const closeAddStaffModal = async () => {
@@ -1316,6 +1316,34 @@ export default function MoreScreen() {
 
         <Pressable onPress={() => router.push("/recurring-invoices" as any)} className="flex-row justify-between items-center py-2.5">
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Recurring Invoices</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/sales-orders" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Sales Orders</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/purchase-orders" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Purchase Orders</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/stock-transfer-requests" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Stock Transfer Requests</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable onPress={() => router.push("/referral-program" as any)} className="flex-row justify-between items-center py-2.5">
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Referral Program</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
       </View>
@@ -1588,6 +1616,46 @@ export default function MoreScreen() {
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable
+          onPress={() => router.push("/categories" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Categories & Brands</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/customer-groups" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Customer Groups</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/price-lists" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Price Lists</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/invoice-templates" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Invoice Templates</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
           onPress={() => router.push("/scanned-documents" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
@@ -1612,6 +1680,26 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-2.5"
         >
           <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Accounts</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/gst-rate-tools" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">GST Rate Tools</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+        </Pressable>
+
+        <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
+
+        <Pressable
+          onPress={() => router.push("/bulk-price-update" as any)}
+          className="flex-row justify-between items-center py-2.5"
+        >
+          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bulk Price Update</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
         </Pressable>
 

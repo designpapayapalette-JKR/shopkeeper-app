@@ -75,7 +75,7 @@ export default function StaffScreen() {
   const [addEmail, setAddEmail] = useState("");
   const [addPhone, setAddPhone] = useState("");
   const [addPassword, setAddPassword] = useState("");
-  const [addRole, setAddRole] = useState("staff");
+  const [addRole, setAddRole] = useState(activeCompany?.default_staff_role || "staff");
   const [addSubmitting, setAddSubmitting] = useState(false);
 
   // Edit Modal
@@ -117,7 +117,7 @@ export default function StaffScreen() {
     setAddEmail("");
     setAddPhone("");
     setAddPassword("");
-    setAddRole("staff");
+    setAddRole(activeCompany?.default_staff_role || "staff");
   };
 
   const closeAdd = async () => {

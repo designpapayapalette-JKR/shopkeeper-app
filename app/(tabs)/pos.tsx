@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Text,
   View,
@@ -22,7 +22,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { generateReceiptHtml, ReceiptData, thermalPageWidthPt, estimateThermalPageHeightPt, ThermalPaperWidth } from "../../src/lib/printer";
 import { generateTallyInvoiceHtml, TallyInvoiceItem } from "../../src/lib/invoiceTemplate";
 import { shareInvoiceFile } from "../../src/lib/sharer";
-import { printToSavedPrinter, getDefaultPrinter } from "../../src/lib/thermalPrinter";
+import { printToSavedPrinter, getDefaultPrinter, openCashDrawer } from "../../src/lib/thermalPrinter";
 import PosDashboardPanel from "../../src/components/PosDashboardPanel";
 import { GstRatePicker } from "../../src/components/GstRatePicker";
 import { useAuth } from "../../src/lib/auth-context";
@@ -36,6 +36,7 @@ import { useTerminology } from "../../src/lib/terminology-context";
 import { useKeepAwake } from "expo-keep-awake";
 import { writeCache, readCache, getCacheKey } from "../../src/lib/apiCache";
 import { getIsConnected, subscribeToConnectivity } from "../../src/lib/connectivity";
+import { verifyPin } from "../../src/lib/pin";
 
 interface Product {
   id: string;
@@ -49,6 +50,15 @@ interface Product {
   stock_quantity?: string;
   category?: { name: string } | null;
   tracks_serials?: boolean;
+  sell_by_weight?: boolean;
+  weight_unit?: string;
+  price_per_unit?: string;
+  has_alternate_pricing?: boolean;
+  alternate_price?: string;
+  alternate_unit?: string;
+  default_billing_mode?: "fixed" | "weight";
+  is_returnable_container?: boolean;
+  container_deposit?: string;
 }
 
 interface Party {
@@ -81,10 +91,12 @@ interface CartItem {
   // Comma/newline-separated serial numbers, only meaningful when
   // product.tracks_serials — mirrors the web POS pattern.
   serialNumbers?: string;
+  billingMode?: "fixed" | "weight";
 }
 
 export default function PosScreen() {
   const { user, activeCompany, activeBrand } = useAuth();
+  const pinVerifiedRef = useRef(false);
   const { t } = useTerminology();
   const router = useRouter();
   const confirm = useConfirm();
@@ -241,6 +253,12 @@ export default function PosScreen() {
   const [qtyEditItemId, setQtyEditItemId] = useState<string | null>(null);
   const [qtyEditValue, setQtyEditValue] = useState("");
 
+  // PIN-gated checkout — when activeCompany.require_pos_pin is true,
+  // the cashier must re-enter their Quick PIN before every sale.
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+
   // Keep screen awake during POS so it doesn't lock mid-sale.
   useKeepAwake();
 
@@ -294,13 +312,14 @@ export default function PosScreen() {
         label: `${selectedParty?.name || "Walk-in"} · ${cart.length} item${cart.length > 1 ? "s" : ""}`,
         note: selectedParty?.name ? undefined : "Walk-in customer",
         party_id: selectedParty?.id,
-        cart_data: {
-          items: cart.map((c) => ({
-            product_id: c.product.id,
-            quantity: c.quantity,
-            custom_tax_rate: c.customTaxRate,
-            discount: c.discount,
-          })),
+          cart_data: {
+            items: cart.map((c) => ({
+              product_id: c.product.id,
+              quantity: c.quantity,
+              custom_tax_rate: c.customTaxRate,
+              discount: c.discount,
+              billing_mode: c.billingMode,
+            })),
           discount: discount || undefined,
           discount_type: discountType,
           invoice_type: invoiceType,
@@ -310,6 +329,7 @@ export default function PosScreen() {
         },
       });
       setCart([]);
+      pinVerifiedRef.current = false;
       setSelectedParty(null);
       setDiscount("");
       setDiscountType("flat");
@@ -351,6 +371,7 @@ export default function PosScreen() {
           quantity: item.quantity,
           customTaxRate: item.custom_tax_rate,
           discount: item.discount || 0,
+          billingMode: item.billing_mode,
         });
       }
     }
@@ -527,18 +548,45 @@ export default function PosScreen() {
                           ₹{parseFloat(item.mrp).toFixed(0)}
                         </Text>
                       )}
-                      <Text className="font-black text-base text-primary dark:text-primary-dark">
-                        ₹{parseFloat(item.price).toFixed(0)}
-                      </Text>
+                      {item.has_alternate_pricing ? (
+                        <View className="flex-col items-start">
+                          <Text className="font-bold text-sm text-primary dark:text-primary-dark">
+                            ₹{parseFloat(item.alternate_price ?? item.price).toFixed(0)}/{item.alternate_unit || "pkt"}
+                          </Text>
+                          <Text className="text-[10px] font-bold text-on-surface-variant">
+                            ₹{parseFloat(item.price_per_unit ?? item.price).toFixed(0)}/{item.weight_unit || "kg"}
+                          </Text>
+                        </View>
+                      ) : item.mrp && parseFloat(item.mrp) > 0 ? (
+                        <View className="flex-col items-start">
+                          <Text className="font-bold text-sm text-primary dark:text-primary-dark">
+                            ₹{parseFloat(item.mrp).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                          </Text>
+                          {parseFloat(item.price) < parseFloat(item.mrp) && (
+                            <Text className="text-[10px] text-on-surface-variant line-through">
+                              ₹{parseFloat(item.price).toFixed(0)}
+                            </Text>
+                          )}
+                        </View>
+                      ) : (
+                        <Text className="font-black text-base text-primary dark:text-primary-dark">
+                          ₹{parseFloat(item.price).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                        </Text>
+                      )}
                     </View>
                     {item.stock_quantity !== undefined && (
                       <Text className="text-xs text-on-surface-variant mt-1">Stk: {item.stock_quantity}</Text>
+                    )}
+                    {item.is_returnable_container && item.container_deposit && parseFloat(item.container_deposit) > 0 && (
+                      <Text className="text-[9px] font-bold text-purple-600 mt-1">+₹{parseFloat(item.container_deposit).toFixed(0)} deposit</Text>
                     )}
                   </View>
                   {inCart && (
                     <View className="bg-primary/10 dark:bg-primary-dark/10 px-2 py-1 flex-row items-center justify-center" style={{ gap: 4 }}>
                       <MaterialCommunityIcons name="check-circle" size={12} color="#0368FE" />
-                      <Text className="text-xs font-bold text-primary dark:text-primary-dark">{inCart.quantity}</Text>
+                      <Text className="text-xs font-bold text-primary dark:text-primary-dark">
+                        {inCart.quantity}{inCart.billingMode === "weight" ? ` ${item.weight_unit || "kg"}` : inCart.billingMode === "fixed" ? ` ${item.alternate_unit || "pkt"}` : ""}
+                      </Text>
                     </View>
                   )}
                 </Pressable>
@@ -708,6 +756,16 @@ export default function PosScreen() {
     }
   };
 
+  const unitPriceFor = (item: CartItem): number => {
+    if (item.billingMode === "fixed") return parseFloat(item.product.alternate_price ?? item.product.price);
+    if (item.billingMode === "weight") return parseFloat(item.product.price_per_unit ?? item.product.price);
+    const mrp = parseFloat(item.product.mrp ?? "0");
+    if (mrp > 0) return mrp;
+    return parseFloat(item.product.price);
+  };
+
+  const lineTotal = (item: CartItem): number => unitPriceFor(item) * item.quantity;
+
   const addToCart = (product: Product) => {
     if (businessMode === "b2b" && !selectedParty) {
       setIsSelectingParty(true);
@@ -716,11 +774,13 @@ export default function PosScreen() {
     setCart((prevCart) => {
       const existing = prevCart.find((item) => item.product.id === product.id);
       if (existing) {
+        if (product.sell_by_weight && !product.has_alternate_pricing) return prevCart;
         return prevCart.map((item) =>
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prevCart, { product, quantity: 1 }];
+      const billingMode = product.has_alternate_pricing ? (product.default_billing_mode || "weight") : product.sell_by_weight ? "weight" : undefined;
+      return [...prevCart, { product, quantity: billingMode === "weight" ? 0 : 1, billingMode }];
     });
   };
 
@@ -729,6 +789,7 @@ export default function PosScreen() {
       prevCart
         .map((item) => {
           if (item.product.id === productId) {
+            if (item.billingMode === "weight") return item;
             const nextQty = item.quantity + delta;
             return { ...item, quantity: nextQty };
           }
@@ -745,9 +806,18 @@ export default function PosScreen() {
     setGstEditProductId(null);
   };
 
+  const getDepositTotal = () => {
+    return cart.reduce((sum, item) => {
+      if (item.product.is_returnable_container && item.product.container_deposit) {
+        return sum + parseFloat(item.product.container_deposit) * item.quantity;
+      }
+      return sum;
+    }, 0);
+  };
+
   // Calculations
   const getSubtotal = () => {
-    return cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
+    return cart.reduce((sum, item) => sum + lineTotal(item), 0);
   };
 
   const getDiscountValue = () => {
@@ -771,7 +841,7 @@ export default function PosScreen() {
   const getTaxTotal = () => {
     if (!shouldApplyTax) return 0;
     return cart.reduce((sum, item) => {
-      const price = parseFloat(item.product.price);
+      const price = unitPriceFor(item);
       const taxAmount = price * (effectiveTaxRate(item) / 100);
       return sum + taxAmount * item.quantity;
     }, 0);
@@ -783,7 +853,7 @@ export default function PosScreen() {
   };
 
   const getTotal = () => {
-    return Math.max(0, getSubtotal() + getTaxTotal() + getExtraChargeValue() - getDiscountValue());
+    return Math.max(0, getSubtotal() + getTaxTotal() + getDepositTotal() + getExtraChargeValue() - getDiscountValue());
   };
 
   // Retail mode allows checkout with no chosen customer — this resolves (or
@@ -826,6 +896,20 @@ export default function PosScreen() {
     }
   };
 
+  const verifyPinAndProceed = async () => {
+    if (!user?.id) return;
+    const ok = await verifyPin(user.id, pinInput);
+    if (!ok) {
+      setPinError("Incorrect PIN. Try again.");
+      return;
+    }
+    setShowPinModal(false);
+    setPinInput("");
+    setPinError("");
+    pinVerifiedRef.current = true;
+    handleCheckout();
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) {
       Alert.alert("Empty Cart", "Add items to the cart before checking out.");
@@ -838,6 +922,13 @@ export default function PosScreen() {
     }
     if (!user?.company_id || !defaultWarehouseId) {
       Alert.alert("Error", "Missing company or warehouse data. Cannot process.");
+      return;
+    }
+
+    if (activeCompany?.require_pos_pin && !pinVerifiedRef.current) {
+      setPinInput("");
+      setPinError("");
+      setShowPinModal(true);
       return;
     }
 
@@ -872,17 +963,18 @@ export default function PosScreen() {
         discount_total: discountVal,
         apply_gst: invoiceType === "estimate" ? estimateWithGst : undefined,
         apply_round_off: applyRoundOff,
-        extra_charge_total: extraChargeVal,
-        extra_charge_label: extraChargeVal > 0 && (hasCreditSplit || paymentMode === "credit") ? "Credit Charge" : undefined,
+        extra_charge_total: extraChargeVal + getDepositTotal(),
+        extra_charge_label: getDepositTotal() > 0 ? "Crate Deposit" : (extraChargeVal > 0 && (hasCreditSplit || paymentMode === "credit") ? "Credit Charge" : undefined),
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
-          price: parseFloat(item.product.price),
+          price: unitPriceFor(item),
           tax_rate: shouldApplyTax ? effectiveTaxRate(item) : 0,
           discount: item.discount || 0,
           serial_numbers: item.serialNumbers
             ? item.serialNumbers.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
             : undefined,
+          billing_mode: item.billingMode,
         })),
       };
 
@@ -900,6 +992,7 @@ export default function PosScreen() {
           // just held locally until connectivity returns.
           await enqueueSale(checkoutPayload);
           setCart([]);
+          pinVerifiedRef.current = false;
           setSelectedParty(null);
           setIsCheckoutOpen(false);
           setDiscount("");
@@ -934,6 +1027,7 @@ export default function PosScreen() {
 
       const finishSale = () => {
         setCart([]);
+        pinVerifiedRef.current = false;
         setSelectedParty(null);
         setIsCheckoutOpen(false);
         setDiscount("");
@@ -952,7 +1046,7 @@ export default function PosScreen() {
 
       const buildReceiptData = (): ReceiptData => {
         const printItems = cart.map((item) => {
-          const price = parseFloat(item.product.price);
+          const price = unitPriceFor(item);
           return {
             name: item.product.name,
             quantity: item.quantity,
@@ -986,7 +1080,7 @@ export default function PosScreen() {
 
       const buildTallyHtml = () => {
         const tallyItems: TallyInvoiceItem[] = cart.map((item) => {
-          const price = parseFloat(item.product.price);
+          const price = unitPriceFor(item);
           const taxRate = shouldApplyTax ? effectiveTaxRate(item) : 0;
           const lineSubtotal = price * item.quantity;
           return {
@@ -1177,9 +1271,31 @@ export default function PosScreen() {
                     ₹{parseFloat(item.mrp).toFixed(0)}
                   </Text>
                 )}
-                <Text className="font-black text-base text-primary dark:text-primary-dark">
-                  ₹{parseFloat(item.price).toFixed(0)}
-                </Text>
+                {item.has_alternate_pricing ? (
+                  <View className="items-end">
+                    <Text className="text-sm font-black text-primary dark:text-primary-dark">
+                      ₹{parseFloat(item.alternate_price ?? item.price).toFixed(0)}/{item.alternate_unit || "pkt"}
+                    </Text>
+                    <Text className="text-xs font-bold text-on-surface-variant">
+                      ₹{parseFloat(item.price_per_unit ?? item.price).toFixed(0)}/{item.weight_unit || "kg"}
+                    </Text>
+                  </View>
+                ) : item.mrp && parseFloat(item.mrp) > 0 ? (
+                  <View className="items-end">
+                    <Text className="font-black text-base text-primary dark:text-primary-dark">
+                      ₹{parseFloat(item.mrp).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                    </Text>
+                    {parseFloat(item.price) < parseFloat(item.mrp) && (
+                      <Text className="text-[10px] text-on-surface-variant line-through">
+                        ₹{parseFloat(item.price).toFixed(0)}
+                      </Text>
+                    )}
+                  </View>
+                ) : (
+                  <Text className="font-black text-base text-primary dark:text-primary-dark">
+                    ₹{parseFloat(item.price).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                  </Text>
+                )}
               </View>
               {item.mrp && parseFloat(item.mrp) > parseFloat(item.price) && (
                 <Text className="text-[10px] text-green-600 font-semibold">
@@ -1191,21 +1307,48 @@ export default function PosScreen() {
                   Stock: {item.stock_quantity}
                 </Text>
               )}
+              {item.is_returnable_container && item.container_deposit && parseFloat(item.container_deposit) > 0 && (
+                <View className="bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded mt-1">
+                  <Text className="text-[9px] font-bold text-purple-700 dark:text-purple-400">
+                    +₹{parseFloat(item.container_deposit).toFixed(0)} deposit
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
         {inCart && (
           <View className="bg-primary/10 dark:bg-primary-dark/10 px-4 py-1.5 flex-row justify-between items-center">
             <Text className="text-xs font-bold text-primary dark:text-primary-dark">In cart</Text>
-            <View className="flex-row items-center gap-3">
-              <Pressable onPress={() => updateQuantity(item.id, -1)} className="w-7 h-7 rounded-full bg-primary dark:bg-primary-dark items-center justify-center">
-                <MaterialCommunityIcons name="minus" size={14} color="white" />
-              </Pressable>
-              <Text className="text-primary dark:text-primary-dark font-black text-base min-w-[16px] text-center">{inCart.quantity}</Text>
-              <Pressable onPress={() => updateQuantity(item.id, 1)} className="w-7 h-7 rounded-full bg-primary dark:bg-primary-dark items-center justify-center">
-                <MaterialCommunityIcons name="plus" size={14} color="white" />
-              </Pressable>
-            </View>
+            {inCart.billingMode === "weight" ? (
+              <View className="flex-row items-center gap-1">
+                <TextInput
+                  value={String(inCart.quantity || "")}
+                  onChangeText={(val) => {
+                    const qty = parseFloat(val) || 0;
+                    setCart((prev) => prev.map((c) =>
+                      c.product.id === item.id ? { ...c, quantity: qty } : c
+                    ));
+                  }}
+                  keyboardType="numeric"
+                  placeholder="0.000"
+                  placeholderTextColor="#9E9E9E"
+                  className="text-primary dark:text-primary-dark font-black text-base min-w-[40px] text-center bg-white/30 dark:bg-white/10 rounded-lg px-2 py-0.5"
+                />
+                <Text className="text-xs font-bold text-primary dark:text-primary-dark">{item.weight_unit || "kg"}</Text>
+              </View>
+            ) : (
+              <View className="flex-row items-center gap-3">
+                <Text className="text-xs font-bold text-primary dark:text-primary-dark shrink-0">{inCart.billingMode === "fixed" ? `${item.alternate_unit || "pkt"}` : ""}</Text>
+                <Pressable onPress={() => updateQuantity(item.id, -1)} className="w-7 h-7 rounded-full bg-primary dark:bg-primary-dark items-center justify-center">
+                  <MaterialCommunityIcons name="minus" size={14} color="white" />
+                </Pressable>
+                <Text className="text-primary dark:text-primary-dark font-black text-base min-w-[16px] text-center">{inCart.quantity}</Text>
+                <Pressable onPress={() => updateQuantity(item.id, 1)} className="w-7 h-7 rounded-full bg-primary dark:bg-primary-dark items-center justify-center">
+                  <MaterialCommunityIcons name="plus" size={14} color="white" />
+                </Pressable>
+              </View>
+            )}
           </View>
         )}
       </Pressable>
@@ -1278,22 +1421,49 @@ export default function PosScreen() {
                     {item.product.mrp && parseFloat(item.product.mrp) > 0 && (
                       <Text className="text-[10px] text-on-surface-variant line-through">₹{parseFloat(item.product.mrp).toFixed(0)}</Text>
                     )}
-                    <Text className="text-xs text-on-surface-variant">₹{parseFloat(item.product.price).toFixed(2)} each</Text>
+                    <Text className="text-xs text-on-surface-variant">₹{unitPriceFor(item).toFixed(2)}{item.billingMode === "weight" ? `/${item.product.weight_unit || "kg"}` : item.billingMode === "fixed" ? `/${item.product.alternate_unit || "unit"}` : " each"}</Text>
                   </View>
                 </View>
-                <View className="flex-row items-center gap-2 mr-3">
-                  <Pressable onPress={() => updateQuantity(item.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
-                    <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
-                  </Pressable>
-                  <Text className="text-base font-black text-on-surface dark:text-text-primary-dark min-w-[20px] text-center">{item.quantity}</Text>
-                  <Pressable onPress={() => updateQuantity(item.product.id, 1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
-                    <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
-                  </Pressable>
-                </View>
+                {item.billingMode === "weight" ? (
+                  <View className="flex-row items-center gap-1 mr-3">
+                    <TextInput
+                      value={String(item.quantity || "")}
+                      onChangeText={(val) => {
+                        const qty = parseFloat(val) || 0;
+                        setCart((prev) => prev.map((c) =>
+                          c.product.id === item.product.id ? { ...c, quantity: qty } : c
+                        ));
+                      }}
+                      keyboardType="numeric"
+                      placeholder="0.000"
+                      placeholderTextColor="#9E9E9E"
+                      className="text-base font-black text-on-surface dark:text-text-primary-dark min-w-[60px] text-center bg-surface-container rounded-lg px-2 py-1"
+                    />
+                    <Text className="text-xs font-bold text-on-surface-variant">{item.product.weight_unit || "kg"}</Text>
+                  </View>
+                ) : (
+                  <View className="flex-row items-center gap-2 mr-3">
+                    <Text className="text-xs font-bold text-on-surface-variant shrink-0">{item.billingMode === "fixed" ? `${item.product.alternate_unit || "pkt"}` : ""}</Text>
+                    <Pressable onPress={() => updateQuantity(item.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
+                      <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
+                    </Pressable>
+                    <Text className="text-base font-black text-on-surface dark:text-text-primary-dark min-w-[20px] text-center">{item.quantity}</Text>
+                    <Pressable onPress={() => updateQuantity(item.product.id, 1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
+                      <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
+                    </Pressable>
+                  </View>
+                )}
                 <Text className="font-black text-base text-primary dark:text-primary-dark min-w-[60px] text-right">
-                  ₹{(parseFloat(item.product.price) * item.quantity).toFixed(0)}
+                  ₹{lineTotal(item).toFixed(0)}
                 </Text>
               </View>
+              {item.product.is_returnable_container && item.product.container_deposit && parseFloat(item.product.container_deposit) > 0 && (
+                <View className="bg-purple-100 dark:bg-purple-900/30 self-start px-2 py-0.5 rounded mt-1">
+                  <Text className="text-[9px] font-bold text-purple-700 dark:text-purple-400">
+                    +₹{parseFloat(item.product.container_deposit).toFixed(0)}/unit crate deposit
+                  </Text>
+                </View>
+              )}
               <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
                 {shouldApplyTax && (
                   <Pressable
@@ -1328,6 +1498,34 @@ export default function PosScreen() {
                   <Text className="text-[10px] text-on-surface-variant mr-1">off</Text>
                 </View>
               </View>
+              {item.product.has_alternate_pricing && (
+                <View className="flex-row items-center mt-2" style={{ gap: 6 }}>
+                  <Pressable
+                    onPress={() => setCart((prev) => prev.map((c) =>
+                      c.product.id === item.product.id
+                        ? { ...c, billingMode: "fixed", quantity: c.billingMode === "weight" && c.quantity === 0 ? 1 : (c.billingMode === "weight" ? Math.max(1, Math.round(c.quantity)) : c.quantity) }
+                        : c
+                    ))}
+                    className={`px-3 py-1.5 rounded-full border ${item.billingMode === "fixed" ? "bg-primary border-primary" : "bg-surface-container border-outline-variant dark:border-outline"}`}
+                  >
+                    <Text className={`text-[10px] font-bold ${item.billingMode === "fixed" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                      Per {item.product.alternate_unit || "Packet"} ₹{parseFloat(item.product.alternate_price ?? item.product.price).toFixed(0)}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setCart((prev) => prev.map((c) =>
+                      c.product.id === item.product.id
+                        ? { ...c, billingMode: "weight", quantity: c.billingMode === "fixed" ? 0 : c.quantity }
+                        : c
+                    ))}
+                    className={`px-3 py-1.5 rounded-full border ${item.billingMode === "weight" ? "bg-primary border-primary" : "bg-surface-container border-outline-variant dark:border-outline"}`}
+                  >
+                    <Text className={`text-[10px] font-bold ${item.billingMode === "weight" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                      Per {item.product.weight_unit || "Kg"} ₹{parseFloat(item.product.price_per_unit ?? item.product.price).toFixed(0)}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
               {item.product.tracks_serials && (
                 <TextInput
                   value={item.serialNumbers || ""}
@@ -1488,7 +1686,10 @@ export default function PosScreen() {
               { key: "cash",   label: "Cash",  icon: "cash" as const },
               { key: "upi",    label: "UPI",   icon: "cellphone" as const },
               { key: "credit", label: "Credit", icon: "book-account-outline" as const },
-            ] as const).map((opt) => (
+            ] as const).filter((opt) => {
+              const enabled = activeCompany?.enabled_payment_methods;
+              return !enabled?.length || enabled.includes(opt.key);
+            }).map((opt) => (
               <Pressable
                 key={opt.key}
                 onPress={() => {
@@ -1532,6 +1733,23 @@ export default function PosScreen() {
               <Text className="text-xs text-text-secondary">{activeCompany.upi_payee_name}</Text>
             )}
           </View>
+        )}
+        {paymentMode === "cash" && (
+          <Pressable
+            onPress={async () => {
+              try {
+                await openCashDrawer();
+                Alert.alert("Drawer Open", "Cash drawer has been triggered.");
+              } catch (e: any) {
+                Alert.alert("Drawer Error", e.message || "Could not open cash drawer. Is a printer paired?");
+              }
+            }}
+            className="flex-row items-center justify-center mb-3 py-2.5 rounded-xl border border-outline-variant dark:border-outline active:opacity-80"
+            style={{ gap: 6 }}
+          >
+            <MaterialCommunityIcons name="cash-register" size={16} color="#6e7a74" />
+            <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark">Open Cash Drawer</Text>
+          </Pressable>
         )}
         <Pressable
           onPress={() => {
@@ -1635,6 +1853,12 @@ export default function PosScreen() {
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-on-surface-variant font-medium">GST</Text>
             <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getTaxTotal().toFixed(2)}</Text>
+          </View>
+        )}
+        {getDepositTotal() > 0 && (
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-sm text-on-surface-variant font-medium">Crate Deposit</Text>
+            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getDepositTotal().toFixed(2)}</Text>
           </View>
         )}
         {getExtraChargeValue() > 0 && (
@@ -2331,6 +2555,38 @@ export default function PosScreen() {
           )}
         </View>
         </SafeAreaProvider>
+      </Modal>
+
+      {/* PIN-gated checkout overlay */}
+      <Modal visible={showPinModal} animationType="fade" transparent onRequestClose={() => setShowPinModal(false)}>
+        <View className="flex-1 bg-black/40 justify-center items-center px-8">
+          <View className="w-full max-w-sm bg-surface dark:bg-zinc-900 rounded-3xl p-8 border border-gray-100 dark:border-zinc-800 shadow-xl">
+            <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark text-center mb-1">Enter PIN</Text>
+            <Text className="text-sm text-text-secondary dark:text-text-secondary-dark text-center mb-6">Enter your Quick PIN to authorize this sale.</Text>
+            <TextInput
+              value={pinInput}
+              onChangeText={(t) => { setPinInput(t.replace(/[^0-9]/g, "").slice(0, 4)); setPinError(""); }}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+              placeholder="• • • •"
+              placeholderTextColor="#A0A0A0"
+              autoFocus
+              className="bg-background dark:bg-zinc-800 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-4 text-center text-2xl font-bold tracking-[12px] mb-2"
+            />
+            {pinError !== "" && <Text className="text-sm font-bold text-error text-center mb-2">{pinError}</Text>}
+            <View className="flex-row mt-4" style={{ gap: 10 }}>
+              <Pressable onPress={() => { setShowPinModal(false); setPinInput(""); setPinError(""); }}
+                className="flex-1 border border-gray-200 dark:border-zinc-700 py-3.5 rounded-xl items-center">
+                <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={verifyPinAndProceed} disabled={pinInput.length < 4}
+                className={`flex-1 py-3.5 rounded-xl items-center ${pinInput.length < 4 ? "bg-primary/50" : "bg-primary"}`}>
+                <Text className="text-white font-bold">Confirm</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );

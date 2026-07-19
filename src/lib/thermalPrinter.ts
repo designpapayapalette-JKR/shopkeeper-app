@@ -202,3 +202,17 @@ export async function printToSavedPrinter(data: ReceiptData, printer?: SavedPrin
   const bill = buildEscPosBill(data, target.paperWidth);
   driver.printBill(bill);
 }
+
+// Sends the ESC/POS cash drawer kick command (pin 2) to the paired printer.
+// On cash payment finalise the caller should invoke this to pop the drawer
+// open automatically — no action required from the cashier.
+export async function openCashDrawer(printer?: SavedPrinter): Promise<void> {
+  const target = printer ?? (await getDefaultPrinter());
+  if (!target) throw new Error("No printer is paired yet. Add one in Printer Settings.");
+
+  await connectToPrinter(target);
+  const driver = activeDriver(target.type);
+  // Standard ESC/POS drawer kick: ESC p 0 25 250 (pin 2, 25ms pulse)
+  const rawCmd = "\x1B\x70\x00\x19\xFA";
+  (driver as any).printRaw(rawCmd);
+}

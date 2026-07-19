@@ -3,7 +3,7 @@ import { Text, View, ScrollView, Pressable, ActivityIndicator, Alert } from "rea
 import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 
-type Tab = "balance-sheet" | "stock-valuation";
+type Tab = "balance-sheet" | "stock-valuation" | "trial-balance";
 
 export default function BalanceSheetScreen() {
   const topInset = useTopInset();
@@ -11,6 +11,7 @@ export default function BalanceSheetScreen() {
   const [loading, setLoading] = useState(false);
   const [balanceSheet, setBalanceSheet] = useState<any | null>(null);
   const [stockValuation, setStockValuation] = useState<any | null>(null);
+  const [trialBalance, setTrialBalance] = useState<any | null>(null);
 
   const load = async (t: Tab) => {
     setTab(t);
@@ -19,9 +20,12 @@ export default function BalanceSheetScreen() {
       if (t === "balance-sheet") {
         const res = await api.get<{ data: any }>("/reports/balance-sheet");
         setBalanceSheet(res.data);
-      } else {
+      } else if (t === "stock-valuation") {
         const res = await api.get<{ data: any }>("/reports/stock-valuation");
         setStockValuation(res.data);
+      } else {
+        const res = await api.get<{ data: any }>("/reports/trial-balance");
+        setTrialBalance(res.data);
       }
     } catch {
       Alert.alert("Error", "Could not load report.");
@@ -36,7 +40,7 @@ export default function BalanceSheetScreen() {
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset + 8 }}>
     <ScrollView className="flex-1 px-4">
       <Text className="text-xl font-black text-text-primary mb-1">Balance Sheet &amp; Stock Valuation</Text>
-      <Text className="text-sm text-text-secondary mb-4">Inventory valued at cost; receivables/payables from party balances.</Text>
+      <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mb-4">Inventory valued at cost; receivables/payables from party balances.</Text>
 
       <View className="flex-row mb-4" style={{ gap: 8 }}>
         <Pressable onPress={() => load("balance-sheet")} className={`px-4 py-2 rounded-xl ${tab === "balance-sheet" ? "bg-primary" : "bg-surface border border-gray-200 dark:border-zinc-800"}`}>
@@ -44,6 +48,9 @@ export default function BalanceSheetScreen() {
         </Pressable>
         <Pressable onPress={() => load("stock-valuation")} className={`px-4 py-2 rounded-xl ${tab === "stock-valuation" ? "bg-primary" : "bg-surface border border-gray-200 dark:border-zinc-800"}`}>
           <Text className={tab === "stock-valuation" ? "text-white font-bold" : "text-text-secondary font-bold"}>Stock Valuation</Text>
+        </Pressable>
+        <Pressable onPress={() => load("trial-balance")} className={`px-4 py-2 rounded-xl ${tab === "trial-balance" ? "bg-primary" : "bg-surface border border-gray-200 dark:border-zinc-800"}`}>
+          <Text className={tab === "trial-balance" ? "text-white font-bold" : "text-text-secondary font-bold"}>Trial Balance</Text>
         </Pressable>
       </View>
 
@@ -72,11 +79,11 @@ export default function BalanceSheetScreen() {
         <View style={{ paddingBottom: 24 }}>
           <View className="flex-row mb-4" style={{ gap: 10 }}>
             <View className="flex-1 bg-surface dark:bg-surface-dark p-3 rounded-2xl">
-              <Text className="text-xs font-bold text-text-secondary uppercase">At Cost</Text>
+              <Text className="text-xs font-bold text-text-secondary dark:text-text-secondary-dark uppercase">At Cost</Text>
               <Text className="text-lg font-black text-text-primary dark:text-text-primary-dark">{money(stockValuation.totalValueAtCost)}</Text>
             </View>
             <View className="flex-1 bg-surface dark:bg-surface-dark p-3 rounded-2xl">
-              <Text className="text-xs font-bold text-text-secondary uppercase">At Sale Price</Text>
+              <Text className="text-xs font-bold text-text-secondary dark:text-text-secondary-dark uppercase">At Sale Price</Text>
               <Text className="text-lg font-black text-success">{money(stockValuation.totalValueAtSalePrice)}</Text>
             </View>
           </View>
@@ -84,11 +91,42 @@ export default function BalanceSheetScreen() {
             <View key={r.id} className="flex-row justify-between items-center py-2.5 border-b border-gray-100 dark:border-zinc-800">
               <View className="flex-1 mr-2">
                 <Text className="font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{r.name}</Text>
-                <Text className="text-xs text-text-secondary">{r.quantity} units</Text>
+                <Text className="text-xs text-text-secondary dark:text-text-secondary-dark">{r.quantity} units</Text>
               </View>
               <Text className="font-bold text-text-primary dark:text-text-primary-dark">{money(r.valueAtCost)}</Text>
             </View>
           ))}
+        </View>
+      )}
+
+      {!loading && tab === "trial-balance" && trialBalance && (
+        <View style={{ paddingBottom: 24 }}>
+          {trialBalance.groups?.map((group: any) => (
+            <View key={group.type} className="mb-5">
+              <Text className="text-xs font-black text-primary uppercase tracking-widest mb-2">{group.type}</Text>
+              {group.accounts?.map((account: any) => (
+                <View key={account.id || account.name} className="flex-row justify-between items-center py-2 border-b border-gray-100 dark:border-zinc-800">
+                  <Text className="text-sm font-medium text-text-primary dark:text-text-primary-dark flex-1">{account.name}</Text>
+                  <Text className={`text-sm font-bold ${account.type === "credit" ? "text-success" : "text-text-primary dark:text-text-primary-dark"}`}>
+                    {money(account.amount)}
+                  </Text>
+                </View>
+              ))}
+              <View className="flex-row justify-between items-center py-2 mt-1 border-t-2 border-gray-200 dark:border-zinc-700">
+                <Text className="text-sm font-black text-text-primary dark:text-text-primary-dark">Total {group.type}</Text>
+                <Text className="text-sm font-black text-text-primary dark:text-text-primary-dark">{money(group.total)}</Text>
+              </View>
+            </View>
+          ))}
+          {trialBalance.totalDebit != null && trialBalance.totalCredit != null && (
+            <View className="flex-row justify-between border-t-2 border-primary py-3 mt-2">
+              <Text className="text-base font-black text-text-primary dark:text-text-primary-dark">Grand Total</Text>
+              <View className="items-end">
+                <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">Dr: {money(trialBalance.totalDebit)}</Text>
+                <Text className="text-sm font-bold text-success">Cr: {money(trialBalance.totalCredit)}</Text>
+              </View>
+            </View>
+          )}
         </View>
       )}
     </ScrollView>

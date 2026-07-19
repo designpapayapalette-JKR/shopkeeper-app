@@ -49,7 +49,7 @@ interface LedgerEntry {
 }
 
 export default function LedgerScreen() {
-  const { user } = useAuth();
+  const { user, activeCompany } = useAuth();
   const { t } = useTerminology();
   const confirm = useConfirm();
   const router = useRouter();
@@ -71,6 +71,21 @@ export default function LedgerScreen() {
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(false);
 
+  // Container / Crate Tracking
+  const [containerInventory, setContainerInventory] = useState<any[]>([]);
+  const [containerLoading, setContainerLoading] = useState(false);
+  const fetchContainerBalance = async (partyId: string) => {
+    setContainerLoading(true);
+    try {
+      const res = await api.get<{ data: any[] }>(`/container/inventory/${partyId}`);
+      setContainerInventory(res.data ?? []);
+    } catch {
+      setContainerInventory([]);
+    } finally {
+      setContainerLoading(false);
+    }
+  };
+
   // Add Party Modal State
   const [isAddingParty, setIsAddingParty] = useState(false);
   const [editingParty, setEditingParty] = useState<Party | null>(null);
@@ -78,7 +93,7 @@ export default function LedgerScreen() {
   const [newPartyPhone, setNewPartyPhone] = useState("");
   const [newPartyState, setNewPartyState] = useState("");
   const [newPartyGstin, setNewPartyGstin] = useState("");
-  const [newPartyCategory, setNewPartyCategory] = useState<"b2b" | "b2c">("b2c");
+  const [newPartyCategory, setNewPartyCategory] = useState<"b2b" | "b2c">(activeCompany?.default_customer_category || "b2c");
   const [newPartyBalance, setNewPartyBalance] = useState("");
   const [newPartyCreditLimit, setNewPartyCreditLimit] = useState("");
   const [newPartyAddress, setNewPartyAddress] = useState("");
@@ -211,6 +226,7 @@ export default function LedgerScreen() {
   const handleSelectParty = (party: Party) => {
     setSelectedParty(party);
     fetchLedgerEntries(party.id);
+    fetchContainerBalance(party.id);
   };
 
   const handleRecordPayment = async () => {
@@ -262,7 +278,7 @@ export default function LedgerScreen() {
     setNewPartyPhone("");
     setNewPartyState("");
     setNewPartyGstin("");
-    setNewPartyCategory("b2c");
+    setNewPartyCategory(activeCompany?.default_customer_category || "b2c");
     setNewPartyBalance("");
     setNewPartyAddress("");
     setNewPartyPan("");
@@ -726,6 +742,46 @@ export default function LedgerScreen() {
                 </Pressable>
               )}
             </View>
+
+            {/* Container / Crate Balance */}
+            {containerLoading ? (
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-6">
+                <ActivityIndicator size="small" color="#7c3aed" />
+              </View>
+            ) : containerInventory.length > 0 ? (
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-6 shadow-sm">
+                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+                  <View className="w-2 h-2 rounded-full" style={{ backgroundColor: "#7c3aed" }} />
+                  <Text className="text-xs font-extrabold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-widest">
+                    Container / Crate Balance
+                  </Text>
+                </View>
+                {containerInventory.map((ci: any) => (
+                  <View
+                    key={ci.id}
+                    className="flex-row justify-between items-center py-2 border-b border-outline-variant/40 dark:border-outline/40"
+                    style={{ borderBottomWidth: ci === containerInventory[containerInventory.length - 1] ? 0 : 0.5 }}
+                  >
+                    <View className="flex-1 mr-2">
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
+                        {ci.product?.name || "Unknown"}
+                      </Text>
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                        {ci.total_issued} issued / {ci.total_returned} returned
+                      </Text>
+                    </View>
+                    <View className="items-end">
+                      <Text className="text-sm font-black text-on-surface dark:text-text-primary-dark">
+                        Net: {ci.net_pending}
+                      </Text>
+                      <Text className="text-xs font-bold" style={{ color: "#7c3aed" }}>
+                        ₹{Number(ci.deposit_value || 0).toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
 
             {/* Entries timeline */}
             {entriesLoading ? (
