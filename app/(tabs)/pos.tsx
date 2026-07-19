@@ -181,17 +181,48 @@ export default function PosScreen() {
 
   // Switching company-wide mode changes what a *new* bill defaults to.
   // Guarded by an empty cart so it never yanks the bill type out from under
-  // an in-progress sale if the mode happens to change mid-session.
+  // an in-progress sale if the mode happens to change mid-session. Respects
+  // Settings > Billing & Printing's "Default Invoice Type" (already honored
+  // by the web POS) when it's set and valid for the current business mode —
+  // b2b shops always start GST regardless, since retail/estimate defaults
+  // wouldn't make sense there.
   useEffect(() => {
     if (cart.length > 0) return;
-    setInvoiceType(businessMode === "b2b" ? "gst" : "retail");
-  }, [businessMode]);
+    const configured = activeCompany?.default_invoice_type as typeof invoiceType | undefined;
+    if (businessMode === "b2b") {
+      setInvoiceType("gst");
+    } else if (configured && ["gst", "retail", "estimate", "bill_of_supply"].includes(configured)) {
+      setInvoiceType(configured);
+    } else {
+      setInvoiceType("retail");
+    }
+  }, [businessMode, activeCompany?.default_invoice_type]);
 
   // Reset the GST-on-estimate toggle whenever the bill type changes away
   // from estimate, so it doesn't silently carry over into a GST/retail bill.
   useEffect(() => {
     if (invoiceType !== "estimate") setEstimateWithGst(false);
   }, [invoiceType]);
+
+  // Settings > Billing & Printing's "Default Payment Mode" and "Default
+  // Discount Type" — same empty-cart guard as invoiceType above, so a
+  // setting change never yanks values out from under an in-progress sale.
+  useEffect(() => {
+    if (cart.length > 0) return;
+    const mode = activeCompany?.default_payment_mode as typeof paymentMode | undefined;
+    if (mode && ["cash", "upi", "credit"].includes(mode)) setPaymentMode(mode);
+  }, [activeCompany?.default_payment_mode]);
+
+  useEffect(() => {
+    if (cart.length > 0) return;
+    const dType = activeCompany?.discount_default_type as typeof discountType | undefined;
+    if (dType && ["flat", "percent"].includes(dType)) setDiscountType(dType);
+  }, [activeCompany?.discount_default_type]);
+
+  useEffect(() => {
+    if (cart.length > 0) return;
+    if (typeof activeCompany?.apply_round_off_default === "boolean") setApplyRoundOff(activeCompany.apply_round_off_default);
+  }, [activeCompany?.apply_round_off_default]);
 
   // Party Selector State
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);

@@ -18,7 +18,23 @@ interface Product {
   category?: { name: string } | null;
 }
 
+// ean13Bars only understands numeric EAN-13 strings — a company configured
+// for Code128 (alphanumeric, prefix-based) would render garbage bars if we
+// ran it through this encoder regardless of format. Rather than build a
+// full Code128 renderer here, fall back to a clear text-only view; the web
+// dashboard's barcode designer (Barcodes > Print Label) can render/print
+// any format correctly.
 function BarcodeSvg({ code, width = 280, height = 80 }: { code: string; width?: number; height?: number }) {
+  if (!/^\d{13}$/.test(code)) {
+    return (
+      <View style={{ width, paddingVertical: 12, alignItems: "center" }}>
+        <Text style={{ fontFamily: "monospace", fontWeight: "700", fontSize: 16, letterSpacing: 2 }}>{code}</Text>
+        <Text style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4, textAlign: "center" }}>
+          Non-EAN13 barcode — print the scannable label from the web dashboard.
+        </Text>
+      </View>
+    );
+  }
   const bars = ean13Bars(code);
   const moduleWidth = width / bars.length;
   return (
@@ -138,7 +154,7 @@ export default function BarcodeGeneratorScreen() {
             Barcode Generator
           </Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
-            Generate EAN-13 barcode labels for your products
+            Generate barcodes for your products using your shop&apos;s configured standard
           </Text>
         </View>
       </View>
@@ -258,9 +274,11 @@ export default function BarcodeGeneratorScreen() {
                     {viewBarcodeId === product.id && (
                       <View className="px-4 pb-5 items-center bg-white dark:bg-zinc-900 mx-4 mb-4 rounded-xl py-4" style={{ gap: 2 }}>
                         <BarcodeSvg code={product.barcode!} />
-                        <Text className="text-xs text-gray-400 font-mono font-bold tracking-widest">
-                          {product.barcode!.replace(/\D/g, "").slice(0, 13)}
-                        </Text>
+                        {/^\d{13}$/.test(product.barcode!) && (
+                          <Text className="text-xs text-gray-400 font-mono font-bold tracking-widest">
+                            {product.barcode}
+                          </Text>
+                        )}
                       </View>
                     )}
                   </>
