@@ -23,8 +23,19 @@
         "buildType": "apk"
       }
     },
+    "playstore": {
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "playstore": {
+      "android": {
+        "track": "internal"
+      }
+    }
   }
 }

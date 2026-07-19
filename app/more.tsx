@@ -1794,7 +1794,7 @@ export default function MoreScreen() {
           >
             <View className="flex-1 mr-2">
               <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
-                {selectedOutlet ? selectedOutlet.name : "All Outlets (LALA JI)"}
+                {selectedOutlet ? selectedOutlet.name : "All Outlets (Owner Access)"}
               </Text>
               <Text className="text-sm text-text-secondary mt-0.5 capitalize">
                 {selectedOutlet ? selectedOutlet.type.replace("_", " ") : "Cross-outlet access"}
