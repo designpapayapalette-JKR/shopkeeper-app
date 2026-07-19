@@ -260,6 +260,11 @@ export default function InventoryScreen() {
   const [autoOpenedProductId, setAutoOpenedProductId] = useState<string | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
+  // Which field a scan result should go into — "search" (default, filters
+  // the catalog like before) or "newProductBarcode" (Add Product form's
+  // own Scan button).
+  const [scanTarget, setScanTarget] = useState<"search" | "newProductBarcode">("search");
+  const [generatingBarcode, setGeneratingBarcode] = useState(false);
 
   // Deep-link support: the dashboard's "Scan" quick action navigates here
   // with a query param so it jumps straight into the scanner instead of
@@ -346,7 +351,7 @@ export default function InventoryScreen() {
     }
   }, [params.openProductId, products]);
 
-  const handleScanBarcode = async () => {
+  const handleScanBarcode = async (target: "search" | "newProductBarcode" = "search") => {
     if (!permission) {
       // Camera permissions are still loading.
       return;
@@ -358,11 +363,31 @@ export default function InventoryScreen() {
         return;
       }
     }
+    setScanTarget(target);
     setIsScanning(true);
+  };
+
+  // Auto-generate the next barcode from the company's configured standard
+  // (Settings > Barcode & Labels) — same generator the "Assign Barcodes"
+  // bulk tool uses, just for a single product being added right now.
+  const handleGenerateBarcode = async () => {
+    setGeneratingBarcode(true);
+    try {
+      const res = await api.get<{ data: { barcode: string } }>("/products/next-barcode");
+      if (res?.data?.barcode) setNewProductBarcode(res.data.barcode);
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to generate a barcode.");
+    } finally {
+      setGeneratingBarcode(false);
+    }
   };
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     setIsScanning(false);
+    if (scanTarget === "newProductBarcode") {
+      setNewProductBarcode(data);
+      return;
+    }
     setSearch(data);
     Alert.alert("Barcode Scanned", `Filtered catalog by barcode: ${data}`);
   };
@@ -679,7 +704,7 @@ export default function InventoryScreen() {
             <MaterialCommunityIcons name="swap-horizontal" size={19} color="#0368FE" />
           </Pressable>
           <Pressable
-            onPress={handleScanBarcode}
+            onPress={() => handleScanBarcode("search")}
             className="w-11 h-11 rounded-xl bg-secondary dark:bg-secondary-dark items-center justify-center shadow-sm active:opacity-90"
           >
             <MaterialCommunityIcons name="barcode-scan" size={19} color="white" />
@@ -1155,13 +1180,35 @@ export default function InventoryScreen() {
               <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Barcode
               </Text>
-              <TextInput
-                value={newProductBarcode}
-                onChangeText={setNewProductBarcode}
-                placeholder="Enter barcode string"
-                placeholderTextColor="#A0A0A0"
-                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
-              />
+              <View className="flex-row" style={{ gap: 8 }}>
+                <TextInput
+                  value={newProductBarcode}
+                  onChangeText={setNewProductBarcode}
+                  placeholder="Scan, generate, or type a barcode"
+                  placeholderTextColor="#A0A0A0"
+                  className="flex-1 bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium"
+                />
+                <Pressable
+                  onPress={() => handleScanBarcode("newProductBarcode")}
+                  className="w-14 items-center justify-center rounded-xl bg-primary/10 border border-primary/30"
+                >
+                  <MaterialCommunityIcons name="barcode-scan" size={22} color="#0368FE" />
+                </Pressable>
+                <Pressable
+                  onPress={handleGenerateBarcode}
+                  disabled={generatingBarcode}
+                  className="w-14 items-center justify-center rounded-xl bg-primary/10 border border-primary/30"
+                >
+                  {generatingBarcode ? (
+                    <ActivityIndicator size="small" color="#0368FE" />
+                  ) : (
+                    <MaterialCommunityIcons name="auto-fix" size={22} color="#0368FE" />
+                  )}
+                </Pressable>
+              </View>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-1.5">
+                Scan an existing barcode off the product, or tap the wand to generate one using your shop&apos;s configured standard.
+              </Text>
             </View>
 
             <View className="mt-4">
