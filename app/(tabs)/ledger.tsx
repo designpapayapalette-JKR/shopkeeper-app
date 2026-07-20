@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../src/lib/auth-context";
 import { api, ApiError } from "../../src/lib/api";
@@ -49,6 +50,7 @@ interface LedgerEntry {
 }
 
 export default function LedgerScreen() {
+  const theme = useTheme();
   const { user, activeCompany } = useAuth();
   const { t } = useTerminology();
   const confirm = useConfirm();
@@ -453,7 +455,7 @@ export default function LedgerScreen() {
           className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3.5 py-2.5 rounded-xl shrink-0"
           style={{ gap: 6 }}
         >
-          <MaterialCommunityIcons name="view-list-outline" size={16} color="#0368FE" />
+          <MaterialCommunityIcons name="view-list-outline" size={16} color={theme.colors.primary} />
           <Text className="text-sm font-bold text-primary dark:text-primary-dark">All Ledger</Text>
         </Pressable>
       </View>
@@ -510,7 +512,7 @@ export default function LedgerScreen() {
       {/* List */}
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filteredParties.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20">
@@ -593,7 +595,7 @@ export default function LedgerScreen() {
                       className="flex-row items-center bg-primary/10 px-2.5 py-1.5 rounded-lg"
                       style={{ gap: 3 }}
                     >
-                      <MaterialCommunityIcons name="book-account-outline" size={13} color="#0368FE" />
+                      <MaterialCommunityIcons name="book-account-outline" size={13} color={theme.colors.primary} />
                       <Text className="text-xs font-bold text-primary dark:text-primary-dark">Ledger</Text>
                     </Pressable>
                   </View>
@@ -613,7 +615,7 @@ export default function LedgerScreen() {
           onPress={() => setIsBulkImportOpen(true)}
           className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-5 py-4 rounded-2xl items-center justify-center"
         >
-          <MaterialCommunityIcons name="tray-arrow-up" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="tray-arrow-up" size={20} color={theme.colors.primary} />
         </Pressable>
         <Pressable
           onPress={() => setIsAddingParty(true)}
@@ -786,7 +788,7 @@ export default function LedgerScreen() {
             {/* Entries timeline */}
             {entriesLoading ? (
               <View className="flex-grow justify-center items-center py-20">
-                <ActivityIndicator size="large" color="#0368FE" />
+                <ActivityIndicator size="large" color={theme.colors.primary} />
               </View>
             ) : ledgerEntries.length === 0 ? (
               <View className="flex-grow justify-center items-center py-20">

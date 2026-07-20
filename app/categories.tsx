@@ -11,14 +11,15 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
-import { useTopInset } from "../src/lib/useTopInset";
-import { useBottomInset } from "../src/lib/useBottomInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 
 interface CListItem {
   id: string;
@@ -31,10 +32,12 @@ export default function CategoriesScreen() {
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
   const router = useRouter();
+  const theme = useTheme();
 
   const [tab, setTab] = useState<"categories" | "brands">("categories");
   const [items, setItems] = useState<CListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Add/Edit Modal
   const [showForm, setShowForm] = useState(false);
@@ -56,6 +59,11 @@ export default function CategoriesScreen() {
       setLoading(false);
     }
   }, [tab]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
+  }, [load]);
 
   useEffect(() => {
     load();
@@ -115,14 +123,14 @@ export default function CategoriesScreen() {
   };
 
   const renderItem = ({ item }: { item: CListItem }) => (
-    <View className="bg-surface dark:bg-surface-dark p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm">
+    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-2xl border border-outline-variant dark:border-outline mb-3 shadow-sm">
       <View className="flex-row items-start justify-between">
         <View className="flex-1 mr-3">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
             {item.name}
           </Text>
           {item._count?.products !== undefined && (
-            <Text className="text-sm text-text-secondary mt-1">
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">
               {item._count.products} product{item._count.products !== 1 ? "s" : ""}
             </Text>
           )}
@@ -130,15 +138,15 @@ export default function CategoriesScreen() {
         <View className="flex-row" style={{ gap: 4 }}>
           <Pressable
             onPress={() => openEdit(item)}
-            className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center active:opacity-70"
+            className="w-9 h-9 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center active:opacity-70"
           >
-            <MaterialCommunityIcons name="pencil" size={16} color="#6B7280" />
+            <MaterialCommunityIcons name="pencil" size={16} color={theme.colors.onSurfaceVariant} />
           </Pressable>
           <Pressable
             onPress={() => handleDelete(item)}
             className="w-9 h-9 rounded-lg bg-red-50 items-center justify-center active:opacity-70"
           >
-            <MaterialCommunityIcons name="delete-outline" size={16} color="#D64545" />
+            <MaterialCommunityIcons name="delete-outline" size={16} color={theme.colors.error} />
           </Pressable>
         </View>
       </View>
@@ -146,20 +154,20 @@ export default function CategoriesScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
           </Pressable>
-          <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">
+          <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
             Categories & Brands
           </Text>
         </View>
         <Pressable
           onPress={openAdd}
-          className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80"
+          className="bg-primary dark:bg-primary-dark px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80"
           style={{ gap: 4 }}
         >
           <MaterialCommunityIcons name="plus" size={16} color="white" />
@@ -173,13 +181,13 @@ export default function CategoriesScreen() {
           onPress={() => setTab("categories")}
           className={`flex-1 py-2.5 rounded-xl items-center border ${
             tab === "categories"
-              ? "bg-primary border-primary"
-              : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"
+              ? "bg-primary dark:bg-primary-dark border-primary dark:border-primary-dark"
+              : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
           }`}
         >
           <Text
             className={`text-xs font-bold uppercase tracking-wider ${
-              tab === "categories" ? "text-white" : "text-text-secondary"
+              tab === "categories" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
             }`}
           >
             Categories
@@ -189,13 +197,13 @@ export default function CategoriesScreen() {
           onPress={() => setTab("brands")}
           className={`flex-1 py-2.5 rounded-xl items-center border ${
             tab === "brands"
-              ? "bg-primary border-primary"
-              : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"
+              ? "bg-primary dark:bg-primary-dark border-primary dark:border-primary-dark"
+              : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
           }`}
         >
           <Text
             className={`text-xs font-bold uppercase tracking-wider ${
-              tab === "brands" ? "text-white" : "text-text-secondary"
+              tab === "brands" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
             }`}
           >
             Brands
@@ -205,15 +213,15 @@ export default function CategoriesScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center pb-20">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : items.length === 0 ? (
         <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name={tab === "categories" ? "shape-outline" : "trademark"} size={48} color="#D1D5DB" />
-          <Text className="text-base font-bold text-text-secondary mt-4">
+          <MaterialCommunityIcons name={tab === "categories" ? "shape-outline" : "trademark"} size={48} color={theme.colors.outline} />
+          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">
             No {tab} yet
           </Text>
-          <Text className="text-sm text-text-secondary mt-1 text-center">
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
             Tap the Add button to create your first {tab.slice(0, -1)}.
           </Text>
         </View>
@@ -222,6 +230,7 @@ export default function CategoriesScreen() {
           data={items}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 24 }}
           showsVerticalScrollIndicator={false}
         />
@@ -235,20 +244,20 @@ export default function CategoriesScreen() {
             className="flex-1"
           >
             <ScrollView
-              className="flex-1 bg-background dark:bg-background-dark px-6 pb-10"
+              className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10"
               style={{ paddingTop: topInset }}
             >
               <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                   {editing ? "Edit" : "Add"} {tab === "categories" ? "Category" : "Brand"}
                 </Text>
                 <Pressable onPress={() => setShowForm(false)} className="w-11 h-11 items-center justify-center">
-                  <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
               </View>
 
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Name *
                 </Text>
                 <TextInput
@@ -257,21 +266,21 @@ export default function CategoriesScreen() {
                   placeholder={tab === "categories" ? "e.g. Groceries, Beverages" : "e.g. Tata, ITC"}
                   placeholderTextColor="#A0A0A0"
                   autoFocus
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
 
               <View className="flex-row justify-between mt-10" style={{ marginBottom: bottomInset }}>
                 <Pressable
                   onPress={() => setShowForm(false)}
-                  className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
+                  className="border border-outline-variant dark:border-outline py-4 px-6 rounded-xl w-[48%] items-center"
                 >
-                  <Text className="text-text-secondary font-bold">Cancel</Text>
+                  <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold">Cancel</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleSave}
                   disabled={saving}
-                  className="bg-primary py-4 px-6 rounded-xl w-[48%] items-center"
+                  className="bg-primary dark:bg-primary-dark py-4 px-6 rounded-xl w-[48%] items-center"
                 >
                   {saving ? (
                     <ActivityIndicator color="white" />

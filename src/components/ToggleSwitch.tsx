@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { Pressable, Animated } from "react-native";
+import { useTheme } from "react-native-paper";
 
 interface ToggleSwitchProps {
   value: boolean;
@@ -11,14 +12,13 @@ const TRACK_WIDTH = 48;
 const TRACK_HEIGHT = 28;
 const THUMB_SIZE = 22;
 const THUMB_MARGIN = 3;
-const TRACK_OFF = "#D1D5DB";
-const TRACK_ON = "#0368FE";
 
 export default function ToggleSwitch({
   value,
   onValueChange,
   disabled,
 }: ToggleSwitchProps) {
+  const theme = useTheme();
   const animatedValue = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function ToggleSwitch({
 
   const trackColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [TRACK_OFF, TRACK_ON],
+    outputRange: [theme.colors.outlineVariant, theme.colors.primary],
   });
 
   const thumbTranslate = animatedValue.interpolate({

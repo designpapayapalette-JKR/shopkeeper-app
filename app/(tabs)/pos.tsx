@@ -19,6 +19,7 @@ import * as Print from "expo-print";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { generateReceiptHtml, ReceiptData, thermalPageWidthPt, estimateThermalPageHeightPt, ThermalPaperWidth } from "../../src/lib/printer";
 import { generateTallyInvoiceHtml, TallyInvoiceItem } from "../../src/lib/invoiceTemplate";
 import { shareInvoiceFile } from "../../src/lib/sharer";
@@ -95,6 +96,7 @@ interface CartItem {
 }
 
 export default function PosScreen() {
+  const theme = useTheme();
   const { user, activeCompany, activeBrand } = useAuth();
   const pinVerifiedRef = useRef(false);
   const { t } = useTerminology();
@@ -508,7 +510,7 @@ export default function PosScreen() {
     if (loading) {
       return (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       );
     }
@@ -536,7 +538,7 @@ export default function PosScreen() {
                   key={item.id}
                   onPress={() => addToCart(item)}
                   className="flex-1 bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline overflow-hidden active:opacity-80"
-                  style={inCart ? { borderColor: "#0368FE", borderWidth: 2 } : undefined}
+                  style={inCart ? { borderColor: theme.colors.primary, borderWidth: 2 } : undefined}
                 >
                   <View className="p-3">
                     <Text numberOfLines={2} className="font-bold text-sm text-on-surface dark:text-text-primary-dark leading-snug min-h-[2.5em]">
@@ -583,7 +585,7 @@ export default function PosScreen() {
                   </View>
                   {inCart && (
                     <View className="bg-primary/10 dark:bg-primary-dark/10 px-2 py-1 flex-row items-center justify-center" style={{ gap: 4 }}>
-                      <MaterialCommunityIcons name="check-circle" size={12} color="#0368FE" />
+                      <MaterialCommunityIcons name="check-circle" size={12} color={theme.colors.primary} />
                       <Text className="text-xs font-bold text-primary dark:text-primary-dark">
                         {inCart.quantity}{inCart.billingMode === "weight" ? ` ${item.weight_unit || "kg"}` : inCart.billingMode === "fixed" ? ` ${item.alternate_unit || "pkt"}` : ""}
                       </Text>
@@ -1369,7 +1371,7 @@ export default function PosScreen() {
       >
         <View className="flex-row items-center flex-1 mr-3">
           <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mr-3">
-            <MaterialCommunityIcons name="account" size={20} color="#0368FE" />
+            <MaterialCommunityIcons name="account" size={20} color={theme.colors.primary} />
           </View>
           <View className="flex-1">
             <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Customer</Text>
@@ -1474,11 +1476,11 @@ export default function PosScreen() {
                     className="flex-row items-center bg-primary/10 px-2.5 py-1 rounded-lg"
                     style={{ gap: 4 }}
                   >
-                    <MaterialCommunityIcons name="percent-outline" size={12} color="#0368FE" />
+                    <MaterialCommunityIcons name="percent-outline" size={12} color={theme.colors.primary} />
                     <Text className="text-xs font-bold text-primary dark:text-primary-dark">
                       GST {effectiveTaxRate(item)}% {item.customTaxRate ? "(custom)" : ""}
                     </Text>
-                    <MaterialCommunityIcons name="pencil" size={11} color="#0368FE" />
+                    <MaterialCommunityIcons name="pencil" size={11} color={theme.colors.primary} />
                   </Pressable>
                 )}
                 <View className="flex-row items-center bg-surface-container rounded-lg" style={{ gap: 2 }}>
@@ -1593,7 +1595,7 @@ export default function PosScreen() {
           <MaterialCommunityIcons
             name={applyRoundOff ? "toggle-switch" : "toggle-switch-off-outline"}
             size={26}
-            color={applyRoundOff ? "#0368FE" : "#9E9E9E"}
+            color={applyRoundOff ? theme.colors.primary : theme.colors.outline}
           />
         </Pressable>
 
@@ -1607,7 +1609,7 @@ export default function PosScreen() {
             }`}
           >
             <View className="flex-row items-center" style={{ gap: 8 }}>
-              <MaterialCommunityIcons name="percent-outline" size={16} color={estimateWithGst ? "#0368FE" : "#6e7a74"} />
+              <MaterialCommunityIcons name="percent-outline" size={16} color={estimateWithGst ? theme.colors.primary : theme.colors.outline} />
               <Text className={`text-sm font-bold ${estimateWithGst ? "text-primary dark:text-primary-dark" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
                 Include GST in this estimate
               </Text>
@@ -1615,7 +1617,7 @@ export default function PosScreen() {
             <MaterialCommunityIcons
               name={estimateWithGst ? "toggle-switch" : "toggle-switch-off-outline"}
               size={26}
-              color={estimateWithGst ? "#0368FE" : "#9E9E9E"}
+              color={estimateWithGst ? theme.colors.primary : theme.colors.outline}
             />
           </Pressable>
         )}
@@ -1641,7 +1643,7 @@ export default function PosScreen() {
                   <MaterialCommunityIcons
                     name={sp.method === "cash" ? "cash" : sp.method === "upi" ? "cellphone" : "book-account-outline"}
                     size={16}
-                    color="#0368FE"
+                    color={theme.colors.primary}
                   />
                   <Text className="text-xs font-bold text-on-surface-variant capitalize">{sp.method}</Text>
                   <MaterialCommunityIcons name="chevron-down" size={14} color="#6B7280" />
@@ -1673,7 +1675,7 @@ export default function PosScreen() {
               className="flex-row items-center justify-center py-2 rounded-xl border border-dashed border-outline-variant"
               style={{ gap: 4 }}
             >
-              <MaterialCommunityIcons name="plus" size={14} color="#0368FE" />
+              <MaterialCommunityIcons name="plus" size={14} color={theme.colors.primary} />
               <Text className="text-xs font-bold text-primary">Add split payment</Text>
             </Pressable>
             <Text className="text-xs text-on-surface-variant text-right">
@@ -1724,13 +1726,13 @@ export default function PosScreen() {
               <Image source={{ uri: activeCompany.upi_qr_url }} style={{ width: 140, height: 140 }} className="rounded-lg" />
             ) : (
               <View style={{ width: 140, height: 140 }} className="items-center justify-center rounded-lg bg-white border border-outline-variant">
-                <MaterialCommunityIcons name="qrcode" size={48} color="#0368fe" />
+                <MaterialCommunityIcons name="qrcode" size={48} color={theme.colors.primary} />
                 <Text className="text-[9px] text-center mt-1 px-2 text-on-surface-variant">Upload QR in Settings</Text>
               </View>
             )}
-            <Text className="text-sm font-mono font-bold mt-2 text-text-primary">{activeCompany.upi_id}</Text>
+            <Text className="text-sm font-mono font-bold mt-2 text-on-surface dark:text-text-primary-dark">{activeCompany.upi_id}</Text>
             {activeCompany?.upi_payee_name && (
-              <Text className="text-xs text-text-secondary">{activeCompany.upi_payee_name}</Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{activeCompany.upi_payee_name}</Text>
             )}
           </View>
         )}
@@ -1762,7 +1764,7 @@ export default function PosScreen() {
           <MaterialCommunityIcons
             name={isSplitPayment ? "toggle-switch" : "toggle-switch-off-outline"}
             size={18}
-            color={isSplitPayment ? "#0368FE" : "#9E9E9E"}
+            color={isSplitPayment ? theme.colors.primary : theme.colors.outline}
           />
           <Text className={`text-xs font-semibold ${isSplitPayment ? "text-primary" : "text-on-surface-variant"}`}>
             Split payment
@@ -1994,7 +1996,7 @@ export default function PosScreen() {
                 className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
               />
               <Pressable onPress={handleScanBarcode} className="ml-2 w-8 h-8 items-center justify-center">
-                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0368FE" />
+                <MaterialCommunityIcons name="barcode-scan" size={20} color={theme.colors.primary} />
               </Pressable>
             </View>
             {categories.length > 0 && (
@@ -2020,7 +2022,7 @@ export default function PosScreen() {
               renderPosProductGrid()
             ) : loading ? (
               <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#0368FE" />
+                <ActivityIndicator size="large" color={theme.colors.primary} />
               </View>
             ) : (
               <FlatList
@@ -2094,7 +2096,7 @@ export default function PosScreen() {
                 </Pressable>
                 {selectedParty && (
                   <Pressable onPress={() => setIsSelectingParty(true)} className="bg-primary/10 dark:bg-primary-dark/10 px-3 py-1.5 rounded-full flex-row items-center" style={{ gap: 4 }}>
-                    <MaterialCommunityIcons name="account" size={14} color="#0368FE" />
+                    <MaterialCommunityIcons name="account" size={14} color={theme.colors.primary} />
                     <Text className="text-primary dark:text-primary-dark text-sm font-bold">{selectedParty.name}</Text>
                     {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
                       <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-500" : "text-green-600"}`}>
@@ -2124,7 +2126,7 @@ export default function PosScreen() {
                 className="flex-1 text-base font-medium text-on-surface dark:text-text-primary-dark"
               />
               <Pressable onPress={handleScanBarcode} className="ml-2 w-8 h-8 items-center justify-center">
-                <MaterialCommunityIcons name="barcode-scan" size={20} color="#0368FE" />
+                <MaterialCommunityIcons name="barcode-scan" size={20} color={theme.colors.primary} />
               </Pressable>
             </View>
           </View>
@@ -2156,7 +2158,7 @@ export default function PosScreen() {
           <View className="flex-1 px-5">
             {loading ? (
               <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#0368FE" />
+                <ActivityIndicator size="large" color={theme.colors.primary} />
               </View>
             ) : (
               <FlatList
@@ -2509,7 +2511,7 @@ export default function PosScreen() {
 
           {heldBillsLoading ? (
             <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#0368FE" />
+              <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
           ) : heldBills.length === 0 ? (
             <View className="flex-1 justify-center items-center">
@@ -2560,9 +2562,9 @@ export default function PosScreen() {
       {/* PIN-gated checkout overlay */}
       <Modal visible={showPinModal} animationType="fade" transparent onRequestClose={() => setShowPinModal(false)}>
         <View className="flex-1 bg-black/40 justify-center items-center px-8">
-          <View className="w-full max-w-sm bg-surface dark:bg-zinc-900 rounded-3xl p-8 border border-gray-100 dark:border-zinc-800 shadow-xl">
-            <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark text-center mb-1">Enter PIN</Text>
-            <Text className="text-sm text-text-secondary dark:text-text-secondary-dark text-center mb-6">Enter your Quick PIN to authorize this sale.</Text>
+          <View className="w-full max-w-sm bg-surface-container-lowest dark:bg-surface-dark rounded-3xl p-8 border border-outline-variant dark:border-outline shadow-xl">
+            <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark text-center mb-1">Enter PIN</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mb-6">Enter your Quick PIN to authorize this sale.</Text>
             <TextInput
               value={pinInput}
               onChangeText={(t) => { setPinInput(t.replace(/[^0-9]/g, "").slice(0, 4)); setPinError(""); }}
@@ -2570,15 +2572,15 @@ export default function PosScreen() {
               secureTextEntry
               maxLength={4}
               placeholder="• • • •"
-              placeholderTextColor="#A0A0A0"
+              placeholderTextColor={theme.colors.onSurfaceVariant}
               autoFocus
-              className="bg-background dark:bg-zinc-800 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-4 text-center text-2xl font-bold tracking-[12px] mb-2"
+              className="bg-background dark:bg-zinc-800 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-center text-2xl font-bold tracking-[12px] mb-2"
             />
             {pinError !== "" && <Text className="text-sm font-bold text-error text-center mb-2">{pinError}</Text>}
             <View className="flex-row mt-4" style={{ gap: 10 }}>
               <Pressable onPress={() => { setShowPinModal(false); setPinInput(""); setPinError(""); }}
-                className="flex-1 border border-gray-200 dark:border-zinc-700 py-3.5 rounded-xl items-center">
-                <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
+                className="flex-1 border border-outline-variant dark:border-outline py-3.5 rounded-xl items-center">
+                <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold">Cancel</Text>
               </Pressable>
               <Pressable onPress={verifyPinAndProceed} disabled={pinInput.length < 4}
                 className={`flex-1 py-3.5 rounded-xl items-center ${pinInput.length < 4 ? "bg-primary/50" : "bg-primary"}`}>

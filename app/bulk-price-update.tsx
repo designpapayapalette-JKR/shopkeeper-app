@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
@@ -25,6 +26,7 @@ interface PriceItem {
 }
 
 export default function BulkPriceUpdateScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const router = useRouter();
@@ -95,27 +97,27 @@ export default function BulkPriceUpdateScreen() {
   };
 
   const renderItem = ({ item }: { item: PriceItem }) => (
-    <View className="flex-row items-center bg-surface dark:bg-surface-dark px-4 py-3.5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-2">
-      <Text className="flex-1 text-sm font-bold text-text-primary dark:text-text-primary-dark mr-2" numberOfLines={1}>
+    <View className="flex-row items-center bg-surface-container-lowest dark:bg-surface-dark px-4 py-3.5 rounded-2xl border border-outline-variant dark:border-outline mb-2">
+      <Text className="flex-1 text-sm font-bold text-on-surface dark:text-text-primary-dark mr-2" numberOfLines={1}>
         {item.name}
       </Text>
       <TextInput
         value={item.price.toString()}
         onChangeText={(v) => updatePrice(item.id, v)}
         keyboardType="decimal-pad"
-        className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-sm font-bold w-24 text-right"
+        className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-sm font-bold w-24 text-right"
       />
     </View>
   );
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
           </Pressable>
-          <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">
+          <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
             Bulk Price Update
           </Text>
         </View>
@@ -123,7 +125,7 @@ export default function BulkPriceUpdateScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <KeyboardAvoidingView
@@ -136,8 +138,8 @@ export default function BulkPriceUpdateScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* % Change Input */}
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-6">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-4">
                 Apply % Change
               </Text>
               <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -147,16 +149,16 @@ export default function BulkPriceUpdateScreen() {
                   placeholder="e.g. 10 or -5"
                   placeholderTextColor="#A0A0A0"
                   keyboardType="numeric"
-                  className="flex-1 bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="flex-1 bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
-                <Text className="text-sm font-bold text-text-secondary">%</Text>
+                <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">%</Text>
               </View>
-              <Text className="text-xs text-text-secondary mt-2">Positive = increase, negative = decrease</Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-2">Positive = increase, negative = decrease</Text>
             </View>
 
             {/* Product List */}
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-6">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
                 {items.length} Product{items.length !== 1 ? "s" : ""}
               </Text>
 
@@ -170,7 +172,7 @@ export default function BulkPriceUpdateScreen() {
             <Pressable
               onPress={handleSave}
               disabled={submitting}
-              className="bg-primary py-4 rounded-xl items-center mb-6"
+              className="bg-primary dark:bg-primary-dark py-4 rounded-xl items-center mb-6"
             >
               {submitting ? (
                 <ActivityIndicator color="white" />

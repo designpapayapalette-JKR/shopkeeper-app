@@ -1,19 +1,34 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { useTheme } from "react-native-paper";
 import { api } from "../src/lib/api";
-import { useTopInset } from "../src/lib/useTopInset";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+
+interface AgingEntry {
+  party_name: string;
+  invoice_number: string;
+  date: string;
+  due_amount: number;
+}
+
+interface AgingData {
+  bucket_totals: Record<string, { total: number; count: number }>;
+  buckets: Record<string, AgingEntry[]>;
+  total_outstanding: number;
+}
 
 export default function AgingReportScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const [type, setType] = useState<"receivable" | "payable">("receivable");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AgingData | null>(null);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await api.get<{ data: any }>("/reports/aging-report", { params: { type } });
+      const res = await api.get<{ data: AgingData }>("/reports/aging-report", { params: { type } });
       setData(res.data);
     } catch (e) {
       Alert.alert("Error", "Could not load aging report.");
@@ -30,28 +45,28 @@ export default function AgingReportScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: topInset + 8 }}>
-    <ScrollView style={{ flex: 1 }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset + 8 }}>
+    <ScrollView contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
       <View className="px-4 py-3">
-        <Text className="text-xl font-black text-text-primary mb-1">Aging Report</Text>
-        <Text className="text-sm text-text-secondary mb-4">{type === "receivable" ? "Receivables (Customers)" : "Payables (Suppliers)"}</Text>
+        <Text className="text-xl font-black text-on-surface dark:text-text-primary-dark mb-1">Aging Report</Text>
+        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">{type === "receivable" ? "Receivables (Customers)" : "Payables (Suppliers)"}</Text>
 
         <View className="flex-row gap-2 mb-4">
           <Pressable
             onPress={() => setType("receivable")}
-            className={`px-4 py-2 rounded-xl ${type === "receivable" ? "bg-primary" : "bg-surface border border-gray-200"}`}
+            className={`px-4 py-2 rounded-xl ${type === "receivable" ? "bg-primary dark:bg-primary-dark" : "bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline"}`}
           >
-            <Text className={`text-sm font-bold ${type === "receivable" ? "text-white" : "text-text-primary"}`}>Receivables</Text>
+            <Text className={`text-sm font-bold ${type === "receivable" ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>Receivables</Text>
           </Pressable>
           <Pressable
             onPress={() => setType("payable")}
-            className={`px-4 py-2 rounded-xl ${type === "payable" ? "bg-primary" : "bg-surface border border-gray-200"}`}
+            className={`px-4 py-2 rounded-xl ${type === "payable" ? "bg-primary dark:bg-primary-dark" : "bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline"}`}
           >
-            <Text className={`text-sm font-bold ${type === "payable" ? "text-white" : "text-text-primary"}`}>Payables</Text>
+            <Text className={`text-sm font-bold ${type === "payable" ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>Payables</Text>
           </Pressable>
         </View>
 
-        <Pressable onPress={load} disabled={loading} className="bg-primary px-6 py-3 rounded-xl items-center mb-4">
+        <Pressable onPress={load} disabled={loading} className="bg-primary dark:bg-primary-dark px-6 py-3 rounded-xl items-center mb-4">
           {loading ? (
             <ActivityIndicator color="white" />
           ) : (
@@ -62,35 +77,35 @@ export default function AgingReportScreen() {
         {data && (
           <>
             <View className="flex-row flex-wrap gap-2 mb-4">
-              {Object.entries(data.bucket_totals || {}).map(([key, val]: any) => (
-                <View key={key} className="bg-surface rounded-xl px-4 py-3 flex-1 min-w-[80px] border border-gray-100" style={{ borderLeftColor: bucketColors[key] || "#999", borderLeftWidth: 3 }}>
-                  <Text className="text-[10px] font-bold text-text-secondary uppercase">{key}d</Text>
-                  <Text className="text-base font-black text-text-primary">₹{Number(val.total).toLocaleString("en-IN")}</Text>
-                  <Text className="text-[10px] text-text-secondary">{val.count} items</Text>
+              {Object.entries(data.bucket_totals || {}).map(([key, val]) => (
+                <View key={key} className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl px-4 py-3 flex-1 min-w-[80px] border border-outline-variant dark:border-outline" style={{ borderLeftColor: bucketColors[key] || theme.colors.onSurfaceVariant, borderLeftWidth: 3 }}>
+                  <Text className="text-[10px] font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase">{key}d</Text>
+                  <Text className="text-base font-black text-on-surface dark:text-text-primary-dark">₹{Number(val.total).toLocaleString("en-IN")}</Text>
+                  <Text className="text-[10px] text-on-surface-variant dark:text-text-secondary-dark">{val.count} items</Text>
                 </View>
               ))}
             </View>
 
-            <View className="bg-surface rounded-xl px-4 py-3 mb-4 border border-gray-100">
-              <Text className="text-xs text-text-secondary">Total Outstanding</Text>
-              <Text className="text-lg font-black text-text-primary">₹{Number(data.total_outstanding).toLocaleString("en-IN")}</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl px-4 py-3 mb-4 border border-outline-variant dark:border-outline">
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">Total Outstanding</Text>
+              <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark">₹{Number(data.total_outstanding).toLocaleString("en-IN")}</Text>
             </View>
 
             {["0-30", "31-60", "61-90", "90+"].map((bucket) => {
               const entries = data.buckets?.[bucket] || [];
               if (entries.length === 0) return null;
               return (
-                <View key={bucket} className="mb-4 bg-surface rounded-xl border border-gray-100 overflow-hidden">
-                  <View className="px-4 py-3 border-b border-gray-100" style={{ backgroundColor: bucketColors[bucket] + "15" }}>
-                    <Text className="text-sm font-bold text-text-primary">{bucket} Days ({entries.length})</Text>
+                <View key={bucket} className="mb-4 bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline overflow-hidden">
+                  <View className="px-4 py-3 border-b border-outline-variant dark:border-outline" style={{ backgroundColor: bucketColors[bucket] + "15" }}>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{bucket} Days ({entries.length})</Text>
                   </View>
-                  {entries.map((e: any, i: number) => (
-                    <View key={i} className="px-4 py-3 border-b border-gray-50 flex-row justify-between items-center">
+                  {entries.map((e, i) => (
+                    <View key={i} className="px-4 py-3 border-b border-outline-variant dark:border-outline flex-row justify-between items-center">
                       <View className="flex-1">
-                        <Text className="text-sm font-bold text-text-primary">{e.party_name}</Text>
-                        <Text className="text-xs text-text-secondary">{e.invoice_number} • {new Date(e.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</Text>
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{e.party_name}</Text>
+                        <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{e.invoice_number} • {new Date(e.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</Text>
                       </View>
-                      <Text className="text-sm font-black text-red-500">₹{Number(e.due_amount).toLocaleString("en-IN")}</Text>
+                      <Text className="text-sm font-black text-error">₹{Number(e.due_amount).toLocaleString("en-IN")}</Text>
                     </View>
                   ))}
                 </View>

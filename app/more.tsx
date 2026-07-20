@@ -17,6 +17,7 @@ import {
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { useAuth } from "../src/lib/auth-context";
 import { api, ApiError, uploadDocument } from "../src/lib/api";
 import { SETTINGS_MODULE_CATEGORIES } from "../src/lib/moduleCategories";
@@ -154,6 +155,7 @@ interface BusinessProfileSnapshot {
 }
 
 export default function MoreScreen() {
+  const theme = useTheme();
   const { user, activeCompany, refreshCompany, setupQuickPin, pinLoginAvailable, logout } = useAuth();
   const { lang, setLang, t } = useTerminology();
   const router = useRouter();
@@ -1273,10 +1275,10 @@ export default function MoreScreen() {
     <ScrollView className="flex-1 px-6">
       {/* Title */}
       <View className="mb-8">
-        <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+        <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
           Operations
         </Text>
-        <Text className="text-sm text-text-secondary dark:text-text-secondary-dark font-medium mt-0.5">
+        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark font-medium mt-0.5">
           Day-to-day workflows and merchant configuration
         </Text>
       </View>
@@ -1289,78 +1291,78 @@ export default function MoreScreen() {
 
       {/* Purchases, Returns & Compliance — daily counter workflows */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
           Purchases, Returns & Compliance
         </Text>
 
         <Pressable onPress={() => router.push("/purchase-entry" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Record Purchase</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Record Purchase</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/credit-note" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Credit Note</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Credit Note</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/debit-note" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Debit Note</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Debit Note</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/recurring-invoices" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Recurring Invoices</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Recurring Invoices</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/sales-orders" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Sales Orders</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Sales Orders</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/purchase-orders" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Purchase Orders</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Purchase Orders</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/stock-transfer-requests" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Stock Transfer Requests</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Stock Transfer Requests</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
 
         <Pressable onPress={() => router.push("/referral-program" as any)} className="flex-row justify-between items-center py-2.5">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Referral Program</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Referral Program</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
       {/* Data & Activity — daily lookups & sharing */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
           Data & Activity
         </Text>
         <Pressable
           onPress={() => router.push("/invoice-history" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Invoice History
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1369,10 +1371,10 @@ export default function MoreScreen() {
           onPress={() => router.push("/purchase-history" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Purchase History
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1381,10 +1383,10 @@ export default function MoreScreen() {
           onPress={() => router.push("/expenses" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             {t("expenses")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1393,10 +1395,10 @@ export default function MoreScreen() {
           onPress={() => router.push("/gst-reports?tab=daybook" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             {t("dayBook")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1405,10 +1407,10 @@ export default function MoreScreen() {
           onPress={() => router.push("/support-tickets" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Support Tickets
           </Text>
-          <MaterialCommunityIcons name="headset" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="headset" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1417,27 +1419,27 @@ export default function MoreScreen() {
           onPress={() => router.push("/recycle-bin" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             {t("recycleBin")}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
       {/* Staff & Employees — daily team management */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
           Staff & Employees
         </Text>
         <Pressable
           onPress={() => router.push("/staff" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Manage Employees
           </Text>
           <View className="flex-row items-center" style={{ gap: 4 }}>
-            <MaterialCommunityIcons name="account-group" size={16} color="#0368FE" />
+            <MaterialCommunityIcons name="account-group" size={16} color={theme.colors.primary} />
             <Text className="text-primary font-bold text-base">Manage</Text>
           </View>
         </Pressable>
@@ -1451,11 +1453,11 @@ export default function MoreScreen() {
           }}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Add New Employee
           </Text>
           <View className="flex-row items-center" style={{ gap: 4 }}>
-            <MaterialCommunityIcons name="plus" size={16} color="#0368FE" />
+            <MaterialCommunityIcons name="plus" size={16} color={theme.colors.primary} />
             <Text className="text-primary font-bold text-base">Add</Text>
           </View>
         </Pressable>
@@ -1469,10 +1471,10 @@ export default function MoreScreen() {
           }}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Dispatch Agent Task
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
@@ -1483,7 +1485,7 @@ export default function MoreScreen() {
 
       {/* Financial Reports */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
           Financial Reports
         </Text>
 
@@ -1494,10 +1496,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Sales Performance Report
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <Pressable
@@ -1507,10 +1509,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Inventory Stock Levels
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <Pressable
@@ -1520,10 +1522,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Ledger Outstanding Summary
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-3" />
@@ -1532,46 +1534,46 @@ export default function MoreScreen() {
           onPress={() => router.push("/gst-reports" as any)}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             GST & Compliance Reports
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/aging-report" as any)}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-2"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Aging Report
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/pnl-report" as any)}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-2"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             P&L Statement
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/balance-sheet" as any)}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50 mt-2"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Balance Sheet & Stock Valuation
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
       {/* Compliance & Configuration */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
           Compliance & Configuration
         </Text>
 
@@ -1579,8 +1581,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/bank-reconciliation" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Reconciliation</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Bank Reconciliation</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1589,8 +1591,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/financial-year" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Financial Year Closing</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Financial Year Closing</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1599,8 +1601,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/barcode-generator" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Barcode Generator</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Barcode Generator</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1609,8 +1611,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/printer-settings" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Printer Settings</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Printer Settings</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1619,8 +1621,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/categories" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Categories & Brands</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Categories & Brands</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1629,8 +1631,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/customer-groups" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Customer Groups</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Customer Groups</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1639,8 +1641,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/price-lists" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Price Lists</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Price Lists</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1649,8 +1651,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/invoice-templates" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Invoice Templates</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Invoice Templates</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1659,8 +1661,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/scanned-documents" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Scanned Documents Archive</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Scanned Documents Archive</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1669,8 +1671,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/activity-log" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Activity Log</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Activity Log</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1679,8 +1681,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/bank-accounts" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bank Accounts</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Bank Accounts</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1689,8 +1691,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/gst-rate-tools" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">GST Rate Tools</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">GST Rate Tools</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1699,8 +1701,8 @@ export default function MoreScreen() {
           onPress={() => router.push("/bulk-price-update" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Bulk Price Update</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Bulk Price Update</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -1709,14 +1711,14 @@ export default function MoreScreen() {
           onPress={() => router.push("/reorder-suggestions" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">Reorder Suggestions</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">Reorder Suggestions</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
       {/* Inventory & Logistics Operations */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
           Inventory & Logistics
         </Text>
 
@@ -1727,10 +1729,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50 dark:active:bg-zinc-800"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Record Purchase Bill
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         {canManageWarehouse && (
@@ -1741,10 +1743,10 @@ export default function MoreScreen() {
             }}
             className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
           >
-            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
               Stock Transfer
             </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
           </Pressable>
         )}
 
@@ -1756,10 +1758,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Logistics & Delivery Challans
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         {canManageWarehouse && (
@@ -1770,10 +1772,10 @@ export default function MoreScreen() {
             }}
             className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
           >
-            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
               Warehouse Management
             </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
           </Pressable>
         )}
 
@@ -1784,10 +1786,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Stock Movements Log
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-3" />
@@ -1796,16 +1798,16 @@ export default function MoreScreen() {
           onPress={() => router.push("/barcode-generator" as any)}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Barcode Generator
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
       {/* Staff Operations */}
       <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
           Staff Management
         </Text>
 
@@ -1816,10 +1818,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Staff Attendance Checklist
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <Pressable
@@ -1830,10 +1832,10 @@ export default function MoreScreen() {
           }}
           className="border border-gray-200 dark:border-zinc-800 py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:bg-gray-50"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
             Employee Salaries
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
@@ -1845,7 +1847,7 @@ export default function MoreScreen() {
 
       {/* Language Settings */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark mb-4">
+        <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mb-4">
           App Language
         </Text>
         <View className="flex-row flex-wrap bg-gray-50 p-1 rounded-xl" style={{ gap: 4 }}>
@@ -1864,7 +1866,7 @@ export default function MoreScreen() {
               onPress={() => setLang(l.key as TerminologyLang)}
               className={`py-2.5 px-3 rounded-lg items-center ${lang === l.key ? "bg-primary shadow-sm" : ""}`}
             >
-              <Text className={`text-xs font-bold ${lang === l.key ? "text-white" : "text-text-primary"}`}>{l.label}</Text>
+              <Text className={`text-xs font-bold ${lang === l.key ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>{l.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -1873,7 +1875,7 @@ export default function MoreScreen() {
       {/* Outlet Switcher */}
       {outlets.length > 0 && (
         <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark mb-4">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mb-4">
             Current Outlet
           </Text>
           <Pressable
@@ -1881,14 +1883,14 @@ export default function MoreScreen() {
             className="flex-row justify-between items-center py-3"
           >
             <View className="flex-1 mr-2">
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">
                 {selectedOutlet ? selectedOutlet.name : "All Outlets (Owner Access)"}
               </Text>
-              <Text className="text-sm text-text-secondary mt-0.5 capitalize">
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5 capitalize">
                 {selectedOutlet ? selectedOutlet.type.replace("_", " ") : "Cross-outlet access"}
               </Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={22} color="#0368FE" />
+            <MaterialCommunityIcons name="chevron-right" size={22} color={theme.colors.primary} />
           </Pressable>
         </View>
       )}
@@ -1900,7 +1902,7 @@ export default function MoreScreen() {
           in-app edit form — only Printer Settings stays here since
           Bluetooth/USB pairing can only happen on the physical device. */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-4">
           Business Profile
         </Text>
         <Pressable
@@ -1908,11 +1910,11 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-3"
         >
           <View className="flex-1 mr-2">
-            <Text className="text-sm font-bold text-text-secondary">Edit GSTIN, address, bank details</Text>
+            <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">Edit GSTIN, address, bank details</Text>
           </View>
           <View className="flex-row items-center gap-1.5">
             <Text className="text-sm font-bold text-primary">Web Portal</Text>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#0368FE" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color={theme.colors.primary} />
           </View>
         </Pressable>
 
@@ -1923,11 +1925,11 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-2.5"
         >
           <View className="flex-1 mr-2">
-            <Text className="text-sm font-bold text-text-secondary">GST default, discount type, walk-in name</Text>
+            <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">GST default, discount type, walk-in name</Text>
           </View>
           <View className="flex-row items-center gap-1.5">
             <Text className="text-sm font-bold text-primary">Web Portal</Text>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#0368FE" />
+            <MaterialCommunityIcons name="open-in-new" size={18} color={theme.colors.primary} />
           </View>
         </Pressable>
 
@@ -1937,26 +1939,26 @@ export default function MoreScreen() {
           onPress={() => router.push("/printer-settings" as any)}
           className="flex-row justify-between items-center py-2.5"
         >
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
             Printer Settings
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
       {/* Subscription */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-4">
           Subscription
         </Text>
         <View className="flex-row items-center justify-between py-2">
-          <Text className="text-sm text-text-secondary">Plan</Text>
-          <Text className="text-sm font-bold text-text-primary capitalize">
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Plan</Text>
+          <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark capitalize">
             {activeCompany?.subscription_plan || "Trial"}
           </Text>
         </View>
         <View className="flex-row items-center justify-between py-2">
-          <Text className="text-sm text-text-secondary">Status</Text>
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Status</Text>
           <View className="flex-row items-center gap-1.5">
             <View className="w-2 h-2 rounded-full" style={{
               backgroundColor: activeCompany?.subscription_status === "active" ? "#10B981"
@@ -1974,8 +1976,8 @@ export default function MoreScreen() {
         </View>
         {activeCompany?.subscription_end_date && (
           <View className="flex-row items-center justify-between py-2">
-            <Text className="text-sm text-text-secondary">Expires</Text>
-            <Text className="text-sm font-bold text-text-primary">
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Expires</Text>
+            <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
               {new Date(activeCompany.subscription_end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
             </Text>
           </View>
@@ -1986,7 +1988,7 @@ export default function MoreScreen() {
           className="flex-row items-center justify-between py-2"
         >
           <Text className="text-sm font-bold text-primary">Manage in Web Portal</Text>
-          <MaterialCommunityIcons name="open-in-new" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="open-in-new" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
 
@@ -1994,17 +1996,17 @@ export default function MoreScreen() {
           mobile-specific selection, separate from the web sidebar's module
           list. Leaving it empty falls back to whatever's enabled on web. */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-4">
           Module Configuration
         </Text>
-        <Text className="text-sm text-text-secondary mb-4">
+        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">
           {isOwner
             ? "Choose which modules appear in this app. This is separate from the web dashboard&apos;s module list."
             : "Modules currently enabled for your business. Only the shop owner can change these."}
         </Text>
         {mobileModulesLoaded && isOwner && mobileModules.length === 0 && (
           <View className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5 mb-4">
-            <Text className="text-xs text-text-secondary">
+            <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
               No mobile-specific selection yet — this app is currently using the web dashboard&apos;s module list. Toggling any module below starts a mobile-only selection.
             </Text>
           </View>
@@ -2017,8 +2019,8 @@ export default function MoreScreen() {
             <View key={cat.id} className="mb-4">
               <View className="flex-row items-center gap-2 mb-2">
                 <View className="w-1 h-4 rounded-full bg-primary" />
-                <Text className="text-xs font-bold text-text-secondary uppercase tracking-wider">{cat.label}</Text>
-                <Text className="text-[10px] text-text-secondary ml-auto">{enabledCount} enabled</Text>
+                <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">{cat.label}</Text>
+                <Text className="text-[10px] text-on-surface-variant dark:text-text-secondary-dark ml-auto">{enabledCount} enabled</Text>
               </View>
               {catModulesToShow.map((mod) => {
                 const enabled = enabledModules.includes(mod.key);
@@ -2030,10 +2032,10 @@ export default function MoreScreen() {
                       className="flex-row items-center justify-between py-2.5 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
                     >
                       <View className="flex-1 mr-3">
-                        <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
-                        <Text className="text-xs text-text-secondary mt-0.5">{mod.desc}</Text>
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{mod.label}</Text>
+                        <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{mod.desc}</Text>
                       </View>
-                      <MaterialCommunityIcons name="check-circle" size={20} color="#0368FE" />
+                      <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
                     </View>
                   );
                 }
@@ -2045,18 +2047,18 @@ export default function MoreScreen() {
                     className="flex-row items-center justify-between py-2.5 border-b border-gray-100 dark:border-zinc-800 last:border-b-0"
                   >
                     <View className="flex-1 mr-3">
-                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{mod.label}</Text>
-                      <Text className="text-xs text-text-secondary mt-0.5">
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{mod.label}</Text>
+                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                         {mod.desc}{usingMobileOverride ? "" : enabled ? " · via web default" : ""}
                       </Text>
                     </View>
                     {savingModuleKey === mod.key ? (
-                      <ActivityIndicator size="small" color="#0368FE" />
+                      <ActivityIndicator size="small" color={theme.colors.primary} />
                     ) : (
                       <MaterialCommunityIcons
                         name={enabled ? "toggle-switch" : "toggle-switch-off-outline"}
                         size={30}
-                        color={enabled ? "#0368FE" : "#9E9E9E"}
+                        color={enabled ? theme.colors.primary : theme.colors.outline}
                       />
                     )}
                   </Pressable>
@@ -2070,7 +2072,7 @@ export default function MoreScreen() {
             {savingModuleKey === "__reset__" ? (
               <ActivityIndicator size="small" color="#6B7280" />
             ) : (
-              <Text className="text-sm font-bold text-text-secondary">Reset to Web Defaults</Text>
+              <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">Reset to Web Defaults</Text>
             )}
           </Pressable>
         )}
@@ -2078,7 +2080,7 @@ export default function MoreScreen() {
 
       {/* Security */}
       <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-10">
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-4">
           Security
         </Text>
         <Pressable
@@ -2086,10 +2088,10 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-3"
         >
           <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">
               {pinLoginAvailable ? "Change Quick PIN" : "Set Up Quick PIN"}
             </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
               A 4-digit PIN to unlock the app quickly instead of typing your email and password every time.
             </Text>
           </View>
@@ -2097,7 +2099,7 @@ export default function MoreScreen() {
             <Text className="text-primary font-bold text-base">
               {pinLoginAvailable ? "Change" : "Set Up"}
             </Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
           </View>
         </Pressable>
 
@@ -2108,14 +2110,14 @@ export default function MoreScreen() {
           className="flex-row justify-between items-center py-3"
         >
           <View className="flex-1 mr-2">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">
               Account Security
             </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
               Email verification and two-factor authentication.
             </Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <View className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2" />
@@ -2136,7 +2138,7 @@ export default function MoreScreen() {
             <Text className="text-lg font-bold text-error">
               Sign Out
             </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
               Sign out of this device.
             </Text>
           </View>
@@ -2174,7 +2176,7 @@ export default function MoreScreen() {
             <Text className="text-lg font-bold text-error">
               Delete My Account
             </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
               Request deletion of your account and data.
             </Text>
           </View>
@@ -2187,13 +2189,13 @@ export default function MoreScreen() {
         <SafeAreaProvider>
         {loading ? (
           <View className="flex-1 justify-center items-center bg-background dark:bg-background-dark">
-            <ActivityIndicator size="large" color="#0368FE" />
+            <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         ) : (
           <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 Record Purchase Bill
               </Text>
               <Pressable
@@ -2206,7 +2208,7 @@ export default function MoreScreen() {
 
             {billPhotoUri && (
               <View className="mb-6">
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Photographed Bill (for reference while entering items)
                 </Text>
                 <Image
@@ -2219,7 +2221,7 @@ export default function MoreScreen() {
 
             <View className="space-y-4">
               <View>
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Select Supplier *
                 </Text>
                 <View className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-2 py-1">
@@ -2228,7 +2230,7 @@ export default function MoreScreen() {
                     placeholderTextColor="#A0A0A0"
                     value={supplierSearch}
                     onChangeText={setSupplierSearch}
-                    className="text-sm font-medium px-2 py-3 text-text-primary"
+                    className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark"
                   />
                   <ScrollView horizontal className="flex-row px-2 pb-2">
                     {filteredSuppliers.map((s) => (
@@ -2243,7 +2245,7 @@ export default function MoreScreen() {
                       >
                         <Text
                           className={`text-sm font-semibold ${
-                            selectedSupplierId === s.id ? "text-white" : "text-text-secondary"
+                            selectedSupplierId === s.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
                           }`}
                         >
                           {s.name}
@@ -2268,7 +2270,7 @@ export default function MoreScreen() {
                       placeholderTextColor="#A0A0A0"
                       value={quickSupplierName}
                       onChangeText={setQuickSupplierName}
-                      className="text-sm font-medium px-2 py-3 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
+                      className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
                     />
                     <TextInput
                       placeholder="Phone (optional)"
@@ -2276,11 +2278,11 @@ export default function MoreScreen() {
                       value={quickSupplierPhone}
                       onChangeText={setQuickSupplierPhone}
                       keyboardType="phone-pad"
-                      className="text-sm font-medium px-2 py-3 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
+                      className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
                     />
                     <View className="flex-row" style={{ gap: 8 }}>
                       <Pressable onPress={() => { setIsQuickAddSupplier(false); resetQuickSupplierForm(); }} className="flex-1 py-2.5 rounded-lg border border-gray-200 dark:border-zinc-800 items-center">
-                        <Text className="text-sm font-bold text-text-secondary">Cancel</Text>
+                        <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">Cancel</Text>
                       </Pressable>
                       <Pressable onPress={handleQuickAddSupplier} disabled={quickAddSupplierLoading} className="flex-1 py-2.5 rounded-lg bg-primary items-center">
                         {quickAddSupplierLoading ? <ActivityIndicator color="white" size="small" /> : <Text className="text-sm font-bold text-white">Save</Text>}
@@ -2291,7 +2293,7 @@ export default function MoreScreen() {
               </View>
 
               <View className="mt-4">
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Select Product *
                 </Text>
                 <View className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-2 py-1">
@@ -2300,7 +2302,7 @@ export default function MoreScreen() {
                     placeholderTextColor="#A0A0A0"
                     value={productPickerSearch}
                     onChangeText={setProductPickerSearch}
-                    className="text-sm font-medium px-2 py-3 text-text-primary"
+                    className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark"
                   />
                   <ScrollView horizontal className="flex-row px-2 pb-2">
                     {filteredProductsForPurchase.map((p) => (
@@ -2315,7 +2317,7 @@ export default function MoreScreen() {
                       >
                         <Text
                           className={`text-sm font-semibold ${
-                            selectedProductId === p.id ? "text-white" : "text-text-secondary"
+                            selectedProductId === p.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
                           }`}
                         >
                           {p.name}
@@ -2340,7 +2342,7 @@ export default function MoreScreen() {
                       placeholderTextColor="#A0A0A0"
                       value={quickProductName}
                       onChangeText={setQuickProductName}
-                      className="text-sm font-medium px-2 py-3 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
+                      className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
                     />
                     <TextInput
                       placeholder="Selling price"
@@ -2348,11 +2350,11 @@ export default function MoreScreen() {
                       value={quickProductPrice}
                       onChangeText={setQuickProductPrice}
                       keyboardType="numeric"
-                      className="text-sm font-medium px-2 py-3 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
+                      className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-lg mb-2"
                     />
                     <View className="flex-row" style={{ gap: 8 }}>
                       <Pressable onPress={() => { setIsQuickAddProduct(false); resetQuickProductForm(); }} className="flex-1 py-2.5 rounded-lg border border-gray-200 dark:border-zinc-800 items-center">
-                        <Text className="text-sm font-bold text-text-secondary">Cancel</Text>
+                        <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">Cancel</Text>
                       </Pressable>
                       <Pressable onPress={handleQuickAddProduct} disabled={quickAddProductLoading} className="flex-1 py-2.5 rounded-lg bg-primary items-center">
                         {quickAddProductLoading ? <ActivityIndicator color="white" size="small" /> : <Text className="text-sm font-bold text-white">Save</Text>}
@@ -2364,7 +2366,7 @@ export default function MoreScreen() {
 
               {warehouses.length > 0 && (
                 <View className="mt-4">
-                  <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                  <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                     Intake Warehouse
                   </Text>
                   <ScrollView horizontal className="flex-row">
@@ -2380,7 +2382,7 @@ export default function MoreScreen() {
                       >
                         <Text
                           className={`text-sm font-bold ${
-                            selectedWarehouseId === w.id ? "text-white" : "text-text-primary dark:text-text-primary-dark"
+                            selectedWarehouseId === w.id ? "text-white" : "text-on-surface dark:text-text-primary-dark"
                           }`}
                         >
                           {w.name}
@@ -2392,7 +2394,7 @@ export default function MoreScreen() {
               )}
 
               <View className="mt-4">
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Quantity *
                 </Text>
                 {(() => {
@@ -2410,7 +2412,7 @@ export default function MoreScreen() {
                               purchaseQtyMode === "unit" ? "bg-primary border-primary dark:bg-primary-dark" : "border-gray-200 dark:border-zinc-800"
                             }`}
                           >
-                            <Text className={`text-sm font-bold ${purchaseQtyMode === "unit" ? "text-white" : "text-text-secondary"}`}>
+                            <Text className={`text-sm font-bold ${purchaseQtyMode === "unit" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
                               By {baseUnit}
                             </Text>
                           </Pressable>
@@ -2420,7 +2422,7 @@ export default function MoreScreen() {
                               purchaseQtyMode === "pack" ? "bg-primary border-primary dark:bg-primary-dark" : "border-gray-200 dark:border-zinc-800"
                             }`}
                           >
-                            <Text className={`text-sm font-bold ${purchaseQtyMode === "pack" ? "text-white" : "text-text-secondary"}`}>
+                            <Text className={`text-sm font-bold ${purchaseQtyMode === "pack" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
                               By {packUnit}
                             </Text>
                           </Pressable>
@@ -2431,10 +2433,10 @@ export default function MoreScreen() {
                         onChangeText={setPurchaseQuantity}
                         placeholder="0"
                         keyboardType="numeric"
-                        className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
+                        className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
                       />
                       {packUnit && packSize && purchaseQtyMode === "pack" && purchaseQuantity && (
-                        <Text className="text-sm text-text-secondary mt-1.5">
+                        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1.5">
                           = {(parseFloat(purchaseQuantity) * packSize).toFixed(2)} {baseUnit} total
                         </Text>
                       )}
@@ -2444,7 +2446,7 @@ export default function MoreScreen() {
               </View>
 
               <View className="mt-4">
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   {(() => {
                     const p = products.find((prod) => prod.id === selectedProductId);
                     return purchaseQtyMode === "pack" && p?.pack_unit ? `Cost per ${p.pack_unit} (INR) *` : "Unit Cost (INR) *";
@@ -2455,19 +2457,19 @@ export default function MoreScreen() {
                   onChangeText={setPurchasePrice}
                   placeholder="0.00"
                   keyboardType="numeric"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
+                  className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
                 />
               </View>
 
               <View className="mt-4">
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Bill Reference / Invoice ID
                 </Text>
                 <TextInput
                   value={purchaseRef}
                   onChangeText={setPurchaseRef}
                   placeholder="e.g. BILL-92881-A"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
             </View>
@@ -2477,7 +2479,7 @@ export default function MoreScreen() {
                 onPress={closePurchaseModal}
                 className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
               >
-                <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
+                <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold">Cancel</Text>
               </Pressable>
               <Pressable
                 onPress={handleRecordPurchase}
@@ -2503,7 +2505,7 @@ export default function MoreScreen() {
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Record Expense
             </Text>
             <Pressable
@@ -2516,7 +2518,7 @@ export default function MoreScreen() {
 
           {billPhotoUri ? (
             <View className="mb-6">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Receipt Photo
               </Text>
               <Image
@@ -2533,15 +2535,15 @@ export default function MoreScreen() {
               onPress={() => router.push("/bill-scanner?category=expense" as any)}
               className="mb-6 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-2xl p-5 items-center bg-surface dark:bg-zinc-900 active:opacity-80"
             >
-              <MaterialCommunityIcons name="camera-plus-outline" size={28} color="#0368FE" />
+              <MaterialCommunityIcons name="camera-plus-outline" size={28} color={theme.colors.primary} />
               <Text className="text-primary dark:text-primary-dark font-bold text-sm mt-2">Attach Bill Photo</Text>
-              <Text className="text-text-secondary text-xs mt-0.5">Optional — helps during approval</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark text-xs mt-0.5">Optional — helps during approval</Text>
             </Pressable>
           )}
 
           <View className="space-y-4">
             <View>
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Category
               </Text>
               <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -2555,7 +2557,7 @@ export default function MoreScreen() {
                         : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
                     }`}
                   >
-                    <Text className={`text-sm font-bold ${expenseCategory.toLowerCase() === cat.toLowerCase() ? "text-white" : "text-text-secondary"}`}>
+                    <Text className={`text-sm font-bold ${expenseCategory.toLowerCase() === cat.toLowerCase() ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
                       {cat}
                     </Text>
                   </Pressable>
@@ -2565,12 +2567,12 @@ export default function MoreScreen() {
                 value={expenseCategory}
                 onChangeText={setExpenseCategory}
                 placeholder="Or type a custom category..."
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-medium mt-2"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-medium mt-2"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Amount (INR) *
               </Text>
               <TextInput
@@ -2578,19 +2580,19 @@ export default function MoreScreen() {
                 onChangeText={setExpenseAmount}
                 placeholder="0.00"
                 keyboardType="numeric"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold text-lg"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold text-lg"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Notes
               </Text>
               <TextInput
                 value={expenseNotes}
                 onChangeText={setExpenseNotes}
                 placeholder="e.g. electricity bill, courier charges"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 text-base font-medium"
               />
             </View>
           </View>
@@ -2613,7 +2615,7 @@ export default function MoreScreen() {
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Warehouses
             </Text>
             <Pressable onPress={closeWarehouseModal} className="w-11 h-11 items-center justify-center">
@@ -2627,10 +2629,10 @@ export default function MoreScreen() {
                 key={w.id}
                 className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm"
               >
-                <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark">
+                <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark">
                   {w.name}
                 </Text>
-                <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-1">
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">
                   Location: {w.location || "Not specified"}
                 </Text>
               </View>
@@ -2638,7 +2640,7 @@ export default function MoreScreen() {
           </ScrollView>
 
           <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-155 dark:border-zinc-800 mb-10 shadow-lg">
-            <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark mb-4">
+            <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark mb-4">
               Add New Warehouse
             </Text>
             <TextInput
@@ -2646,14 +2648,14 @@ export default function MoreScreen() {
               placeholderTextColor="#A0A0A0"
               value={newWhName}
               onChangeText={setNewWhName}
-              className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-3 text-sm"
+              className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-3 text-sm"
             />
             <TextInput
               placeholder="Location Address"
               placeholderTextColor="#A0A0A0"
               value={newWhLoc}
               onChangeText={setNewWhLoc}
-              className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-4 text-sm"
+              className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-4 text-sm"
             />
             <Pressable
               onPress={handleCreateWarehouse}
@@ -2678,7 +2680,7 @@ export default function MoreScreen() {
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Stock Transfer
             </Text>
             <Pressable onPress={closeTransferModal} className="w-11 h-11 items-center justify-center">
@@ -2688,7 +2690,7 @@ export default function MoreScreen() {
 
           <ScrollView className="flex-grow space-y-4 pb-10" keyboardShouldPersistTaps="handled">
             <View>
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Select Product *
               </Text>
               <View className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-2 py-1">
@@ -2697,7 +2699,7 @@ export default function MoreScreen() {
                   placeholderTextColor="#A0A0A0"
                   value={transferProductSearch}
                   onChangeText={setTransferProductSearch}
-                  className="text-sm font-medium px-2 py-3 text-text-primary"
+                  className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark"
                 />
                 <ScrollView horizontal className="flex-row px-2 pb-2">
                   {filteredProductsForTransfer.map((p) => (
@@ -2712,7 +2714,7 @@ export default function MoreScreen() {
                     >
                       <Text
                         className={`text-sm font-semibold ${
-                          transferProductId === p.id ? "text-white" : "text-text-secondary"
+                          transferProductId === p.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
                         }`}
                       >
                         {p.name}
@@ -2724,7 +2726,7 @@ export default function MoreScreen() {
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Source Warehouse (From) *
               </Text>
               <ScrollView horizontal className="flex-row">
@@ -2740,7 +2742,7 @@ export default function MoreScreen() {
                   >
                     <Text
                       className={`text-sm font-bold ${
-                        transferSourceWhId === w.id ? "text-white" : "text-text-primary dark:text-text-primary-dark"
+                        transferSourceWhId === w.id ? "text-white" : "text-on-surface dark:text-text-primary-dark"
                       }`}
                     >
                       {w.name}
@@ -2751,7 +2753,7 @@ export default function MoreScreen() {
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Destination Warehouse (To) *
               </Text>
               <ScrollView horizontal className="flex-row">
@@ -2767,7 +2769,7 @@ export default function MoreScreen() {
                   >
                     <Text
                       className={`text-sm font-bold ${
-                        transferDestWhId === w.id ? "text-white" : "text-text-primary dark:text-text-primary-dark"
+                        transferDestWhId === w.id ? "text-white" : "text-on-surface dark:text-text-primary-dark"
                       }`}
                     >
                       {w.name}
@@ -2778,7 +2780,7 @@ export default function MoreScreen() {
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Quantity *
               </Text>
               <TextInput
@@ -2786,24 +2788,24 @@ export default function MoreScreen() {
                 onChangeText={setTransferQuantity}
                 placeholder="0"
                 keyboardType="numeric"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Transfer Reference Note
               </Text>
               <TextInput
                 value={transferRef}
                 onChangeText={setTransferRef}
                 placeholder="e.g. Stock re-balancing"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Receipt Photo (optional)
               </Text>
               {transferPhotoUri ? (
@@ -2819,7 +2821,7 @@ export default function MoreScreen() {
                   className="border border-dashed border-gray-300 dark:border-zinc-700 rounded-xl py-5 items-center justify-center flex-row"
                   style={{ gap: 8 }}
                 >
-                  <MaterialCommunityIcons name="camera-outline" size={18} color="#0368FE" />
+                  <MaterialCommunityIcons name="camera-outline" size={18} color={theme.colors.primary} />
                   <Text className="text-primary dark:text-primary-dark font-bold text-sm">Attach Receipt Photo</Text>
                 </Pressable>
               )}
@@ -2830,7 +2832,7 @@ export default function MoreScreen() {
                 onPress={closeTransferModal}
                 className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
               >
-                <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
+                <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold">Cancel</Text>
               </Pressable>
               <Pressable
                 onPress={handleStockTransfer}
@@ -2856,10 +2858,10 @@ export default function MoreScreen() {
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 Daily Attendance Checklist
               </Text>
-              <Text className="text-sm text-text-secondary mt-0.5">
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                 Date: {attendanceDate}
               </Text>
             </View>
@@ -2870,7 +2872,7 @@ export default function MoreScreen() {
 
           {staff.length === 0 ? (
             <View className="flex-1 justify-center items-center py-20">
-              <Text className="text-text-secondary font-bold text-center">No employee profiles found</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-center">No employee profiles found</Text>
             </View>
           ) : (
             <ScrollView className="flex-1 mb-4" showsVerticalScrollIndicator={false}>
@@ -2881,10 +2883,10 @@ export default function MoreScreen() {
                     key={s.id}
                     className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-4 shadow-sm"
                   >
-                    <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark">
+                    <Text className="font-bold text-sm text-on-surface dark:text-text-primary-dark">
                       {s.first_name} {s.last_name || ""}
                     </Text>
-                    <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-0.5 font-semibold">
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5 font-semibold">
                       Email: {s.email}
                     </Text>
                     
@@ -2901,7 +2903,7 @@ export default function MoreScreen() {
                         >
                           <Text
                             className={`text-sm font-bold uppercase ${
-                              currentStatus === statusOption ? "text-white" : "text-text-secondary"
+                              currentStatus === statusOption ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
                             }`}
                           >
                             {statusOption.replace("_", " ")}
@@ -2937,7 +2939,7 @@ export default function MoreScreen() {
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Employee Salaries
             </Text>
             <Pressable onPress={closeSalaryModal} className="w-11 h-11 items-center justify-center">
@@ -2952,7 +2954,7 @@ export default function MoreScreen() {
             contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
             ListHeaderComponent={
               <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-155 dark:border-zinc-800 mb-6 shadow-sm">
-                <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark mb-4">
+                <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark mb-4">
                   Log Salary Payout
                 </Text>
                 
@@ -2962,7 +2964,7 @@ export default function MoreScreen() {
                     placeholderTextColor="#A0A0A0"
                     value={selectedStaffId}
                     onChangeText={setSelectedStaffId}
-                    className="text-sm font-medium px-2 py-2 text-text-primary dark:text-text-primary-dark"
+                    className="text-sm font-medium px-2 py-2 text-on-surface dark:text-text-primary-dark"
                   />
                   <ScrollView horizontal className="flex-row px-2 pb-1">
                     {staff.map((s) => (
@@ -2977,7 +2979,7 @@ export default function MoreScreen() {
                       >
                         <Text
                           className={`text-sm font-semibold ${
-                            selectedStaffId === s.id ? "text-white" : "text-text-secondary"
+                            selectedStaffId === s.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
                           }`}
                         >
                           {s.first_name}
@@ -2993,7 +2995,7 @@ export default function MoreScreen() {
                   value={salaryAmount}
                   onChangeText={setSalaryAmount}
                   keyboardType="numeric"
-                  className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-3 text-sm font-bold"
+                  className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-3 text-sm font-bold"
                 />
 
                 <TextInput
@@ -3001,7 +3003,7 @@ export default function MoreScreen() {
                   placeholderTextColor="#A0A0A0"
                   value={salaryRef}
                   onChangeText={setSalaryRef}
-                  className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-4 text-sm font-medium"
+                  className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 mb-4 text-sm font-medium"
                 />
 
                 <Pressable
@@ -3021,13 +3023,13 @@ export default function MoreScreen() {
               <View className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm">
                 <View className="flex-row justify-between items-start">
                   <View>
-                    <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark">
+                    <Text className="font-bold text-sm text-on-surface dark:text-text-primary-dark">
                       {item.user ? `${item.user.first_name} ${item.user.last_name || ""}` : "Employee"}
                     </Text>
-                    <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-1">
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">
                       Note: {item.reference || "Salary Payment"}
                     </Text>
-                    <Text className="text-sm text-text-secondary mt-0.5">
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                       Date: {item.date}
                     </Text>
                   </View>
@@ -3035,7 +3037,7 @@ export default function MoreScreen() {
                     <Text className="text-sm font-black text-green-600">
                       ₹{parseFloat(item.amount).toFixed(2)}
                     </Text>
-                    <Text className="text-sm font-bold text-text-secondary dark:text-text-secondary-dark mt-1 uppercase tracking-wider">
+                    <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark mt-1 uppercase tracking-wider">
                       {item.status}
                     </Text>
                   </View>
@@ -3054,10 +3056,10 @@ export default function MoreScreen() {
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 Delivery Challans
               </Text>
-              <Text className="text-sm text-text-secondary mt-0.5">
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                 Logistics driver runs and transit dispatch logs
               </Text>
             </View>
@@ -3075,11 +3077,11 @@ export default function MoreScreen() {
 
           {loading ? (
             <View className="flex-grow justify-center items-center py-20">
-              <ActivityIndicator size="large" color="#0368FE" />
+              <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
           ) : challans.length === 0 ? (
             <View className="flex-grow justify-center items-center py-20">
-              <Text className="text-text-secondary font-bold text-center">No challans generated</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-center">No challans generated</Text>
             </View>
           ) : (
             <FlatList
@@ -3096,15 +3098,15 @@ export default function MoreScreen() {
                   <View className="bg-surface dark:bg-surface-dark p-4.5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-4 shadow-sm">
                     <View className="flex-row justify-between items-start">
                       <View className="flex-1 mr-2">
-                        <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark" numberOfLines={1}>
+                        <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
                           {item.challan_number}
                         </Text>
-                        <Text className="text-sm text-text-secondary mt-1 font-semibold" numberOfLines={1}>
+                        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 font-semibold" numberOfLines={1}>
                           {item.party?.name || item.destination || "No consignee recorded"}
                           {item.reason ? ` · ${CHALLAN_REASONS.find((r) => r.value === item.reason)?.label || item.reason}` : ""}
                         </Text>
                         {(item.vehicle_number || item.driver_name) && (
-                          <Text className="text-sm text-text-secondary mt-0.5" numberOfLines={1}>
+                          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5" numberOfLines={1}>
                             {item.vehicle_number ? `Vehicle: ${item.vehicle_number}` : ""}
                             {item.vehicle_number && item.driver_name ? " · " : ""}
                             {item.driver_name ? `Driver: ${item.driver_name}` : ""}
@@ -3143,7 +3145,7 @@ export default function MoreScreen() {
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Generate Challan
             </Text>
             <Pressable onPress={closeCreateChallanModal} className="w-11 h-11 items-center justify-center">
@@ -3153,7 +3155,7 @@ export default function MoreScreen() {
 
           <View className="space-y-4">
             <View>
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Reason for Transport *
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
@@ -3165,14 +3167,14 @@ export default function MoreScreen() {
                       challanReason === r.value ? "bg-primary border-primary dark:bg-primary-dark" : "bg-surface border-gray-200 dark:border-zinc-800"
                     }`}
                   >
-                    <Text className={`text-xs font-semibold ${challanReason === r.value ? "text-white" : "text-text-secondary"}`}>{r.label}</Text>
+                    <Text className={`text-xs font-semibold ${challanReason === r.value ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{r.label}</Text>
                   </Pressable>
                 ))}
               </ScrollView>
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Consignee (Party)
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
@@ -3184,14 +3186,14 @@ export default function MoreScreen() {
                       challanPartyId === p.id ? "bg-primary border-primary dark:bg-primary-dark" : "bg-surface border-gray-200 dark:border-zinc-800"
                     }`}
                   >
-                    <Text className={`text-xs font-semibold ${challanPartyId === p.id ? "text-white" : "text-text-secondary"}`}>{p.name}</Text>
+                    <Text className={`text-xs font-semibold ${challanPartyId === p.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{p.name}</Text>
                   </Pressable>
                 ))}
               </ScrollView>
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Link Existing Invoice (copies its items onto the challan)
               </Text>
               <ScrollView horizontal className="flex-row">
@@ -3207,7 +3209,7 @@ export default function MoreScreen() {
                   >
                     <Text
                       className={`text-sm font-semibold ${
-                        selectedInvoiceId === inv.id ? "text-white" : "text-text-secondary"
+                        selectedInvoiceId === inv.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"
                       }`}
                     >
                       {inv.invoice_number}
@@ -3219,7 +3221,7 @@ export default function MoreScreen() {
 
             {!selectedInvoiceId && (
               <View className="mt-4">
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Items Being Moved
                 </Text>
                 <View className="bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-2 py-1">
@@ -3228,7 +3230,7 @@ export default function MoreScreen() {
                     placeholderTextColor="#A0A0A0"
                     value={challanItemSearch}
                     onChangeText={setChallanItemSearch}
-                    className="text-sm font-medium px-2 py-3 text-text-primary"
+                    className="text-sm font-medium px-2 py-3 text-on-surface dark:text-text-primary-dark"
                   />
                   <ScrollView horizontal className="flex-row px-2 pb-2">
                     {filteredProductsForChallan.map((p) => (
@@ -3244,7 +3246,7 @@ export default function MoreScreen() {
                 </View>
                 {challanItems.map((item) => (
                   <View key={item.productId} className="flex-row items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
-                    <Text className="flex-1 mr-2 text-sm font-semibold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{item.name}</Text>
+                    <Text className="flex-1 mr-2 text-sm font-semibold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{item.name}</Text>
                     <TextInput
                       value={item.quantity}
                       onChangeText={(v) => updateChallanItemQty(item.productId, v)}
@@ -3260,19 +3262,19 @@ export default function MoreScreen() {
             )}
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Place of Supply (State)
               </Text>
               <TextInput
                 value={placeOfSupply}
                 onChangeText={setPlaceOfSupply}
                 placeholder="e.g. Maharashtra"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Transport Mode
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
@@ -3284,38 +3286,38 @@ export default function MoreScreen() {
                       transportMode === m ? "bg-primary border-primary dark:bg-primary-dark" : "bg-surface border-gray-200 dark:border-zinc-800"
                     }`}
                   >
-                    <Text className={`text-sm font-semibold capitalize ${transportMode === m ? "text-white" : "text-text-secondary"}`}>{m}</Text>
+                    <Text className={`text-sm font-semibold capitalize ${transportMode === m ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{m}</Text>
                   </Pressable>
                 ))}
               </ScrollView>
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Vehicle Number
               </Text>
               <TextInput
                 value={vehicleNumber}
                 onChangeText={setVehicleNumber}
                 placeholder="e.g. MH-12-PQ-9988"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-bold"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Driver Name
               </Text>
               <TextInput
                 value={driverName}
                 onChangeText={setDriverName}
                 placeholder="Driver Name"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Driver Phone
               </Text>
               <TextInput
@@ -3323,31 +3325,31 @@ export default function MoreScreen() {
                 onChangeText={setDriverPhone}
                 placeholder="Driver Contact Number"
                 keyboardType="phone-pad"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Ship-To / Destination Address
               </Text>
               <TextInput
                 value={destination}
                 onChangeText={setDestination}
                 placeholder="Delivery Destination Address"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Notes
               </Text>
               <TextInput
                 value={challanNotes}
                 onChangeText={setChallanNotes}
                 placeholder="Optional"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
               />
             </View>
           </View>
@@ -3357,7 +3359,7 @@ export default function MoreScreen() {
               onPress={closeCreateChallanModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
-              <Text className="text-text-secondary dark:text-text-secondary-dark font-bold">Cancel</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold">Cancel</Text>
             </Pressable>
             <Pressable
               onPress={handleCreateChallan}
@@ -3382,10 +3384,10 @@ export default function MoreScreen() {
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-8">
             <View>
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 Sales Summary
               </Text>
-              <Text className="text-sm text-text-secondary mt-0.5 font-medium">
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5 font-medium">
                 Overall company revenue metrics
               </Text>
             </View>
@@ -3396,7 +3398,7 @@ export default function MoreScreen() {
 
           <View className="space-y-4">
             <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 mb-4 shadow-sm">
-              <Text className="text-sm font-bold uppercase tracking-wider text-text-secondary">
+              <Text className="text-sm font-bold uppercase tracking-wider text-on-surface-variant dark:text-text-secondary-dark">
                 Total Revenue
               </Text>
               <Text className="text-3xl font-black text-primary mt-1.5">
@@ -3405,19 +3407,19 @@ export default function MoreScreen() {
             </View>
 
             <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 mb-4 shadow-sm">
-              <Text className="text-sm font-bold uppercase tracking-wider text-text-secondary">
+              <Text className="text-sm font-bold uppercase tracking-wider text-on-surface-variant dark:text-text-secondary-dark">
                 Completed Invoices
               </Text>
-              <Text className="text-3xl font-black text-text-primary dark:text-text-primary-dark mt-1.5">
+              <Text className="text-3xl font-black text-on-surface dark:text-text-primary-dark mt-1.5">
                 {invoices.length} orders
               </Text>
             </View>
 
             <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 mb-6 shadow-sm">
-              <Text className="text-sm font-bold uppercase tracking-wider text-text-secondary">
+              <Text className="text-sm font-bold uppercase tracking-wider text-on-surface-variant dark:text-text-secondary-dark">
                 Average Bill Size
               </Text>
-              <Text className="text-3xl font-black text-text-primary dark:text-text-primary-dark mt-1.5">
+              <Text className="text-3xl font-black text-on-surface dark:text-text-primary-dark mt-1.5">
                 ₹{averageSalesInvoice.toFixed(2)}
               </Text>
             </View>
@@ -3440,10 +3442,10 @@ export default function MoreScreen() {
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 Inventory Stock Levels
               </Text>
-              <Text className="text-sm text-text-secondary mt-0.5">
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                 Live calculated stock aggregates from movements
               </Text>
             </View>
@@ -3454,7 +3456,7 @@ export default function MoreScreen() {
 
           {products.length === 0 ? (
             <View className="flex-1 justify-center items-center">
-              <Text className="text-text-secondary font-bold text-center">No products registered</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-center">No products registered</Text>
             </View>
           ) : (
             <FlatList
@@ -3470,10 +3472,10 @@ export default function MoreScreen() {
                   <View className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm">
                     <View className="flex-row justify-between items-center">
                       <View className="flex-1 mr-2">
-                        <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark" numberOfLines={1}>
+                        <Text className="font-bold text-sm text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
                           {item.name}
                         </Text>
-                        <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-0.5" numberOfLines={1}>
+                        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5" numberOfLines={1}>
                           SKU: {item.sku || "N/A"}
                         </Text>
                       </View>
@@ -3506,10 +3508,10 @@ export default function MoreScreen() {
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 Outstanding Summary
               </Text>
-              <Text className="text-sm text-text-secondary mt-0.5">
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                 Total outstanding balances per account classification
               </Text>
             </View>
@@ -3520,7 +3522,7 @@ export default function MoreScreen() {
 
           <ScrollView className="flex-grow space-y-4 pb-10" showsVerticalScrollIndicator={false}>
             <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-sm font-bold uppercase tracking-wider text-text-secondary">
+              <Text className="text-sm font-bold uppercase tracking-wider text-on-surface-variant dark:text-text-secondary-dark">
                 Total Receivables (From Customers)
               </Text>
               <Text className="text-2xl font-black text-green-600 mt-1">
@@ -3529,7 +3531,7 @@ export default function MoreScreen() {
             </View>
 
             <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-              <Text className="text-sm font-bold uppercase tracking-wider text-text-secondary">
+              <Text className="text-sm font-bold uppercase tracking-wider text-on-surface-variant dark:text-text-secondary-dark">
                 Total Payables (To Suppliers)
               </Text>
               <Text className="text-2xl font-black text-red-600 mt-1">
@@ -3537,7 +3539,7 @@ export default function MoreScreen() {
               </Text>
             </View>
 
-            <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark mb-2">
+            <Text className="font-bold text-sm text-on-surface dark:text-text-primary-dark mb-2">
               Top Customer Outstanding Receivables
             </Text>
             {partiesList
@@ -3549,8 +3551,8 @@ export default function MoreScreen() {
                   className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center"
                 >
                   <View className="flex-1 mr-2">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{p.name}</Text>
-                    <Text className="text-sm text-text-secondary mt-0.5" numberOfLines={1}>Phone: {p.phone || "N/A"}</Text>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{p.name}</Text>
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5" numberOfLines={1}>Phone: {p.phone || "N/A"}</Text>
                   </View>
                   <View className="flex-row items-center space-x-2">
                     <Pressable
@@ -3564,7 +3566,7 @@ export default function MoreScreen() {
                 </View>
               ))}
 
-            <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark mt-6 mb-2">
+            <Text className="font-bold text-sm text-on-surface dark:text-text-primary-dark mt-6 mb-2">
               Top Supplier Outstanding Payables
             </Text>
             {partiesList
@@ -3576,8 +3578,8 @@ export default function MoreScreen() {
                   className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center"
                 >
                   <View className="flex-1 mr-2">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{p.name}</Text>
-                    <Text className="text-sm text-text-secondary mt-0.5" numberOfLines={1}>Phone: {p.phone || "N/A"}</Text>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{p.name}</Text>
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5" numberOfLines={1}>Phone: {p.phone || "N/A"}</Text>
                   </View>
                   <View className="flex-row items-center space-x-2">
                     <Pressable
@@ -3608,7 +3610,7 @@ export default function MoreScreen() {
         <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-background-dark px-6" style={{ paddingTop: topInset }}>
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Stock Movements Log
             </Text>
             <Pressable onPress={() => setIsMovementsModal(false)} className="w-11 h-11 items-center justify-center">
@@ -3618,11 +3620,11 @@ export default function MoreScreen() {
 
           {loading ? (
             <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#0368FE" />
+              <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
           ) : movements.length === 0 ? (
             <View className="flex-1 justify-center items-center py-20">
-              <Text className="text-text-secondary font-bold text-center">No movements recorded</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-center">No movements recorded</Text>
             </View>
           ) : (
             <FlatList
@@ -3647,13 +3649,13 @@ export default function MoreScreen() {
                   <View className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3.5 shadow-sm">
                     <View className="flex-row justify-between items-start">
                       <View className="flex-1 mr-2">
-                        <Text className="font-bold text-sm text-text-primary dark:text-text-primary-dark">
+                        <Text className="font-bold text-sm text-on-surface dark:text-text-primary-dark">
                           {item.product?.name ?? "Unknown Product"}
                         </Text>
-                        <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-1 font-semibold">
+                        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 font-semibold">
                           Reference: {item.reference || "None"}
                         </Text>
-                        <Text className="text-sm text-text-secondary mt-0.5">
+                        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
                           Date: {new Date(item.created_at).toLocaleString()}
                         </Text>
                       </View>
@@ -3661,7 +3663,7 @@ export default function MoreScreen() {
                         <Text className={`text-base font-black px-2.5 py-1 rounded-xl ${indicatorColor}`}>
                           {parseFloat(item.quantity) > 0 ? "+" : ""} {parseFloat(item.quantity).toFixed(0)} units
                         </Text>
-                        <Text className="text-sm font-bold text-text-secondary dark:text-text-secondary-dark mt-1 uppercase tracking-wider">
+                        <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark mt-1 uppercase tracking-wider">
                           {item.type}
                         </Text>
                       </View>
@@ -3681,7 +3683,7 @@ export default function MoreScreen() {
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
               Business Profile
             </Text>
             <Pressable onPress={closeBusinessProfileModal} className="w-11 h-11 items-center justify-center">
@@ -3695,7 +3697,7 @@ export default function MoreScreen() {
               { label: "GSTIN", value: bizGstin, setter: setBizGstin, placeholder: "15-character GSTIN", autoCapitalize: "characters" as const, keyboardType: "default" as const },
             ].map((field) => (
               <View className="mt-4" key={field.label}>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   {field.label}
                 </Text>
                 <TextInput
@@ -3704,12 +3706,12 @@ export default function MoreScreen() {
                   placeholder={field.placeholder}
                   keyboardType={field.keyboardType}
                   autoCapitalize={field.autoCapitalize}
-                  className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                  className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
                 />
               </View>
             ))}
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 State
               </Text>
               <StatePicker value={bizState} onChange={setBizState} />
@@ -3725,7 +3727,7 @@ export default function MoreScreen() {
               { label: "MSME/Udyam Registration No.", value: bizUdyamNumber, setter: setBizUdyamNumber, placeholder: "e.g. UDYAM-MH-01-0000000" },
             ].map((field) => (
               <View className="mt-4" key={field.label}>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   {field.label}
                 </Text>
                 <TextInput
@@ -3734,7 +3736,7 @@ export default function MoreScreen() {
                   placeholder={field.placeholder}
                   keyboardType={field.keyboardType}
                   autoCapitalize={field.autoCapitalize}
-                  className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                  className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
                 />
               </View>
             ))}
@@ -3745,7 +3747,7 @@ export default function MoreScreen() {
               onPress={closeBusinessProfileModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
-              <Text className="text-text-secondary dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
             </Pressable>
             <Pressable
               onPress={handleSaveBusinessProfile}
@@ -3772,7 +3774,7 @@ export default function MoreScreen() {
         >
           <View className="bg-background dark:bg-background-dark rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 {pinLoginAvailable ? "Change Quick PIN" : "Set Up Quick PIN"}
               </Text>
               <Pressable
@@ -3783,7 +3785,7 @@ export default function MoreScreen() {
               </Pressable>
             </View>
 
-            <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
               New 4-Digit PIN
             </Text>
             <TextInput
@@ -3794,10 +3796,10 @@ export default function MoreScreen() {
               secureTextEntry
               maxLength={4}
               keyboardType="number-pad"
-              className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest mb-4"
+              className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest mb-4"
             />
 
-            <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+            <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
               Confirm PIN
             </Text>
             <TextInput
@@ -3808,7 +3810,7 @@ export default function MoreScreen() {
               secureTextEntry
               maxLength={4}
               keyboardType="number-pad"
-              className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest mb-6"
+              className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest mb-6"
             />
 
             <Pressable
@@ -3831,14 +3833,14 @@ export default function MoreScreen() {
         <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
-          <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
+          <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Add New Employee
           </Text>
 
           {/* Form fields */}
           <View className="space-y-4">
             <View>
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 First Name *
               </Text>
               <TextInput
@@ -3846,12 +3848,12 @@ export default function MoreScreen() {
                 onChangeText={setNewStaffFirstName}
                 placeholder="e.g. John"
                 placeholderTextColor="#A0A0A0"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Last Name
               </Text>
               <TextInput
@@ -3859,12 +3861,12 @@ export default function MoreScreen() {
                 onChangeText={setNewStaffLastName}
                 placeholder="e.g. Doe"
                 placeholderTextColor="#A0A0A0"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Email Address *
               </Text>
               <TextInput
@@ -3874,12 +3876,12 @@ export default function MoreScreen() {
                 placeholderTextColor="#A0A0A0"
                 autoCapitalize="none"
                 keyboardType="email-address"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Phone (optional — for sending login via WhatsApp)
               </Text>
               <TextInput
@@ -3888,13 +3890,13 @@ export default function MoreScreen() {
                 placeholder="10-digit mobile number"
                 placeholderTextColor="#A0A0A0"
                 keyboardType="phone-pad"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
 
             <View className="mt-4">
               <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">
                   Temporary Password *
                 </Text>
                 <Pressable onPress={() => setNewStaffPassword(randomTempPassword())}>
@@ -3907,18 +3909,18 @@ export default function MoreScreen() {
                 placeholder="Enter a password, or tap Auto-Generate"
                 placeholderTextColor="#A0A0A0"
                 secureTextEntry
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
               />
-              <Text className="text-xs text-text-secondary mt-1.5">They can change this after their first login.</Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-1.5">They can change this after their first login.</Text>
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Employee Role *
               </Text>
               <View className="flex-row flex-wrap mt-2">
                 {roles.length === 0 ? (
-                  <Text className="text-text-secondary italic">Loading roles... (Requires Admin permissions)</Text>
+                  <Text className="text-on-surface-variant dark:text-text-secondary-dark italic">Loading roles... (Requires Admin permissions)</Text>
                 ) : (
                   roles.map(r => (
                     <Pressable
@@ -3932,7 +3934,7 @@ export default function MoreScreen() {
                     >
                       <Text
                         className={`font-bold ${
-                          newStaffRole === r.id ? "text-white" : "text-text-primary dark:text-text-primary-dark"
+                          newStaffRole === r.id ? "text-white" : "text-on-surface dark:text-text-primary-dark"
                         }`}
                       >
                         {r.name}
@@ -3950,7 +3952,7 @@ export default function MoreScreen() {
               onPress={closeAddStaffModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
-              <Text className="text-text-secondary dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
             </Pressable>
             <Pressable
               onPress={handleAddStaff}
@@ -3976,13 +3978,13 @@ export default function MoreScreen() {
         <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
-          <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
+          <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-6">
             Dispatch Task to Agent
           </Text>
 
           <View className="space-y-4">
             <View>
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Task Title *
               </Text>
               <TextInput
@@ -3990,12 +3992,12 @@ export default function MoreScreen() {
                 onChangeText={setTaskTitle}
                 placeholder="e.g. Collect payment from ABC Traders"
                 placeholderTextColor="#A0A0A0"
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Detailed Description
               </Text>
               <TextInput
@@ -4005,17 +4007,17 @@ export default function MoreScreen() {
                 placeholderTextColor="#A0A0A0"
                 multiline
                 numberOfLines={3}
-                className="bg-surface dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
+                className="bg-surface dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-4 text-base font-medium"
                 style={{ textAlignVertical: "top" }}
               />
             </View>
 
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider mb-2">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                 Assign To *
               </Text>
               {staff.length === 0 ? (
-                <Text className="text-text-secondary italic">No staff found. Create an employee first.</Text>
+                <Text className="text-on-surface-variant dark:text-text-secondary-dark italic">No staff found. Create an employee first.</Text>
               ) : (
                 <View className="flex-row flex-wrap mt-2">
                   {staff.map(s => (
@@ -4030,7 +4032,7 @@ export default function MoreScreen() {
                     >
                       <Text
                         className={`font-bold ${
-                          taskAssignedTo === s.id ? "text-white" : "text-text-primary dark:text-text-primary-dark"
+                          taskAssignedTo === s.id ? "text-white" : "text-on-surface dark:text-text-primary-dark"
                         }`}
                       >
                         {s.first_name} {s.last_name || ""}
@@ -4047,7 +4049,7 @@ export default function MoreScreen() {
               onPress={closeDispatchTaskModal}
               className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
             >
-              <Text className="text-text-secondary dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
+              <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">Cancel</Text>
             </Pressable>
             <Pressable
               onPress={handleDispatchTask}
@@ -4074,14 +4076,14 @@ export default function MoreScreen() {
           <View className="bg-white dark:bg-zinc-900 rounded-t-3xl px-6 pb-10" style={{ paddingTop: 24, maxHeight: "70%" }}>
             <View className="items-center mb-4">
               <View className="w-10 h-1 rounded-full bg-gray-300 mb-4" />
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">
                 Select Outlet
               </Text>
             </View>
             {outlets.length === 0 ? (
               <View className="py-8 items-center">
-                <ActivityIndicator size="small" color="#0368FE" />
-                <Text className="text-sm text-text-secondary mt-3">Loading outlets...</Text>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-3">Loading outlets...</Text>
               </View>
             ) : (
               <ScrollView className="flex-1">
@@ -4095,7 +4097,7 @@ export default function MoreScreen() {
                     >
                       <View
                         className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                        style={{ backgroundColor: isActive ? "#0368FE" : "#E5E7EB" }}
+                        style={{ backgroundColor: isActive ? theme.colors.primary : theme.colors.outlineVariant }}
                       >
                         <MaterialCommunityIcons
                           name={isActive ? "store-check" : "store-outline"}
@@ -4104,15 +4106,15 @@ export default function MoreScreen() {
                         />
                       </View>
                       <View className="flex-1">
-                        <Text className={`text-base font-bold ${isActive ? "text-primary" : "text-text-primary dark:text-text-primary-dark"}`}>
+                        <Text className={`text-base font-bold ${isActive ? "text-primary" : "text-on-surface dark:text-text-primary-dark"}`}>
                           {o.name}
                         </Text>
-                        <Text className="text-xs text-text-secondary mt-0.5 capitalize">
+                        <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5 capitalize">
                           {o.type.replace("_", " ")}
                         </Text>
                       </View>
                       {isActive && (
-                        <MaterialCommunityIcons name="check-circle" size={22} color="#0368FE" />
+                        <MaterialCommunityIcons name="check-circle" size={22} color={theme.colors.primary} />
                       )}
                     </Pressable>
                   );
@@ -4123,7 +4125,7 @@ export default function MoreScreen() {
               onPress={() => { setSelectedOutletId(null); setShowOutletPicker(false); }}
               className="mt-4 py-3 rounded-xl items-center border border-gray-200 dark:border-zinc-700"
             >
-              <Text className="text-sm font-bold text-text-secondary">All Outlets (Owner View)</Text>
+              <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">All Outlets (Owner View)</Text>
             </Pressable>
           </View>
         </View>

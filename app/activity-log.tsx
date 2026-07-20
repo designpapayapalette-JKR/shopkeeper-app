@@ -1,11 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable, RefreshControl, Modal, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Searchbar, useTheme } from "react-native-paper";
 import { useAuth } from "../src/lib/auth-context";
 import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import { shareDataAsPdf } from "../src/lib/pdfExport";
 
 interface LogEntry {
   id: string;
@@ -96,32 +98,69 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+const PAGE_SIZE = 50;
+
 export default function ActivityLogScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [detailEntry, setDetailEntry] = useState<LogEntry | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [actionFilter, setActionFilter] = useState<string>("all");
 
-  const load = useCallback(async () => {
+  const filteredEntries = useMemo(() => {
+    return entries.filter((entry) => {
+      if (actionFilter !== "all" && entry.action !== actionFilter) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        entry.user_label?.toLowerCase().includes(q) ||
+        entry.entity_type.toLowerCase().includes(q) ||
+        entry.entity_label?.toLowerCase().includes(q)
+      );
+    });
+  }, [entries, searchQuery, actionFilter]);
+
+  const FILTER_ACTIONS = ["all", "create", "update", "delete", "restore"] as const;
+
+  const load = useCallback(async (pageNum = 1, append = false) => {
     try {
       if (!user?.company_id) {
         setEntries([]);
         return;
       }
-      const res = await api.get<{ data: LogEntry[] }>("/activity-log");
-      setEntries(res.data ?? []);
+      if (!append) setLoading(true);
+      const res = await api.get<{ data: LogEntry[] }>("/activity-log", { params: { page: pageNum, limit: PAGE_SIZE } });
+      if (append) {
+        setEntries(prev => [...prev, ...(res.data ?? [])]);
+      } else {
+        setEntries(res.data ?? []);
+      }
+      setHasMore((res.data ?? []).length >= PAGE_SIZE);
     } catch (e) {
       console.error("Failed to load activity log:", e);
       Alert.alert("Error", "Could not load activity log. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   }, [user]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    await load(page + 1, true);
+    setPage(p => p + 1);
+  }, [loadingMore, hasMore, page, load]);
 
   useEffect(() => {
     load();
@@ -129,23 +168,73 @@ export default function ActivityLogScreen() {
 
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark">
-      <View className="bg-surface-container-lowest dark:bg-surface-dark border-b border-outline-variant dark:border-outline flex-row items-center px-margin-mobile pb-3" style={{ gap: 12, paddingTop: topInset }}>
-        <Pressable onPress={() => router.back()} className="w-touch-target h-touch-target items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
+      <View className="bg-surface-container-lowest dark:bg-surface-dark border-b border-outline-variant dark:border-outline flex-row items-center justify-between px-margin-mobile pb-3" style={{ gap: 12, paddingTop: topInset }}>
+        <View className="flex-row items-center" style={{ gap: 12 }}>
+          <Pressable onPress={() => router.back()} className="w-touch-target h-touch-target items-center justify-center -ml-2">
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.primary} />
+          </Pressable>
+          <Text className="font-headline-md text-headline-md text-on-surface dark:text-text-primary-dark">
+            Activity Log
+          </Text>
+        </View>
+        <Pressable onPress={() => {
+          const headers = ["User", "Action", "Entity", "Label", "Date"];
+          const rows = entries.map((e) => [e.user_label || "—", e.action, e.entity_type, e.entity_label || "—", new Date(e.created_at).toLocaleDateString("en-IN")]);
+          shareDataAsPdf("Activity Log", headers, rows, "activity-log.pdf");
+        }} className="flex-row items-center gap-1 bg-primary px-3 py-2 rounded-lg">
+          <MaterialCommunityIcons name="file-pdf-box" size={16} color="white" />
+          <Text className="text-xs font-bold text-white">Export</Text>
         </Pressable>
-        <Text className="font-headline-md text-headline-md text-on-surface dark:text-text-primary-dark">
-          Activity Log
-        </Text>
+      </View>
+
+      <View className="px-margin-mobile pt-2 pb-1" style={{ gap: 8 }}>
+        <Searchbar
+          placeholder="Search activity…"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onClearIconPress={() => setSearchQuery("")}
+          elevation={0}
+          inputStyle={{ fontSize: 14 }}
+        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {FILTER_ACTIONS.map((a) => {
+            const isAll = a === "all";
+            const color = isAll ? theme.colors.primary : ACTION_META[a].color;
+            const selected = actionFilter === a;
+            return (
+              <Pressable
+                key={a}
+                onPress={() => setActionFilter(a)}
+                className="px-3 py-1.5 rounded-full"
+                style={{
+                  backgroundColor: selected ? color : "transparent",
+                  borderWidth: 1,
+                  borderColor: color,
+                }}
+              >
+                <Text
+                  className="text-sm font-medium"
+                  style={{ color: selected ? "#FFFFFF" : color }}
+                >
+                  {isAll ? "All" : a.charAt(0).toUpperCase() + a.slice(1)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <FlatList
-          data={entries}
+          data={filteredEntries}
           keyExtractor={(item) => item.id}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? <View className="py-4"><ActivityIndicator size="small" color={theme.colors.primary} /></View> : !hasMore && filteredEntries.length > 0 ? <View className="py-4"><Text className="text-center text-sm text-on-surface-variant dark:text-text-secondary-dark">All entries loaded</Text></View> : null}
           contentContainerStyle={{ padding: 16, gap: 12 }}
           refreshControl={
             <RefreshControl
@@ -158,9 +247,9 @@ export default function ActivityLogScreen() {
           }
           ListEmptyComponent={
             <View className="items-center py-24">
-              <MaterialCommunityIcons name="history" size={40} color="#6e7a74" style={{ marginBottom: 12 }} />
+              <MaterialCommunityIcons name={searchQuery || actionFilter !== "all" ? "magnify-close" : "history"} size={40} color={theme.colors.outline} style={{ marginBottom: 12 }} />
               <Text className="font-body-md text-body-md text-on-surface-variant dark:text-text-secondary-dark">
-                No activity recorded yet.
+                {searchQuery || actionFilter !== "all" ? "No matching activity found." : "No activity recorded yet."}
               </Text>
             </View>
           }
@@ -189,7 +278,7 @@ export default function ActivityLogScreen() {
                     {timeAgo(item.created_at)}
                   </Text>
                 </View>
-                <MaterialCommunityIcons name="chevron-right" size={18} color="#9E9E9E" />
+                <MaterialCommunityIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             );
           }}
@@ -215,7 +304,7 @@ export default function ActivityLogScreen() {
                     {" "}{detailEntry.entity_type}
                   </Text>
                   <Pressable onPress={() => setDetailEntry(null)} className="w-10 h-10 items-center justify-center">
-                    <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                    <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                   </Pressable>
                 </View>
                 <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-1">

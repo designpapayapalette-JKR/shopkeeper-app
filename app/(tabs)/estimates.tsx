@@ -14,9 +14,10 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { api } from "../../src/lib/api";
 import { useAuth } from "../../src/lib/auth-context";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTopInset } from "../../src/lib/useTopInset";
 
 interface Product {
   id: string;
@@ -51,7 +52,8 @@ interface Estimate {
 
 export default function EstimatesScreen() {
   const { user } = useAuth();
-  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const topInset = useTopInset();
   const [view, setView] = useState<"new" | "list">("new");
   const [products, setProducts] = useState<Product[]>([]);
   const [parties, setParties] = useState<Party[]>([]);
@@ -88,7 +90,7 @@ export default function EstimatesScreen() {
     try {
       const res: any = await api.get("/invoices?type=estimate");
       if (res?.data) setEstimates(res.data);
-    } catch {} finally {
+    } catch { Alert.alert("Error", "Failed to load estimates."); } finally {
       setEstimatesLoading(false);
     }
   };
@@ -159,8 +161,6 @@ export default function EstimatesScreen() {
     ]);
   };
 
-  const topInset = insets.top;
-
   if (view === "list") {
     return (
       <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
@@ -172,11 +172,11 @@ export default function EstimatesScreen() {
           </Pressable>
         </View>
         {estimatesLoading ? (
-          <ActivityIndicator size="large" className="mt-10" />
+          <ActivityIndicator size="large" className="mt-10" color={theme.colors.primary} />
         ) : estimates.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
-            <MaterialCommunityIcons name="file-document-outline" size={48} color="#9E9E9E" />
-            <Text className="text-base text-gray-400 mt-3 text-center">No estimates yet</Text>
+            <MaterialCommunityIcons name="file-document-outline" size={48} color={theme.colors.outlineVariant} />
+            <Text className="text-base text-on-surface-variant dark:text-text-secondary-dark mt-3 text-center">No estimates yet</Text>
             <Pressable onPress={() => setView("new")} className="mt-4 bg-primary px-6 py-3 rounded-full">
               <Text className="text-white font-bold">Create First Estimate</Text>
             </Pressable>
@@ -187,12 +187,12 @@ export default function EstimatesScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
             renderItem={({ item }) => (
-              <View className="bg-white dark:bg-surface-dark rounded-xl p-4 mb-2 shadow-sm" style={{ elevation: 1 }}>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-4 mb-2 shadow-sm" style={{ elevation: 1 }}>
                 <View className="flex-row justify-between items-center">
                   <View className="flex-1">
                     <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark">{item.invoiceNumber}</Text>
-                    <Text className="text-sm text-gray-500 mt-0.5">{item.party?.name || "—"}</Text>
-                    <Text className="text-xs text-gray-400 mt-0.5">{new Date(item.createdAt).toLocaleDateString("en-IN")}</Text>
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{item.party?.name || "—"}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{new Date(item.createdAt).toLocaleDateString("en-IN")}</Text>
                   </View>
                   <View className="items-end">
                     <Text className="font-bold text-base text-amber-600">₹{Number(item.grandTotal).toLocaleString("en-IN")}</Text>
@@ -210,14 +210,14 @@ export default function EstimatesScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
         {checkoutResult ? (
           <View className="flex-1 items-center justify-center px-6">
-            <MaterialCommunityIcons name="check-circle-outline" size={64} color="#0368FE" />
-            <Text className="text-xl font-bold text-green-700 mt-4">Estimate Created</Text>
-            <Text className="text-base text-gray-600 mt-1">#{checkoutResult.invoiceNumber}</Text>
-            <Text className="text-lg font-bold text-green-600 mt-2">₹{Number(checkoutResult.grandTotal).toLocaleString("en-IN")}</Text>
+            <MaterialCommunityIcons name="check-circle-outline" size={64} color={theme.colors.primary} />
+            <Text className="text-xl font-bold text-success mt-4">Estimate Created</Text>
+            <Text className="text-base text-on-surface-variant dark:text-text-secondary-dark mt-1">#{checkoutResult.invoiceNumber}</Text>
+            <Text className="text-lg font-bold text-success mt-2">₹{Number(checkoutResult.grandTotal).toLocaleString("en-IN")}</Text>
             <Pressable onPress={() => setCheckoutResult(null)} className="mt-6 bg-primary px-8 py-3 rounded-full">
               <Text className="text-white font-bold">New Estimate</Text>
             </Pressable>
@@ -229,40 +229,41 @@ export default function EstimatesScreen() {
           <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
             <View className="flex-row items-center justify-between mt-2 mb-4">
               <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">New Estimate</Text>
-              <Pressable onPress={() => setView("list")} className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-full">
-                <Text className="text-sm font-bold text-gray-600 dark:text-gray-300">History</Text>
+              <Pressable onPress={() => setView("list")} className="bg-surface-container dark:bg-zinc-800 px-4 py-2 rounded-full">
+                <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">History</Text>
               </Pressable>
             </View>
 
             {/* Customer Selection */}
-            <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Customer</Text>
-            <Pressable onPress={() => setShowPartyPicker(true)} className="bg-white dark:bg-surface-dark rounded-xl p-3.5 mb-4 border border-gray-200 dark:border-gray-700">
-              <Text className={selectedParty ? "text-base font-semibold" : "text-base text-gray-400"}>
+            <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-1.5">Customer</Text>
+            <Pressable onPress={() => setShowPartyPicker(true)} className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-3.5 mb-4 border border-outline-variant dark:border-outline">
+              <Text className={selectedParty ? "text-base font-semibold text-on-surface dark:text-text-primary-dark" : "text-base text-on-surface-variant dark:text-text-secondary-dark"}>
                 {selectedParty ? `${selectedParty.name}${selectedParty.phone ? ` (${selectedParty.phone})` : ""}` : "Select customer"}
               </Text>
             </Pressable>
 
             {/* Product Grid */}
-            <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Products</Text>
+            <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-1.5">Products</Text>
             <TextInput
-              className="bg-white dark:bg-surface-dark rounded-xl px-4 py-3 mb-3 border border-gray-200 dark:border-gray-700 text-base"
+              className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl px-4 py-3 mb-3 border border-outline-variant dark:border-outline text-base text-on-surface dark:text-text-primary-dark"
               placeholder="Search products..."
+              placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {filteredProducts.length === 0 ? (
               <View className="py-8 items-center">
-                <MaterialCommunityIcons name="package-variant-closed" size={32} color="#9E9E9E" />
-                <Text className="text-sm text-gray-400 mt-2">No products found</Text>
+                <MaterialCommunityIcons name="package-variant-closed" size={32} color={theme.colors.outlineVariant} />
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-2">No products found</Text>
               </View>
             ) : (
               <View className="flex-row flex-wrap" style={{ marginHorizontal: -4 }}>
                 {filteredProducts.slice(0, 20).map((p) => (
                   <Pressable key={p.id} onPress={() => addToCart(p)} className="w-1/2 p-1">
-                    <View className="bg-white dark:bg-surface-dark rounded-xl p-3 border border-gray-100 dark:border-gray-700">
-                      <Text className="text-sm font-semibold" numberOfLines={1}>{p.name}</Text>
-                      <Text className="text-sm font-bold text-green-600 mt-1">₹{Number(p.price).toLocaleString("en-IN")}</Text>
-                      {p.sku && <Text className="text-[10px] text-gray-400 mt-0.5">{p.sku}</Text>}
+                    <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-3 border border-outline-variant dark:border-outline">
+                      <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{p.name}</Text>
+                      <Text className="text-sm font-bold text-success mt-1">₹{Number(p.price).toLocaleString("en-IN")}</Text>
+                      {p.sku && <Text className="text-[10px] text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{p.sku}</Text>}
                       <View className={`self-start mt-1.5 rounded-full px-2 py-0.5 ${p.stock_quantity > 5 ? "bg-green-100" : p.stock_quantity > 0 ? "bg-amber-100" : "bg-red-100"}`}>
                         <Text className={`text-[10px] font-bold ${p.stock_quantity > 5 ? "text-green-700" : p.stock_quantity > 0 ? "text-amber-700" : "text-red-700"}`}>
                           {p.stock_quantity > 0 ? `${p.stock_quantity} left` : "Out"}
@@ -275,28 +276,28 @@ export default function EstimatesScreen() {
             )}
 
             {/* Cart */}
-            <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 mt-4">Cart ({cart.length})</Text>
+            <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-1.5 mt-4">Cart ({cart.length})</Text>
             {cart.length === 0 ? (
-              <View className="bg-white dark:bg-surface-dark rounded-xl p-6 items-center">
-                <MaterialCommunityIcons name="cart-outline" size={32} color="#9E9E9E" />
-                <Text className="text-sm text-gray-400 mt-2">Cart is empty</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-6 items-center">
+                <MaterialCommunityIcons name="cart-outline" size={32} color={theme.colors.outlineVariant} />
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-2">Cart is empty</Text>
               </View>
             ) : (
-              <View className="bg-white dark:bg-surface-dark rounded-xl overflow-hidden">
+              <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl overflow-hidden">
                 {cart.map((c) => (
-                  <View key={c.product.id} className="flex-row items-center px-3 py-2.5 border-b border-gray-100 dark:border-gray-700">
-                    <Text className="flex-1 text-sm font-medium" numberOfLines={1}>{c.product.name}</Text>
+                  <View key={c.product.id} className="flex-row items-center px-3 py-2.5 border-b border-outline-variant dark:border-outline">
+                    <Text className="flex-1 text-sm font-medium text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{c.product.name}</Text>
                     <View className="flex-row items-center gap-2">
                       <Pressable onPress={() => setCart(cart.map((ci) => ci.product.id === c.product.id ? { ...ci, quantity: Math.max(1, ci.quantity - 1) } : ci))}>
-                        <MaterialCommunityIcons name="minus-circle-outline" size={20} color="#666" />
+                        <MaterialCommunityIcons name="minus-circle-outline" size={20} color={theme.colors.onSurfaceVariant} />
                       </Pressable>
-                      <Text className="w-6 text-center font-bold">{c.quantity}</Text>
+                      <Text className="w-6 text-center font-bold text-on-surface dark:text-text-primary-dark">{c.quantity}</Text>
                       <Pressable onPress={() => setCart(cart.map((ci) => ci.product.id === c.product.id ? { ...ci, quantity: ci.quantity + 1 } : ci))}>
-                        <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#666" />
+                        <MaterialCommunityIcons name="plus-circle-outline" size={20} color={theme.colors.onSurfaceVariant} />
                       </Pressable>
-                      <Text className="w-16 text-right font-semibold">₹{(Number(c.product.price) * c.quantity).toLocaleString("en-IN")}</Text>
+                      <Text className="w-16 text-right font-semibold text-on-surface dark:text-text-primary-dark">₹{(Number(c.product.price) * c.quantity).toLocaleString("en-IN")}</Text>
                       <Pressable onPress={() => setCart(cart.filter((ci) => ci.product.id !== c.product.id))}>
-                        <MaterialCommunityIcons name="delete-outline" size={18} color="#EF4444" />
+                        <MaterialCommunityIcons name="delete-outline" size={18} color={theme.colors.error} />
                       </Pressable>
                     </View>
                   </View>
@@ -305,30 +306,30 @@ export default function EstimatesScreen() {
             )}
 
             {/* Discount & GST */}
-            <View className="bg-white dark:bg-surface-dark rounded-xl p-3.5 mt-3 space-y-3">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-3.5 mt-3 space-y-3">
               <View className="flex-row items-center justify-between">
-                <Text className="text-sm font-medium">Discount %</Text>
+                <Text className="text-sm font-medium text-on-surface dark:text-text-primary-dark">Discount %</Text>
                 <TextInput
-                  className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-1.5 text-right w-20 text-base"
+                  className="bg-surface-container dark:bg-zinc-800 rounded-lg px-3 py-1.5 text-right w-20 text-base text-on-surface dark:text-text-primary-dark"
                   keyboardType="numeric"
                   value={String(discountPercent)}
                   onChangeText={(t) => setDiscountPercent(Math.max(0, Math.min(100, Number(t) || 0)))}
                 />
               </View>
               <Pressable onPress={() => setApplyGst(!applyGst)} className="flex-row items-center gap-2">
-                <MaterialCommunityIcons name={applyGst ? "checkbox-marked" : "checkbox-blank-outline"} size={20} color="#0368FE" />
-                <Text className="text-sm font-medium">Apply GST (18%)</Text>
+                <MaterialCommunityIcons name={applyGst ? "checkbox-marked" : "checkbox-blank-outline"} size={20} color={theme.colors.primary} />
+                <Text className="text-sm font-medium text-on-surface dark:text-text-primary-dark">Apply GST (18%)</Text>
               </Pressable>
             </View>
 
             {/* Totals */}
-            <View className="bg-white dark:bg-surface-dark rounded-xl p-3.5 mt-3">
-              <View className="flex-row justify-between py-1"><Text className="text-sm text-gray-500">Subtotal</Text><Text className="text-sm font-semibold">₹{subtotal.toLocaleString("en-IN")}</Text></View>
-              {discountPercent > 0 && <View className="flex-row justify-between py-1"><Text className="text-sm text-red-500">Discount</Text><Text className="text-sm text-red-500">-₹{discountAmount.toLocaleString("en-IN")}</Text></View>}
-              {applyGst && <View className="flex-row justify-between py-1"><Text className="text-sm text-gray-500">GST (18%)</Text><Text className="text-sm font-semibold">₹{taxTotal.toLocaleString("en-IN")}</Text></View>}
-              <View className="flex-row justify-between pt-2 mt-1 border-t border-gray-200">
-                <Text className="text-base font-bold">Total</Text>
-                <Text className="text-base font-bold text-green-600">₹{grandTotal.toLocaleString("en-IN")}</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-3.5 mt-3">
+              <View className="flex-row justify-between py-1"><Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Subtotal</Text><Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">₹{subtotal.toLocaleString("en-IN")}</Text></View>
+              {discountPercent > 0 && <View className="flex-row justify-between py-1"><Text className="text-sm text-error">Discount</Text><Text className="text-sm text-error">-₹{discountAmount.toLocaleString("en-IN")}</Text></View>}
+              {applyGst && <View className="flex-row justify-between py-1"><Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">GST (18%)</Text><Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">₹{taxTotal.toLocaleString("en-IN")}</Text></View>}
+              <View className="flex-row justify-between pt-2 mt-1 border-t border-outline-variant dark:border-outline">
+                <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">Total</Text>
+                <Text className="text-base font-bold text-success">₹{grandTotal.toLocaleString("en-IN")}</Text>
               </View>
             </View>
 
@@ -351,14 +352,15 @@ export default function EstimatesScreen() {
         {/* Party Picker Modal */}
         <Modal visible={showPartyPicker} animationType="slide" transparent>
           <View className="flex-1 bg-black/50">
-            <View className="bg-white dark:bg-gray-900 mt-20 rounded-t-3xl flex-1 px-4 pt-4">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark mt-20 rounded-t-3xl flex-1 px-4 pt-4">
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-lg font-bold">Select Customer</Text>
-                <Pressable onPress={() => setShowPartyPicker(false)}><MaterialCommunityIcons name="close" size={24} color="#666" /></Pressable>
+                <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">Select Customer</Text>
+                <Pressable onPress={() => setShowPartyPicker(false)}><MaterialCommunityIcons name="close" size={24} color={theme.colors.onSurfaceVariant} /></Pressable>
               </View>
               <TextInput
-                className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-base"
+                className="bg-surface-container dark:bg-zinc-800 rounded-xl px-4 py-3 mb-3 text-base text-on-surface dark:text-text-primary-dark"
                 placeholder="Search customer..."
+                placeholderTextColor={theme.colors.onSurfaceVariant}
                 value={partySearch}
                 onChangeText={setPartySearch}
               />
@@ -368,10 +370,10 @@ export default function EstimatesScreen() {
                 renderItem={({ item }) => (
                   <Pressable
                     onPress={() => { setSelectedParty(item); setShowPartyPicker(false); }}
-                    className="py-3.5 border-b border-gray-100"
+                    className="py-3.5 border-b border-outline-variant dark:border-outline"
                   >
-                    <Text className="text-base font-semibold">{item.name}</Text>
-                    {item.phone && <Text className="text-sm text-gray-400">{item.phone}</Text>}
+                    <Text className="text-base font-semibold text-on-surface dark:text-text-primary-dark">{item.name}</Text>
+                    {item.phone && <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{item.phone}</Text>}
                   </Pressable>
                 )}
               />

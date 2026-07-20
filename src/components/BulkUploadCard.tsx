@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ActivityIndicator, Alert, Modal, ScrollView } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { rowsToCsv, shareCsv } from "../lib/csvExport";
 import { parseCsvToObjects, pickAndReadCsvFile } from "../lib/csvImport";
 
@@ -35,6 +36,7 @@ interface RowResult {
 // shop, and sequential requests give a clean, orderable per-row result list
 // without needing a bulk-insert endpoint on the server.
 export default function BulkUploadCard({ entityLabel, columns, mapRowToPayload, createOne, onComplete }: Props) {
+  const theme = useTheme();
   const [downloading, setDownloading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [results, setResults] = useState<RowResult[] | null>(null);
@@ -94,14 +96,14 @@ export default function BulkUploadCard({ entityLabel, columns, mapRowToPayload, 
   const errorCount = results?.filter((r) => r.status === "error").length ?? 0;
 
   return (
-    <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-6">
       <View className="flex-row items-center mb-1" style={{ gap: 8 }}>
-        <MaterialCommunityIcons name="tray-arrow-up" size={20} color="#0368FE" />
-        <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
+        <MaterialCommunityIcons name="tray-arrow-up" size={20} color={theme.colors.primary} />
+        <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">
           Bulk Import {entityLabel}
         </Text>
       </View>
-      <Text className="text-sm text-text-secondary mb-4">
+      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">
         Download a CSV template, fill it in with your data, then upload it back to create many {entityLabel.toLowerCase()} at once.
       </Text>
 
@@ -113,10 +115,10 @@ export default function BulkUploadCard({ entityLabel, columns, mapRowToPayload, 
           style={{ gap: 6 }}
         >
           {downloading ? (
-            <ActivityIndicator color="#0368FE" size="small" />
+            <ActivityIndicator color={theme.colors.primary} size="small" />
           ) : (
             <>
-              <MaterialCommunityIcons name="download-outline" size={16} color="#0368FE" />
+              <MaterialCommunityIcons name="download-outline" size={16} color={theme.colors.primary} />
               <Text className="text-primary font-bold text-sm">Download Template</Text>
             </>
           )}
@@ -142,11 +144,11 @@ export default function BulkUploadCard({ entityLabel, columns, mapRowToPayload, 
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6" style={{ maxHeight: "80%" }}>
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
                 Import Results
               </Text>
               <Pressable onPress={() => setResults(null)} className="w-10 h-10 items-center justify-center">
-                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             </View>
             <View className="flex-row mb-4" style={{ gap: 10 }}>
@@ -161,15 +163,15 @@ export default function BulkUploadCard({ entityLabel, columns, mapRowToPayload, 
             </View>
             <ScrollView style={{ marginBottom: 24 }} showsVerticalScrollIndicator={false}>
               {results?.map((r) => (
-                <View key={r.rowNumber} className="flex-row items-center py-2.5 border-b border-gray-100 dark:border-zinc-800">
+                <View key={r.rowNumber} className="flex-row items-center py-2.5 border-b border-outline-variant dark:border-outline">
                   <MaterialCommunityIcons
                     name={r.status === "success" ? "check-circle" : "close-circle"}
                     size={18}
-                    color={r.status === "success" ? "#2E9E5B" : "#D64545"}
+                    color={r.status === "success" ? "#2E9E5B" : theme.colors.error}
                     style={{ marginRight: 10 }}
                   />
                   <View className="flex-1">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
                       Row {r.rowNumber}: {r.label}
                     </Text>
                     {r.message && <Text className="text-xs text-error mt-0.5">{r.message}</Text>}

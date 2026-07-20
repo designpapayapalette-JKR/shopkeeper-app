@@ -14,9 +14,11 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { api } from "../../src/lib/api";
 import { useAuth } from "../../src/lib/auth-context";
-import { useSafeAreaInsets, SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useTopInset, useBottomInset } from "../../src/lib/useTopInset";
 
 interface Product {
   id: string;
@@ -47,7 +49,9 @@ interface CartItem {
 
 export default function B2bScreen() {
   const { user } = useAuth();
-  const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
+  const bottomInset = useBottomInset();
+  const theme = useTheme();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [parties, setParties] = useState<Party[]>([]);
@@ -223,7 +227,7 @@ export default function B2bScreen() {
       <Pressable
         onPress={() => addToCart(item)}
         className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-4 mb-3 active:opacity-75"
-        style={inCart ? { borderColor: "#0368FE", borderWidth: 2 } : undefined}
+        style={inCart ? { borderColor: theme.colors.primary, borderWidth: 2 } : undefined}
       >
         <View className="flex-row justify-between items-start mb-1">
           <Text numberOfLines={2} className="text-base font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
@@ -250,7 +254,7 @@ export default function B2bScreen() {
                 <Text className="text-primary dark:text-primary-dark text-xs font-bold">{inCart.quantity}</Text>
               </View>
             )}
-            <MaterialCommunityIcons name="plus-circle" size={24} color="#0368FE" />
+            <MaterialCommunityIcons name="plus-circle" size={24} color={theme.colors.primary} />
           </View>
         </View>
       </Pressable>
@@ -260,13 +264,13 @@ export default function B2bScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-background dark:bg-bg-dark">
-        <ActivityIndicator size="large" color="#0368FE" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       {/* Header */}
       <View className="px-5 pt-2 pb-3 border-b border-outline-variant dark:border-outline">
         <View className="flex-row items-center gap-2 mb-1">
@@ -289,7 +293,7 @@ export default function B2bScreen() {
         >
           <View className="flex-row items-center flex-1">
             <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center mr-3">
-              <MaterialCommunityIcons name="account-tie" size={20} color="#0368FE" />
+              <MaterialCommunityIcons name="account-tie" size={20} color={theme.colors.primary} />
             </View>
             <View className="flex-1">
               <Text className="text-xs font-bold text-primary uppercase tracking-widest">Customer</Text>
@@ -297,11 +301,11 @@ export default function B2bScreen() {
                 <View>
                   <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">{selectedParty.name}</Text>
                   {selectedParty.gstin && (
-                    <Text className="text-xs text-on-surface-variant">GST: {selectedParty.gstin}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">GST: {selectedParty.gstin}</Text>
                   )}
                 </View>
               ) : (
-                <Text className="text-base font-bold text-on-surface-variant">Tap to select customer first →</Text>
+                <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark">Tap to select customer first →</Text>
               )}
             </View>
           </View>
@@ -310,7 +314,7 @@ export default function B2bScreen() {
               onPress={() => { setSelectedParty(null); setCart([]); }}
               className="bg-surface-container dark:bg-surface-dark px-3 py-1.5 rounded-full"
             >
-              <Text className="text-xs font-bold text-on-surface-variant">Change</Text>
+              <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark">Change</Text>
             </Pressable>
           )}
         </Pressable>
@@ -319,7 +323,7 @@ export default function B2bScreen() {
       {/* Search */}
       <View className="px-5 pt-3 pb-2">
         <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 flex-row items-center">
-          <MaterialCommunityIcons name="magnify" size={18} color="#6e7a74" style={{ marginRight: 8 }} />
+          <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.onSurfaceVariant} style={{ marginRight: 8 }} />
           <TextInput
             placeholder="Search products..."
             placeholderTextColor="#A0A0A0"
@@ -340,7 +344,7 @@ export default function B2bScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View className="flex-1 justify-center items-center py-20">
-            <MaterialCommunityIcons name="package-variant-closed" size={48} color="#c5cdc9" />
+            <MaterialCommunityIcons name="package-variant-closed" size={48} color={theme.colors.outline} />
             <Text className="text-on-surface-variant font-bold text-base mt-3">No products found</Text>
           </View>
         }
@@ -348,7 +352,7 @@ export default function B2bScreen() {
 
       {/* Cart Bar */}
       {cart.length > 0 && (
-        <View className="absolute bottom-0 left-0 right-0 bg-primary dark:bg-primary-dark px-5 py-3 flex-row justify-between items-center" style={{ paddingBottom: insets.bottom + 12 }}>
+        <View className="absolute bottom-0 left-0 right-0 bg-primary dark:bg-primary-dark px-5 py-3 flex-row justify-between items-center" style={{ paddingBottom: bottomInset }}>
           <View>
             <Text className="text-white/70 text-xs font-semibold uppercase tracking-wider">
               {cart.reduce((s, c) => s + c.quantity, 0)} item{cart.reduce((s, c) => s + c.quantity, 0) !== 1 ? "s" : ""}
@@ -367,7 +371,7 @@ export default function B2bScreen() {
               className="bg-white px-4 py-2 rounded-lg flex-row items-center gap-1"
             >
               <Text className="text-primary font-black">Review</Text>
-              <MaterialCommunityIcons name="arrow-right" size={16} color="#0368FE" />
+              <MaterialCommunityIcons name="arrow-right" size={16} color={theme.colors.primary} />
             </Pressable>
           </View>
         </View>
@@ -377,10 +381,10 @@ export default function B2bScreen() {
       <Modal visible={isSelectingParty} animationType="slide" onRequestClose={() => setIsSelectingParty(false)}>
         <SafeAreaProvider>
         <View className="flex-1 bg-background dark:bg-bg-dark">
-          <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: insets.top }}>
+          <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Select Customer</Text>
             <Pressable onPress={() => setIsSelectingParty(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
-              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+              <MaterialCommunityIcons name="close" size={18} color={theme.colors.onSurfaceVariant} />
             </Pressable>
           </View>
 
@@ -391,19 +395,19 @@ export default function B2bScreen() {
               className="bg-primary/10 dark:bg-primary-dark/20 rounded-2xl border border-primary/30 p-4 flex-row items-center gap-3 active:opacity-75"
             >
               <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center">
-                <MaterialCommunityIcons name="account-plus" size={20} color="#0368FE" />
+                <MaterialCommunityIcons name="account-plus" size={20} color={theme.colors.primary} />
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Party</Text>
-                <Text className="text-xs text-on-surface-variant">Name, GST, credit limit, and notes</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">Name, GST, credit limit, and notes</Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={20} color="#0368FE" />
+              <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
             </Pressable>
           </View>
 
           <View className="px-5 pt-2 flex-row gap-2 mb-2">
             <View className="flex-1 bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl px-4 py-3 flex-row items-center">
-              <MaterialCommunityIcons name="magnify" size={18} color="#3e4944" style={{ marginRight: 8 }} />
+              <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.onSurfaceVariant} style={{ marginRight: 8 }} />
               <TextInput
                 placeholder="Search by name or phone..."
                 placeholderTextColor="#A0A0A0"
@@ -419,7 +423,7 @@ export default function B2bScreen() {
             keyExtractor={(item) => item.id}
             className="px-5 pt-2"
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: insets.bottom }}
+            contentContainerStyle={{ paddingBottom: bottomInset }}
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => {
@@ -452,11 +456,11 @@ export default function B2bScreen() {
       {/* ══════ Checkout Modal ══════ */}
       <Modal visible={showCheckout} animationType="slide" onRequestClose={() => setShowCheckout(false)}>
         <SafeAreaProvider>
-        <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
+        <View className="flex-1 bg-background dark:bg-bg-dark px-5" style={{ paddingTop: topInset, paddingBottom: bottomInset }}>
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Checkout</Text>
             <Pressable onPress={() => setShowCheckout(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
-              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+              <MaterialCommunityIcons name="close" size={18} color={theme.colors.onSurfaceVariant} />
             </Pressable>
           </View>
 
@@ -466,7 +470,7 @@ export default function B2bScreen() {
               <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Customer</Text>
               <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark">{selectedParty?.name}</Text>
               {selectedParty?.gstin && (
-                <Text className="text-sm text-on-surface-variant">GST: {selectedParty.gstin}</Text>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">GST: {selectedParty.gstin}</Text>
               )}
             </View>
 
@@ -484,7 +488,7 @@ export default function B2bScreen() {
                   }`}
                   style={{ width: "48%" }}
                 >
-                  <Text className={`text-xs font-bold text-center ${invoiceType === t ? "text-white" : "text-on-surface-variant"}`} numberOfLines={1}>
+                  <Text className={`text-xs font-bold text-center ${invoiceType === t ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`} numberOfLines={1}>
                     {t === "gst" ? "GST" : t === "retail" ? "Retail" : t === "estimate" ? "Estimate" : "Bill of Supply"}
                   </Text>
                 </Pressable>
@@ -501,7 +505,7 @@ export default function B2bScreen() {
               <MaterialCommunityIcons
                 name={applyRoundOff ? "toggle-switch" : "toggle-switch-off-outline"}
                 size={26}
-                color={applyRoundOff ? "#0368FE" : "#9E9E9E"}
+                color={applyRoundOff ? theme.colors.primary : theme.colors.onSurfaceVariant}
               />
             </Pressable>
 
@@ -519,9 +523,9 @@ export default function B2bScreen() {
                   <MaterialCommunityIcons
                     name={m === "cash" ? "cash" : m === "upi" ? "cellphone" : "book-account-outline"}
                     size={16}
-                    color={paymentMode === m ? "white" : "#6e7a74"}
+                    color={paymentMode === m ? "white" : theme.colors.onSurfaceVariant}
                   />
-                  <Text className={`text-xs font-bold mt-0.5 capitalize ${paymentMode === m ? "text-white" : "text-on-surface-variant"}`}>{m}</Text>
+                  <Text className={`text-xs font-bold mt-0.5 capitalize ${paymentMode === m ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{m}</Text>
                 </Pressable>
               ))}
             </View>
@@ -533,15 +537,15 @@ export default function B2bScreen() {
                 <View className="flex-row items-center">
                   <View className="flex-1 mr-2">
                     <Text numberOfLines={1} className="font-bold text-sm text-on-surface dark:text-text-primary-dark">{c.product.name}</Text>
-                    <Text className="text-xs text-on-surface-variant">₹{parseFloat(c.product.price).toFixed(2)} × {c.quantity}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">₹{parseFloat(c.product.price).toFixed(2)} × {c.quantity}</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
                     <Pressable onPress={() => updateQuantity(c.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
-                      <MaterialCommunityIcons name="minus" size={14} color="#6e7a74" />
+                      <MaterialCommunityIcons name="minus" size={14} color={theme.colors.onSurfaceVariant} />
                     </Pressable>
                     <Text className="text-base font-black text-on-surface dark:text-text-primary-dark min-w-[20px] text-center">{c.quantity}</Text>
                     <Pressable onPress={() => updateQuantity(c.product.id, 1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
-                      <MaterialCommunityIcons name="plus" size={14} color="#6e7a74" />
+                      <MaterialCommunityIcons name="plus" size={14} color={theme.colors.onSurfaceVariant} />
                     </Pressable>
                   </View>
                   <Text className="font-black text-base text-primary dark:text-primary-dark min-w-[60px] text-right ml-2">
@@ -555,22 +559,22 @@ export default function B2bScreen() {
           {/* Total + Checkout */}
           <View className="pt-4 border-t border-outline-variant dark:border-outline">
             <View className="flex-row justify-between mb-1">
-              <Text className="text-sm text-on-surface-variant">Subtotal</Text>
-              <Text className="text-sm font-bold text-on-surface">₹{subtotal.toFixed(2)}</Text>
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Subtotal</Text>
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{subtotal.toFixed(2)}</Text>
             </View>
             {discountTotal > 0 && (
               <View className="flex-row justify-between mb-1">
-                <Text className="text-sm text-red-500">Discount</Text>
-                <Text className="text-sm font-bold text-red-500">−₹{discountTotal.toFixed(2)}</Text>
+                <Text className="text-sm text-error">Discount</Text>
+                <Text className="text-sm font-bold text-error">−₹{discountTotal.toFixed(2)}</Text>
               </View>
             )}
             {taxTotal > 0 && (
               <View className="flex-row justify-between mb-1">
-                <Text className="text-sm text-on-surface-variant">GST</Text>
-                <Text className="text-sm font-bold text-on-surface">₹{taxTotal.toFixed(2)}</Text>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">GST</Text>
+                <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{taxTotal.toFixed(2)}</Text>
               </View>
             )}
-            <View className="flex-row justify-between pt-2 border-t border-outline-variant">
+            <View className="flex-row justify-between pt-2 border-t border-outline-variant dark:border-outline">
               <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark">Total</Text>
               <Text className="text-lg font-black text-primary dark:text-primary-dark">₹{grandTotal.toFixed(2)}</Text>
             </View>
@@ -595,10 +599,10 @@ export default function B2bScreen() {
         <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View className="flex-1 bg-background dark:bg-bg-dark">
-          <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: insets.top }}>
+          <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
             <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Add Party</Text>
             <Pressable onPress={() => setAddPartyModal(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
-              <MaterialCommunityIcons name="close" size={18} color="#3e4944" />
+              <MaterialCommunityIcons name="close" size={18} color={theme.colors.onSurfaceVariant} />
             </Pressable>
           </View>
           <ScrollView className="flex-1 px-5 pt-4" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 24 }}>

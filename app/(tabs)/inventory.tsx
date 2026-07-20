@@ -19,6 +19,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../../src/lib/api";
 import { useAuth } from "../../src/lib/auth-context";
 import { useEnabledModules } from "../../src/lib/useEnabledModules";
@@ -67,6 +68,7 @@ interface Warehouse {
 }
 
 export default function InventoryScreen() {
+  const theme = useTheme();
   const { user, activeBrand, activeCompany } = useAuth();
   const { enabledModules } = useEnabledModules();
   const { t } = useTerminology();
@@ -759,7 +761,7 @@ export default function InventoryScreen() {
             onPress={() => router.push("/more?openTransfer=1" as any)}
             className="w-11 h-11 rounded-xl bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
           >
-            <MaterialCommunityIcons name="swap-horizontal" size={19} color="#0368FE" />
+            <MaterialCommunityIcons name="swap-horizontal" size={19} color={theme.colors.primary} />
           </Pressable>
           <Pressable
             onPress={() => handleScanBarcode("search")}
@@ -771,7 +773,7 @@ export default function InventoryScreen() {
             onPress={() => setIsBulkImportOpen(true)}
             className="w-11 h-11 rounded-xl bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline items-center justify-center"
           >
-            <MaterialCommunityIcons name="tray-arrow-up" size={19} color="#0368FE" />
+            <MaterialCommunityIcons name="tray-arrow-up" size={19} color={theme.colors.primary} />
           </Pressable>
           <Pressable
             onPress={() => setIsAdding(true)}
@@ -868,7 +870,7 @@ export default function InventoryScreen() {
                 >
                   {opt.label}
                 </Text>
-                {sortKey === opt.key && <MaterialCommunityIcons name="check" size={18} color="#0368FE" />}
+                {sortKey === opt.key && <MaterialCommunityIcons name="check" size={18} color={theme.colors.primary} />}
               </Pressable>
             ))}
           </Pressable>
@@ -929,7 +931,7 @@ export default function InventoryScreen() {
               onPress={openAddWarehouse}
               className="px-4 py-2.5 rounded-xl border border-dashed border-outline-variant dark:border-outline flex-row items-center"
             >
-              <MaterialCommunityIcons name="plus" size={14} color="#0368FE" style={{ marginRight: 5 }} />
+              <MaterialCommunityIcons name="plus" size={14} color={theme.colors.primary} style={{ marginRight: 5 }} />
               <Text className="text-sm font-bold text-primary dark:text-primary-dark">Add Location</Text>
             </Pressable>
             {warehouses.length > 0 && (
@@ -947,7 +949,7 @@ export default function InventoryScreen() {
       {/* Catalog List */}
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : products.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20">
@@ -983,7 +985,7 @@ export default function InventoryScreen() {
             return (
               <View
                 className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-2xl border border-outline-variant dark:border-outline shadow-sm mb-3"
-                style={isVariant ? { marginLeft: 24, borderLeftWidth: 3, borderLeftColor: "#0368FE" } : undefined}
+                style={isVariant ? { marginLeft: 24, borderLeftWidth: 3, borderLeftColor: theme.colors.primary } : undefined}
               >
                 {/* Single compact row: avatar, name, price, stock, quick actions */}
                 <View className="flex-row items-center">
@@ -1069,7 +1071,7 @@ export default function InventoryScreen() {
                       className="flex-row items-center bg-primary/10 px-2.5 py-1.5 rounded-lg"
                       style={{ gap: 3 }}
                     >
-                      <MaterialCommunityIcons name="clipboard-edit-outline" size={14} color="#0368FE" />
+                      <MaterialCommunityIcons name="clipboard-edit-outline" size={14} color={theme.colors.primary} />
                       <Text className="text-sm font-bold text-primary">Adjust</Text>
                     </Pressable>
                   )}
@@ -1082,7 +1084,7 @@ export default function InventoryScreen() {
                       <Text className="text-sm font-bold text-primary">
                         {variantCount} variant{variantCount !== 1 ? "s" : ""}
                       </Text>
-                      <MaterialCommunityIcons name={isGroupExpanded ? "chevron-up" : "chevron-down"} size={14} color="#0368FE" />
+                      <MaterialCommunityIcons name={isGroupExpanded ? "chevron-up" : "chevron-down"} size={14} color={theme.colors.primary} />
                     </Pressable>
                   )}
                   {hasDetails && (
@@ -1266,7 +1268,7 @@ export default function InventoryScreen() {
                   onPress={() => handleScanBarcode("newProductBarcode")}
                   className="w-14 items-center justify-center rounded-xl bg-primary/10 border border-primary/30"
                 >
-                  <MaterialCommunityIcons name="barcode-scan" size={22} color="#0368FE" />
+                  <MaterialCommunityIcons name="barcode-scan" size={22} color={theme.colors.primary} />
                 </Pressable>
                 <Pressable
                   onPress={handleGenerateBarcode}
@@ -1274,9 +1276,9 @@ export default function InventoryScreen() {
                   className="w-14 items-center justify-center rounded-xl bg-primary/10 border border-primary/30"
                 >
                   {generatingBarcode ? (
-                    <ActivityIndicator size="small" color="#0368FE" />
+                    <ActivityIndicator size="small" color={theme.colors.primary} />
                   ) : (
-                    <MaterialCommunityIcons name="auto-fix" size={22} color="#0368FE" />
+                    <MaterialCommunityIcons name="auto-fix" size={22} color={theme.colors.primary} />
                   )}
                 </Pressable>
               </View>
@@ -1439,7 +1441,7 @@ export default function InventoryScreen() {
                 <MaterialCommunityIcons
                   name={newProductTracksSerials ? "toggle-switch" : "toggle-switch-off-outline"}
                   size={26}
-                  color={newProductTracksSerials ? "#0368FE" : "#9E9E9E"}
+                  color={newProductTracksSerials ? theme.colors.primary : theme.colors.outline}
                 />
               </Pressable>
 
@@ -1624,7 +1626,7 @@ export default function InventoryScreen() {
 
           {editCustomFieldsLoading ? (
             <View className="mt-6 pt-4 border-t border-outline-variant dark:border-outline items-center py-4">
-              <ActivityIndicator size="small" color="#0368FE" />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             </View>
           ) : !customFieldDefsLoading && customFieldDefs.length > 0 && (
             <ProductCustomFieldsFormSection
@@ -1734,8 +1736,8 @@ export default function InventoryScreen() {
                       adjustType === "add" ? "border-green-500 bg-green-50 dark:bg-green-950/20" : "border-outline-variant dark:border-outline"
                     }`}
                   >
-                    <MaterialCommunityIcons name="plus" size={20} color={adjustType === "add" ? "#16a34a" : "#6B7280"} />
-                    <Text className={`text-sm font-bold mt-1 ${adjustType === "add" ? "text-green-600" : "text-text-secondary"}`}>Add Stock</Text>
+                    <MaterialCommunityIcons name="plus" size={20} color={adjustType === "add" ? "#16a34a" : theme.colors.onSurfaceVariant} />
+                    <Text className={`text-sm font-bold mt-1 ${adjustType === "add" ? "text-success" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>Add Stock</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => setAdjustType("remove")}
@@ -1743,8 +1745,8 @@ export default function InventoryScreen() {
                       adjustType === "remove" ? "border-red-500 bg-red-50 dark:bg-red-950/20" : "border-outline-variant dark:border-outline"
                     }`}
                   >
-                    <MaterialCommunityIcons name="minus" size={20} color={adjustType === "remove" ? "#dc2626" : "#6B7280"} />
-                    <Text className={`text-sm font-bold mt-1 ${adjustType === "remove" ? "text-red-600" : "text-text-secondary"}`}>Remove Stock</Text>
+                    <MaterialCommunityIcons name="minus" size={20} color={adjustType === "remove" ? "#dc2626" : theme.colors.onSurfaceVariant} />
+                    <Text className={`text-sm font-bold mt-1 ${adjustType === "remove" ? "text-error" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>Remove Stock</Text>
                   </Pressable>
                 </View>
 
@@ -1831,7 +1833,7 @@ export default function InventoryScreen() {
                     }}
                     className="w-10 h-10 items-center justify-center"
                   >
-                    <MaterialCommunityIcons name="pencil-outline" size={20} color="#0368FE" />
+                    <MaterialCommunityIcons name="pencil-outline" size={20} color={theme.colors.primary} />
                   </Pressable>
                   <Pressable onPress={() => handleDeleteWarehouse(w)} className="w-10 h-10 items-center justify-center">
                     <MaterialCommunityIcons name="trash-can-outline" size={20} color="#D64545" />

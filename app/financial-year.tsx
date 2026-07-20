@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
@@ -12,6 +13,7 @@ interface Closure {
 }
 
 export default function FinancialYearScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
   const confirm = useConfirm();
   const [currentFyLabel, setCurrentFyLabel] = useState("");
@@ -62,7 +64,7 @@ export default function FinancialYearScreen() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-bg-dark">
-        <ActivityIndicator color="#0368FE" />
+        <ActivityIndicator color={theme.colors.primary} />
       </View>
     );
   }
@@ -70,23 +72,23 @@ export default function FinancialYearScreen() {
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset + 8 }}>
     <ScrollView className="flex-1 px-4">
-      <Text className="text-xl font-black text-text-primary mb-1">Financial Year Closing</Text>
-      <Text className="text-sm text-text-secondary mb-4">
+      <Text className="text-xl font-black text-on-surface dark:text-text-primary-dark mb-1">Financial Year Closing</Text>
+      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">
         India&apos;s financial year runs April–March. Closing a past year blocks new backdated transactions — it never deletes or alters existing records.
       </Text>
 
-      <View className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-4">
-        <Text className="text-sm text-text-secondary">Current financial year</Text>
-        <Text className="text-lg font-black text-text-primary dark:text-text-primary-dark mt-0.5">{currentFyLabel} (open)</Text>
+      <View className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-outline-variant dark:border-outline mb-4">
+        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Current financial year</Text>
+        <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark mt-0.5">{currentFyLabel} (open)</Text>
       </View>
 
       {closures.map((c) => (
-        <View key={c.id} className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
+        <View key={c.id} className="flex-row items-center justify-between py-3 border-b border-outline-variant dark:border-outline">
           <View className="flex-row items-center" style={{ gap: 6 }}>
-            <MaterialCommunityIcons name="lock-outline" size={16} color="#6B7280" />
-            <Text className="font-bold text-text-primary dark:text-text-primary-dark">FY {c.fyLabel}</Text>
+            <MaterialCommunityIcons name="lock-outline" size={16} color={theme.colors.onSurfaceVariant} />
+            <Text className="font-bold text-on-surface dark:text-text-primary-dark">FY {c.fyLabel}</Text>
           </View>
-          <Text className="text-xs text-text-secondary">Closed {new Date(c.closedAt).toLocaleDateString("en-IN")}</Text>
+          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">Closed {new Date(c.closedAt).toLocaleDateString("en-IN")}</Text>
         </View>
       ))}
 
@@ -94,13 +96,13 @@ export default function FinancialYearScreen() {
         <Pressable
           onPress={() => closeFy(priorFyLabel)}
           disabled={closing}
-          className="border border-primary py-3.5 rounded-xl items-center flex-row justify-center mt-5"
+          className="border border-primary dark:border-primary-dark py-3.5 rounded-xl items-center flex-row justify-center mt-5"
           style={{ gap: 6, opacity: closing ? 0.5 : 1 }}
         >
-          {closing ? <ActivityIndicator color="#0368FE" size="small" /> : (
+          {closing ? <ActivityIndicator color={theme.colors.primary} size="small" /> : (
             <>
-              <MaterialCommunityIcons name="lock-outline" size={16} color="#0368FE" />
-              <Text className="text-primary font-bold">Close FY {priorFyLabel}</Text>
+              <MaterialCommunityIcons name="lock-outline" size={16} color={theme.colors.primary} />
+              <Text className="text-primary dark:text-primary-dark font-bold">Close FY {priorFyLabel}</Text>
             </>
           )}
         </Pressable>

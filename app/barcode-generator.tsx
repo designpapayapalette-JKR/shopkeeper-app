@@ -3,9 +3,10 @@ import { Text, View, ScrollView, Pressable, TextInput, Alert, ActivityIndicator 
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Svg, { Rect } from "react-native-svg";
+import { useTheme } from "react-native-paper";
 import { useAuth } from "../src/lib/auth-context";
 import { api, ApiError } from "../src/lib/api";
-import { useTopInset } from "../src/lib/useTopInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { ean13Bars } from "../src/lib/barcodeEncoder";
 
 interface Product {
@@ -52,6 +53,8 @@ export default function BarcodeGeneratorScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
+  const theme = useTheme();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,10 +147,10 @@ export default function BarcodeGeneratorScreen() {
 
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
-    <ScrollView className="flex-1">
+    <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
       <View className="px-6 pb-4 flex-row items-center" style={{ gap: 12 }}>
         <Pressable onPress={() => router.back()} className="w-10 h-10 items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.primary} />
         </Pressable>
         <View>
           <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">
@@ -160,11 +163,11 @@ export default function BarcodeGeneratorScreen() {
       </View>
 
       <View className="px-6 mb-4 flex-row items-center bg-surface-container-lowest dark:bg-surface-dark mx-6 rounded-2xl border border-outline-variant dark:border-outline h-12">
-        <MaterialCommunityIcons name="magnify" size={20} color="#9CA3AF" style={{ marginRight: 8 }} />
+        <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.onSurfaceVariant} style={{ marginRight: 8 }} />
         <TextInput
           className="flex-1 text-on-surface dark:text-text-primary-dark text-base"
           placeholder="Search products…"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={theme.colors.onSurfaceVariant}
           value={search}
           onChangeText={setSearch}
         />
@@ -184,7 +187,7 @@ export default function BarcodeGeneratorScreen() {
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <>
-              <MaterialCommunityIcons name="barcode-scan" size={18} color={selectedIds.size === 0 ? "#9CA3AF" : "#fff"} />
+              <MaterialCommunityIcons name="barcode-scan" size={18} color={selectedIds.size === 0 ? theme.colors.onSurfaceVariant : "#fff"} />
               <Text className={`ml-2 font-bold text-sm ${selectedIds.size === 0 ? "text-on-surface-variant" : "text-white"}`}>
                 Generate ({selectedIds.size})
               </Text>
@@ -196,14 +199,14 @@ export default function BarcodeGeneratorScreen() {
           disabled={generating}
           className="px-4 py-3.5 rounded-2xl bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline flex-row items-center active:opacity-80"
         >
-          <MaterialCommunityIcons name="auto-fix" size={18} color="#0368FE" />
+          <MaterialCommunityIcons name="auto-fix" size={18} color={theme.colors.primary} />
           <Text className="ml-1.5 font-bold text-sm text-primary">All Missing</Text>
         </Pressable>
       </View>
 
       {loading ? (
         <View className="py-20 items-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <View className="px-6 mb-8" style={{ gap: 10 }}>
@@ -265,17 +268,17 @@ export default function BarcodeGeneratorScreen() {
                       <MaterialCommunityIcons
                         name={viewBarcodeId === product.id ? "chevron-up" : "chevron-down"}
                         size={18}
-                        color="#0368FE"
+                        color={theme.colors.primary}
                       />
                       <Text className="ml-1 text-primary text-sm font-semibold">
                         {viewBarcodeId === product.id ? "Hide Barcode" : "View Barcode Label"}
                       </Text>
                     </Pressable>
                     {viewBarcodeId === product.id && (
-                      <View className="px-4 pb-5 items-center bg-white dark:bg-zinc-900 mx-4 mb-4 rounded-xl py-4" style={{ gap: 2 }}>
+                      <View className="px-4 pb-5 items-center bg-surface-container-lowest dark:bg-surface-dark mx-4 mb-4 rounded-xl py-4" style={{ gap: 2 }}>
                         <BarcodeSvg code={product.barcode!} />
                         {/^\d{13}$/.test(product.barcode!) && (
-                          <Text className="text-xs text-gray-400 font-mono font-bold tracking-widest">
+                          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark font-mono font-bold tracking-widest">
                             {product.barcode}
                           </Text>
                         )}
@@ -285,14 +288,14 @@ export default function BarcodeGeneratorScreen() {
                 )}
 
                 {isGenerated && !hasBarcode && (
-                  <Text className="px-4 pb-4 text-xs text-green-600 font-semibold">Barcode generated — pull to refresh</Text>
+                  <Text className="px-4 pb-4 text-xs text-success font-semibold">Barcode generated — pull to refresh</Text>
                 )}
               </View>
             );
           })}
           {filtered.length === 0 && (
             <View className="py-16 items-center">
-              <MaterialCommunityIcons name="barcode-off" size={48} color="#D1D5DB" />
+              <MaterialCommunityIcons name="barcode-off" size={48} color={theme.colors.outline} />
               <Text className="text-on-surface-variant dark:text-text-secondary-dark text-base mt-3 font-medium">
                 {search ? "No products match your search" : "No products found"}
               </Text>

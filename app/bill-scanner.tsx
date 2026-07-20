@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { View, Text, Pressable, Image, ActivityIndicator, Alert, StyleSheet } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
@@ -32,6 +33,7 @@ const CATEGORY_META: Record<ScanCategory, { title: string; destination: (uri: st
 // automatically (no OCR/line-item extraction) — it's a faster on-ramp into
 // manual entry, and a permanent record you can find again later.
 export default function BillScannerScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const topInset = useTopInset();
   const bottomInset = useBottomInset(0);
@@ -79,7 +81,7 @@ export default function BillScannerScreen() {
   if (!permission.granted) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-bg-dark px-8" style={{ paddingTop: topInset }}>
-        <MaterialCommunityIcons name="camera-off-outline" size={48} color="#9E9E9E" style={{ marginBottom: 16 }} />
+        <MaterialCommunityIcons name="camera-off-outline" size={48} color={theme.colors.onSurfaceVariant} style={{ marginBottom: 16 }} />
         <Text className="text-on-surface dark:text-text-primary-dark font-bold text-base text-center mb-4">
           Camera access is needed to {meta.title.toLowerCase()}.
         </Text>
@@ -133,7 +135,7 @@ export default function BillScannerScreen() {
               disabled={capturing}
               className="w-20 h-20 rounded-full bg-white items-center justify-center border-4 border-white/40"
             >
-              {capturing ? <ActivityIndicator color="#0368FE" /> : <View className="w-16 h-16 rounded-full bg-primary" />}
+              {capturing ? <ActivityIndicator color={theme.colors.primary} /> : <View className="w-16 h-16 rounded-full bg-primary" />}
             </Pressable>
           </View>
         </>

@@ -11,12 +11,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
-import { useTopInset } from "../src/lib/useTopInset";
-import { useBottomInset } from "../src/lib/useBottomInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import BulkUploadCard from "../src/components/BulkUploadCard";
 
 export interface BankAccount {
@@ -33,8 +34,10 @@ export default function BankAccountsScreen() {
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
+  const theme = useTheme();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
@@ -57,6 +60,11 @@ export default function BankAccountsScreen() {
       setLoading(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
+  }, [load]);
 
   useEffect(() => {
     load();
@@ -149,7 +157,7 @@ export default function BankAccountsScreen() {
             onPress={() => setIsBulkImportOpen(true)}
             className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline px-3 py-2.5 rounded-xl items-center justify-center"
           >
-            <MaterialCommunityIcons name="tray-arrow-up" size={18} color="#0368FE" />
+            <MaterialCommunityIcons name="tray-arrow-up" size={18} color={theme.colors.primary} />
           </Pressable>
           <Pressable
             onPress={() => setIsAdding(true)}
@@ -164,7 +172,7 @@ export default function BankAccountsScreen() {
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : accounts.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20 px-6">
@@ -176,24 +184,25 @@ export default function BankAccountsScreen() {
         <FlatList
           data={accounts}
           keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={{ padding: 16, gap: 12 }}
           renderItem={({ item }) => (
-            <View className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm flex-row justify-between items-center">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline shadow-sm flex-row justify-between items-center">
               <View className="flex-1 mr-2">
-                <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark">
+                <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark">
                   {item.account_name}
                 </Text>
-                <Text className="text-sm text-text-secondary mt-1">
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">
                   {item.bank_name || "—"} {item.account_number ? `· ${item.account_number}` : ""}
                 </Text>
               </View>
               <View className="items-end">
-                <Text className="text-base font-black text-text-primary dark:text-text-primary-dark">
+                <Text className="text-base font-black text-on-surface dark:text-text-primary-dark">
                   ₹{parseFloat(item.current_balance).toFixed(2)}
                 </Text>
                 <Pressable onPress={() => handleDelete(item)} disabled={deletingId === item.id} className="mt-1.5">
                   {deletingId === item.id ? (
-                    <ActivityIndicator size="small" color="#D64545" />
+                    <ActivityIndicator size="small" color={theme.colors.error} />
                   ) : (
                     <Text className="text-sm text-error font-bold">Delete</Text>
                   )}
@@ -210,7 +219,7 @@ export default function BankAccountsScreen() {
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Add Bank Account</Text>
             <Pressable onPress={closeAdd} className="w-11 h-11 items-center justify-center">
-              <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+              <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
             </Pressable>
           </View>
 
@@ -261,7 +270,7 @@ export default function BankAccountsScreen() {
               Bulk Import Bank Accounts
             </Text>
             <Pressable onPress={() => setIsBulkImportOpen(false)} className="w-11 h-11 items-center justify-center">
-              <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+              <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
             </Pressable>
           </View>
           <BulkUploadCard
@@ -295,4 +304,3 @@ export default function BankAccountsScreen() {
     </View>
   );
 }
-

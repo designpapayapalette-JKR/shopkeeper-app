@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Alert, Modal } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
-import { useTopInset } from "../src/lib/useTopInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { pickAndReadCsvFile, parseCsvToObjects } from "../src/lib/csvImport";
 
 interface BankAccount {
@@ -27,7 +28,9 @@ interface Suggestion {
 }
 
 export default function BankReconciliationScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [lines, setLines] = useState<StatementLine[]>([]);
@@ -137,18 +140,18 @@ export default function BankReconciliationScreen() {
 
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset + 8 }}>
-    <ScrollView className="flex-1 px-4">
-      <Text className="text-xl font-black text-text-primary mb-1">Bank Reconciliation</Text>
-      <Text className="text-sm text-text-secondary mb-4">Import your bank statement and match each line to a recorded payment.</Text>
+    <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
+      <Text className="text-xl font-black text-on-surface dark:text-text-primary-dark mb-1">Bank Reconciliation</Text>
+      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">Import your bank statement and match each line to a recorded payment.</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row mb-3">
         {accounts.map((a) => (
           <Pressable
             key={a.id}
             onPress={() => setAccountId(a.id)}
-            className={`mr-2 px-4 py-3 rounded-lg border ${accountId === a.id ? "bg-primary border-primary" : "bg-surface border-gray-200 dark:border-zinc-800"}`}
+            className={`mr-2 px-4 py-3 rounded-lg border ${accountId === a.id ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
           >
-            <Text className={`text-sm font-semibold ${accountId === a.id ? "text-white" : "text-text-secondary"}`}>{a.bankName} — {a.accountNumber}</Text>
+            <Text className={`text-sm font-semibold ${accountId === a.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{a.bankName} — {a.accountNumber}</Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -161,28 +164,28 @@ export default function BankReconciliationScreen() {
           </>
         )}
       </Pressable>
-      <Text className="text-xs text-text-secondary mb-4">CSV columns required: date, description, amount (positive = money in, negative = money out).</Text>
+      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-4">CSV columns required: date, description, amount (positive = money in, negative = money out).</Text>
 
       {loading ? (
-        <View className="py-10 items-center"><ActivityIndicator color="#0368FE" /></View>
+        <View className="py-10 items-center"><ActivityIndicator color={theme.colors.primary} /></View>
       ) : lines.length === 0 ? (
         <View className="py-10 items-center">
-          <Text className="text-sm text-text-secondary">No unmatched statement lines.</Text>
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">No unmatched statement lines.</Text>
         </View>
       ) : (
         lines.map((l) => (
-          <View key={l.id} className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-3">
+          <View key={l.id} className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-3">
             <View className="flex-row justify-between items-start mb-2">
-              <Text className="font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2" numberOfLines={2}>{l.description}</Text>
+              <Text className="font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={2}>{l.description}</Text>
               <Text className={`font-black ${Number(l.amount) >= 0 ? "text-success" : "text-error"}`}>₹{Number(l.amount).toLocaleString("en-IN")}</Text>
             </View>
-            <Text className="text-xs text-text-secondary mb-3">{new Date(l.date).toLocaleDateString("en-IN")}</Text>
+            <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-3">{new Date(l.date).toLocaleDateString("en-IN")}</Text>
             <View className="flex-row" style={{ gap: 8 }}>
               <Pressable onPress={() => openSuggestions(l)} className="flex-1 border border-primary py-2.5 rounded-xl items-center">
                 <Text className="text-primary font-bold text-sm">Match</Text>
               </Pressable>
               <Pressable onPress={() => ignoreLine(l)} className="flex-1 border border-gray-300 dark:border-zinc-700 py-2.5 rounded-xl items-center">
-                <Text className="text-text-secondary font-bold text-sm">Ignore</Text>
+                <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-sm">Ignore</Text>
               </Pressable>
             </View>
           </View>
@@ -193,15 +196,15 @@ export default function BankReconciliationScreen() {
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-background dark:bg-bg-dark rounded-t-3xl px-6 pt-6 pb-10" style={{ maxHeight: "75%" }}>
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>{suggestFor?.description}</Text>
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2" numberOfLines={1}>{suggestFor?.description}</Text>
               <Pressable onPress={() => setSuggestFor(null)}>
-                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             </View>
             {suggestLoading ? (
-              <ActivityIndicator color="#0368FE" />
+              <ActivityIndicator color={theme.colors.primary} />
             ) : suggestions.length === 0 ? (
-              <Text className="text-sm text-text-secondary py-6 text-center">No candidate payments found nearby.</Text>
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark py-6 text-center">No candidate payments found nearby.</Text>
             ) : (
               <ScrollView>
                 {suggestions.map((s) => (
@@ -212,10 +215,10 @@ export default function BankReconciliationScreen() {
                     style={{ borderColor: s.confidence === "high" ? "#2E9E5B" : "#e5e7eb" }}
                   >
                     <View className="flex-row justify-between">
-                      <Text className="font-bold text-text-primary dark:text-text-primary-dark">{s.payment.party?.name || "—"} — ₹{Number(s.payment.amount).toLocaleString("en-IN")}</Text>
+                      <Text className="font-bold text-on-surface dark:text-text-primary-dark">{s.payment.party?.name || "—"} — ₹{Number(s.payment.amount).toLocaleString("en-IN")}</Text>
                       <Text className={`text-xs font-bold ${s.confidence === "high" ? "text-success" : "text-warning"}`}>{s.confidence}</Text>
                     </View>
-                    <Text className="text-xs text-text-secondary mt-0.5">{s.payment.reference || "No reference"} · {s.daysApart.toFixed(0)}d apart</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{s.payment.reference || "No reference"} · {s.daysApart.toFixed(0)}d apart</Text>
                   </Pressable>
                 ))}
               </ScrollView>

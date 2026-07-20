@@ -7,6 +7,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { isValidGstin } from "../src/lib/gstin";
+import { useTheme } from "react-native-paper";
 
 const STAFF_ROLES = [
   { id: "manager", name: "Manager" },
@@ -39,6 +40,7 @@ export default function OnboardingScreen() {
   const { activeCompany, refreshCompany } = useAuth();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
+  const theme = useTheme();
   const [keyboardActive, setKeyboardActive] = useState(false);
 
   React.useEffect(() => {
@@ -261,10 +263,10 @@ export default function OnboardingScreen() {
               style={{ gap: 6 }}
             >
               {addingMember ? (
-                <ActivityIndicator color="#0368FE" size="small" />
+                <ActivityIndicator color={theme.colors.primary} size="small" />
               ) : (
                 <>
-                  <MaterialCommunityIcons name="plus" size={16} color="#0368FE" />
+                  <MaterialCommunityIcons name="plus" size={16} color={theme.colors.primary} />
                   <Text className="text-primary dark:text-primary-dark font-bold text-sm">Create Login & Add</Text>
                 </>
               )}
@@ -311,7 +313,7 @@ export default function OnboardingScreen() {
       {step === 2 && (
         <View className="flex-1 items-center justify-center px-4" style={{ paddingBottom: bottomInset }}>
           <View className="w-20 h-20 rounded-full bg-primary/10 dark:bg-primary-dark/10 items-center justify-center mb-6">
-            <MaterialCommunityIcons name="check-circle" size={44} color="#0368FE" />
+            <MaterialCommunityIcons name="check-circle" size={44} color={theme.colors.primary} />
           </View>
           <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-2 text-center">You&apos;re all set!</Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mb-8">

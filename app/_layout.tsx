@@ -4,6 +4,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, View, AppState } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { PaperProvider, useTheme } from "react-native-paper";
 import { colorScheme } from "nativewind";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
 import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
@@ -13,6 +14,7 @@ import { startConnectivityMonitoring } from "../src/lib/connectivity";
 import { TerminologyProvider } from "../src/lib/terminology-context";
 import { OutletProvider } from "../src/lib/outlet-context";
 import { useAppFonts } from "../src/lib/fonts";
+import { MMCTheme, MMCDarkTheme } from "../src/theme/mmc-theme";
 
 // The app is light-theme only — several screens have incomplete `dark:`
 // class coverage (a card gets a dark background but its text stays the
@@ -21,6 +23,7 @@ import { useAppFonts } from "../src/lib/fonts";
 // Locking the scheme here overrides NativeWind's "media" (system) mode app-wide.
 
 function NavigationGuard() {
+  const theme = useTheme();
   const { isAuthenticated, isLoading, activeCompany } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -75,7 +78,7 @@ function NavigationGuard() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0368FE" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -99,23 +102,25 @@ export default function RootLayout() {
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0368FE" />
+        <ActivityIndicator size="large" color={MMCTheme.colors?.primary ?? "#0368FE"} />
       </View>
     );
   }
 
   return (
     <SafeAreaProvider>
-      <TerminologyProvider>
-        <AuthProvider>
-          <OutletProvider>
-            <ConfirmDialogProvider>
-              <StatusBar style="dark" />
-              <NavigationGuard />
-            </ConfirmDialogProvider>
-          </OutletProvider>
-        </AuthProvider>
-      </TerminologyProvider>
+      <PaperProvider theme={MMCTheme}>
+        <TerminologyProvider>
+          <AuthProvider>
+            <OutletProvider>
+              <ConfirmDialogProvider>
+                <StatusBar style="dark" />
+                <NavigationGuard />
+              </ConfirmDialogProvider>
+            </OutletProvider>
+          </AuthProvider>
+        </TerminologyProvider>
+      </PaperProvider>
     </SafeAreaProvider>
   );
 }

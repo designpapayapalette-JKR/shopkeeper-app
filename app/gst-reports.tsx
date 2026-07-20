@@ -9,10 +9,12 @@ import {
   TextInput,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
 import { rowsToCsv, shareCsv } from "../src/lib/csvExport";
-import { useTopInset } from "../src/lib/useTopInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { useTerminology } from "../src/lib/terminology-context";
+import { useTheme } from "react-native-paper";
 
 // Note: shopkeeper-api returns camelCase, but src/lib/api.ts converts every
 // response body through toSnakeCase() before handing it back — so every
@@ -84,9 +86,82 @@ interface DayBook {
   net: number;
 }
 
+// Module scope, not defined inside GstReportsScreen — see the same note in
+// pnl-report.tsx: a component declared inside another component's render
+// body is a new function identity every render, forcing React to remount
+// (not update) its subtree each time.
+function GstDrillDownSection({
+  label,
+  count,
+  expanded,
+  onToggle,
+  children,
+}: {
+  label: string;
+  count: number;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View className="mb-3 bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline overflow-hidden">
+      <Pressable onPress={onToggle} className="flex-row justify-between items-center p-4">
+        <Text className="font-bold text-on-surface dark:text-text-primary-dark">
+          {label} ({count})
+        </Text>
+        <MaterialCommunityIcons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={20}
+          color="#6e7a74"
+        />
+      </Pressable>
+      {expanded && <View className="border-t border-outline-variant dark:border-outline">{children}</View>}
+    </View>
+  );
+}
+
+function GstSaleRowCard({ row }: { row: GstSaleRow }) {
+  return (
+    <View className="p-3 border-b border-outline-variant dark:border-outline last:border-b-0">
+      <View className="flex-row justify-between items-center mb-1">
+        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{row.invoice_number}</Text>
+        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{row.grand_total.toFixed(2)}</Text>
+      </View>
+      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-1">
+        {new Date(row.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} · {row.party_name}
+        {row.gstin ? ` · ${row.gstin}` : ""}
+      </Text>
+      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
+        Taxable ₹{row.taxable_value.toFixed(2)}
+        {row.igst > 0 ? ` · IGST ₹${row.igst.toFixed(2)}` : ` · CGST ₹${row.cgst.toFixed(2)} · SGST ₹${row.sgst.toFixed(2)}`}
+      </Text>
+    </View>
+  );
+}
+
+function GstPurchaseRowCard({ row }: { row: GstPurchaseRow }) {
+  return (
+    <View className="p-3 border-b border-outline-variant dark:border-outline last:border-b-0">
+      <View className="flex-row justify-between items-center mb-1">
+        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{row.purchase_number}</Text>
+        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{row.grand_total.toFixed(2)}</Text>
+      </View>
+      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-1">
+        {new Date(row.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} · {row.supplier_name}
+        {row.gstin ? ` · ${row.gstin}` : ""}
+      </Text>
+      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
+        Taxable ₹{row.taxable_value.toFixed(2)} · Tax ₹{row.tax_total.toFixed(2)}
+      </Text>
+    </View>
+  );
+}
+
 export default function GstReportsScreen() {
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const { t } = useTerminology();
+  const theme = useTheme();
   const params = useLocalSearchParams<{ tab?: string }>();
   const initialTab: ReportTab = params.tab === "daybook" || params.tab === "gst" ? (params.tab as ReportTab) : "hsn";
   const [activeTab, setActiveTab] = useState<ReportTab>(initialTab);
@@ -99,6 +174,7 @@ export default function GstReportsScreen() {
   const [hsnRows, setHsnRows] = useState<HsnRow[] | null>(null);
   const [gstSummary, setGstSummary] = useState<GstSummary | null>(null);
   const [dayBook, setDayBook] = useState<DayBook | null>(null);
+  const [expandedGstSection, setExpandedGstSection] = useState<"b2b" | "b2c" | "purchases" | null>(null);
 
   const handleRunHsn = async () => {
     setLoading(true);
@@ -215,7 +291,7 @@ export default function GstReportsScreen() {
 
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
-    <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
       <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark mb-1">
         GST & Compliance Reports
       </Text>
@@ -291,7 +367,7 @@ export default function GstReportsScreen() {
           ) : (
             <>
               {hsnRows.map((row) => (
-                <View key={`${row.hsn_code}-${row.tax_rate}`} className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-3">
+                <View key={`${row.hsn_code}-${row.tax_rate}`} className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-outline-variant dark:border-outline mb-3">
                   <View className="flex-row justify-between mb-1">
                     <Text className="font-bold text-on-surface dark:text-text-primary-dark">HSN {row.hsn_code}</Text>
                     <Text className="font-bold text-on-surface dark:text-text-primary-dark">{row.tax_rate}%</Text>
@@ -302,7 +378,7 @@ export default function GstReportsScreen() {
                 </View>
               ))}
               <Pressable onPress={handleExportHsn} disabled={exporting} className="border border-primary py-3.5 rounded-xl items-center mt-2">
-                {exporting ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
+                {exporting ? <ActivityIndicator color={theme.colors.primary} /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
               </Pressable>
             </>
           )}
@@ -311,11 +387,47 @@ export default function GstReportsScreen() {
 
       {activeTab === "gst" && gstSummary && (
         <View>
-          <Text className="font-bold text-on-surface dark:text-text-primary-dark mb-2">B2B Sales ({gstSummary.sales_b2_b.length})</Text>
-          <Text className="font-bold text-on-surface dark:text-text-primary-dark mb-2 mt-3">B2C Sales ({gstSummary.sales_b2_c.length})</Text>
-          <Text className="font-bold text-on-surface dark:text-text-primary-dark mb-2 mt-3">Purchases ({gstSummary.purchase_register.length})</Text>
-          <Pressable onPress={handleExportGst} disabled={exporting} className="border border-primary py-3.5 rounded-xl items-center mt-4">
-            {exporting ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Export & Share CSV</Text>}
+          <GstDrillDownSection
+            label="B2B Sales"
+            count={gstSummary.sales_b2_b.length}
+            expanded={expandedGstSection === "b2b"}
+            onToggle={() => setExpandedGstSection((s) => (s === "b2b" ? null : "b2b"))}
+          >
+            {gstSummary.sales_b2_b.length === 0 ? (
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic p-3">No B2B sales in this range.</Text>
+            ) : (
+              gstSummary.sales_b2_b.map((r, idx) => <GstSaleRowCard key={`${r.invoice_number}-${idx}`} row={r} />)
+            )}
+          </GstDrillDownSection>
+
+          <GstDrillDownSection
+            label="B2C Sales"
+            count={gstSummary.sales_b2_c.length}
+            expanded={expandedGstSection === "b2c"}
+            onToggle={() => setExpandedGstSection((s) => (s === "b2c" ? null : "b2c"))}
+          >
+            {gstSummary.sales_b2_c.length === 0 ? (
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic p-3">No B2C sales in this range.</Text>
+            ) : (
+              gstSummary.sales_b2_c.map((r, idx) => <GstSaleRowCard key={`${r.invoice_number}-${idx}`} row={r} />)
+            )}
+          </GstDrillDownSection>
+
+          <GstDrillDownSection
+            label="Purchases"
+            count={gstSummary.purchase_register.length}
+            expanded={expandedGstSection === "purchases"}
+            onToggle={() => setExpandedGstSection((s) => (s === "purchases" ? null : "purchases"))}
+          >
+            {gstSummary.purchase_register.length === 0 ? (
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic p-3">No purchases in this range.</Text>
+            ) : (
+              gstSummary.purchase_register.map((r, idx) => <GstPurchaseRowCard key={`${r.purchase_number}-${idx}`} row={r} />)
+            )}
+          </GstDrillDownSection>
+
+          <Pressable onPress={handleExportGst} disabled={exporting} className="border border-primary dark:border-primary-dark py-3.5 rounded-xl items-center mt-4">
+            {exporting ? <ActivityIndicator color={theme.colors.primary} /> : <Text className="text-primary dark:text-primary-dark font-bold text-base">Export & Share CSV</Text>}
           </Pressable>
         </View>
       )}
@@ -323,7 +435,7 @@ export default function GstReportsScreen() {
       {activeTab === "daybook" && dayBook && (
         <View className="mt-2">
           {/* Summary Card */}
-          <View className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-4">
+          <View className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-outline-variant dark:border-outline mb-4">
             <View className="flex-row justify-between mb-1.5">
               <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm">Total Inflow</Text>
               <Text className="font-bold text-success text-sm">₹{dayBook.total_in.toFixed(2)}</Text>
@@ -332,7 +444,7 @@ export default function GstReportsScreen() {
               <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm">Total Outflow</Text>
               <Text className="font-bold text-error text-sm">₹{dayBook.total_out.toFixed(2)}</Text>
             </View>
-            <View className="flex-row justify-between pt-1.5 border-t border-gray-100 dark:border-zinc-800">
+            <View className="flex-row justify-between pt-1.5 border-t border-outline-variant dark:border-outline">
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-sm">Net Balance</Text>
               <Text className={`font-black text-sm ${dayBook.net >= 0 ? "text-primary dark:text-primary-dark" : "text-error"}`}>₹{dayBook.net.toFixed(2)}</Text>
             </View>
@@ -340,7 +452,7 @@ export default function GstReportsScreen() {
 
           {/* Action buttons */}
           <Pressable onPress={handleExportDayBook} disabled={exporting} className="border border-primary dark:border-primary-dark py-3.5 rounded-xl items-center mb-6">
-            {exporting ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary dark:text-primary-dark font-bold text-sm">Export & Share Day Book CSV</Text>}
+            {exporting ? <ActivityIndicator color={theme.colors.primary} /> : <Text className="text-primary dark:text-primary-dark font-bold text-sm">Export & Share Day Book CSV</Text>}
           </Pressable>
 
           {/* Detailed Lists */}
@@ -349,15 +461,15 @@ export default function GstReportsScreen() {
             <View>
               <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Invoices Billed (Sales)</Text>
               {dayBook.invoices.length === 0 ? (
-                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No sales recorded today.</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface-container-lowest/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-outline-variant dark:border-outline">No sales recorded today.</Text>
               ) : (
                 dayBook.invoices.map((i, idx) => (
-                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                  <View key={idx} className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-xl border border-outline-variant dark:border-outline mb-2 flex-row justify-between items-center">
                     <View>
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{i.invoice_number}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{i.party_name}</Text>
                     </View>
-                    <Text className="font-bold text-emerald-600 text-sm">₹{i.grand_total.toFixed(2)}</Text>
+                    <Text className="font-bold text-success text-sm">₹{i.grand_total.toFixed(2)}</Text>
                   </View>
                 ))
               )}
@@ -367,10 +479,10 @@ export default function GstReportsScreen() {
             <View className="mt-4">
               <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Purchases Staged</Text>
               {dayBook.purchases.length === 0 ? (
-                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No purchases recorded today.</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface-container-lowest/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-outline-variant dark:border-outline">No purchases recorded today.</Text>
               ) : (
                 dayBook.purchases.map((p, idx) => (
-                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                  <View key={idx} className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-xl border border-outline-variant dark:border-outline mb-2 flex-row justify-between items-center">
                     <View>
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{p.purchase_number}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{p.supplier_name}</Text>
@@ -385,15 +497,15 @@ export default function GstReportsScreen() {
             <View className="mt-4">
               <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Payments Received (Inbound)</Text>
               {dayBook.payments_in.length === 0 ? (
-                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No inbound payments.</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface-container-lowest/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-outline-variant dark:border-outline">No inbound payments.</Text>
               ) : (
                 dayBook.payments_in.map((pi, idx) => (
-                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                  <View key={idx} className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-xl border border-outline-variant dark:border-outline mb-2 flex-row justify-between items-center">
                     <View>
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{pi.party_name}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{pi.mode || "Payment"} {pi.reference ? `· ${pi.reference}` : ""}</Text>
                     </View>
-                    <Text className="font-bold text-emerald-600 text-sm">₹{pi.amount.toFixed(2)}</Text>
+                    <Text className="font-bold text-success text-sm">₹{pi.amount.toFixed(2)}</Text>
                   </View>
                 ))
               )}
@@ -403,10 +515,10 @@ export default function GstReportsScreen() {
             <View className="mt-4">
               <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Payments Made (Outbound)</Text>
               {dayBook.payments_out.length === 0 ? (
-                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No outbound payments.</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface-container-lowest/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-outline-variant dark:border-outline">No outbound payments.</Text>
               ) : (
                 dayBook.payments_out.map((po, idx) => (
-                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                  <View key={idx} className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-xl border border-outline-variant dark:border-outline mb-2 flex-row justify-between items-center">
                     <View>
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{po.party_name}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{po.mode || "Payment"} {po.reference ? `· ${po.reference}` : ""}</Text>
@@ -421,10 +533,10 @@ export default function GstReportsScreen() {
             <View className="mt-4">
               <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-2 uppercase tracking-wide">Expenses Recorded</Text>
               {dayBook.expenses.length === 0 ? (
-                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-800">No expenses recorded today.</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark italic bg-surface-container-lowest/50 dark:bg-surface-dark/50 p-3 rounded-xl border border-outline-variant dark:border-outline">No expenses recorded today.</Text>
               ) : (
                 dayBook.expenses.map((e, idx) => (
-                  <View key={idx} className="bg-surface dark:bg-surface-dark p-3.5 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center">
+                  <View key={idx} className="bg-surface-container-lowest dark:bg-surface-dark p-3.5 rounded-xl border border-outline-variant dark:border-outline mb-2 flex-row justify-between items-center">
                     <View className="flex-1 pr-2">
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm capitalize">{e.category}</Text>
                       {e.notes ? <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{e.notes}</Text> : null}

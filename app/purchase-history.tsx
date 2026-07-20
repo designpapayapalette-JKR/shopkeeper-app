@@ -11,14 +11,16 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
-import { useTopInset } from "../src/lib/useTopInset";
-import { useBottomInset } from "../src/lib/useBottomInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import { shareDataAsPdf } from "../src/lib/pdfExport";
 
 interface PurchaseItem {
   quantity: string;
@@ -40,16 +42,18 @@ export default function PurchaseHistoryScreen() {
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
+  const theme = useTheme();
   const params = useLocalSearchParams<{ openPurchaseId?: string }>();
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
+  const [detailPurchase, setDetailPurchase] = useState<PurchaseRecord | null>(null);
   const [returnPurchase, setReturnPurchase] = useState<PurchaseRecord | null>(null);
   const [returnQuantities, setReturnQuantities] = useState<Record<string, string>>({});
   const [returnReason, setReturnReason] = useState("");
   const [submittingReturn, setSubmittingReturn] = useState(false);
-  const handledOpenPurchaseId = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,43 +68,25 @@ export default function PurchaseHistoryScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
   }, [load]);
 
-  useEffect(() => {
-    if (!params.openPurchaseId) return;
-    if (handledOpenPurchaseId.current === params.openPurchaseId) return;
-    const match = purchases.find((p) => p.id === params.openPurchaseId);
-    if (!match) return;
-    handledOpenPurchaseId.current = params.openPurchaseId;
-    openReturn(match);
-  }, [params.openPurchaseId, purchases]);
+  useEffect(() => { load(); }, [load]);
 
   const filtered = purchases.filter((p) =>
     p.purchase_number.toLowerCase().includes(search.trim().toLowerCase())
   );
 
+  const openDetail = (purchase: PurchaseRecord) => {
+    setDetailPurchase(purchase);
+  };
+
   const openReturn = (purchase: PurchaseRecord) => {
     setReturnPurchase(purchase);
     setReturnQuantities({});
     setReturnReason("");
-  };
-
-  const closeReturn = async () => {
-    const hasChanges =
-      returnReason.trim().length > 0 ||
-      Object.values(returnQuantities).some((v) => v.trim().length > 0);
-    if (hasChanges) {
-      const ok = await confirm({
-        title: "Discard changes?",
-        message: "You have unsaved changes. Are you sure you want to go back?",
-        confirmLabel: "Discard",
-        destructive: true,
-      });
-      if (!ok) return;
-    }
-    setReturnPurchase(null);
   };
 
   const handleSubmitReturn = async () => {
@@ -128,6 +114,7 @@ export default function PurchaseHistoryScreen() {
       });
       Alert.alert("Debit Note Created", "Stock and the supplier's payable balance have been updated.");
       setReturnPurchase(null);
+      setDetailPurchase(null);
       load();
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to create debit note.");
@@ -136,15 +123,25 @@ export default function PurchaseHistoryScreen() {
     }
   };
 
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
+  };
+
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark">
-      <View
-        className="bg-surface-container-lowest dark:bg-surface-dark border-b border-outline-variant dark:border-outline px-margin-mobile pb-3"
-        style={{ paddingTop: topInset, gap: 12 }}
-      >
-        <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
-          Purchase History
-        </Text>
+      <View className="bg-surface-container-lowest dark:bg-surface-dark border-b border-outline-variant dark:border-outline px-4 pb-3" style={{ paddingTop: topInset, gap: 12 }}>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Purchase History</Text>
+          <Pressable onPress={() => {
+            const headers = ["Purchase #", "Supplier", "Date", "Items", "Total"];
+            const rows = purchases.map((p) => [p.purchase_number, p.supplier.name, new Date(p.date).toLocaleDateString("en-IN"), String(p.items.length), `₹${parseFloat(p.grand_total).toLocaleString("en-IN")}`]);
+            shareDataAsPdf("Purchase History", headers, rows, "purchases.pdf");
+          }} className="flex-row items-center gap-1 bg-primary px-3 py-2 rounded-lg">
+            <MaterialCommunityIcons name="file-pdf-box" size={16} color="white" />
+            <Text className="text-xs font-bold text-white">Export</Text>
+          </Pressable>
+        </View>
         <TextInput
           value={search}
           onChangeText={setSearch}
@@ -156,58 +153,106 @@ export default function PurchaseHistoryScreen() {
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filtered.length === 0 ? (
-        <View className="flex-1 justify-center items-center py-20">
-          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base">
-            No purchases found
-          </Text>
+        <View className="flex-1 justify-center items-center py-20 px-6">
+          <MaterialCommunityIcons name="truck-delivery" size={48} color={theme.colors.outline} />
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No Purchases Found</Text>
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Register purchase intakes in Inventory.</Text>
         </View>
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: bottomInset + 24 }}
           renderItem={({ item }) => (
-            <View className="bg-surface dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+            <Pressable onPress={() => openDetail(item)} className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline shadow-sm">
               <View className="p-4 flex-row justify-between items-center">
                 <View className="flex-1 mr-2">
-                  <Text className="font-bold text-base text-text-primary dark:text-text-primary-dark">
-                    {item.purchase_number}
-                  </Text>
-                  <Text className="text-sm text-text-secondary mt-1">
-                    {item.supplier.name} · {new Date(item.date).toLocaleDateString()}
-                  </Text>
+                  <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark">{item.purchase_number}</Text>
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">{item.supplier.name} · {formatDate(item.date)}</Text>
                 </View>
-                <Text className="text-base font-black text-text-primary dark:text-text-primary-dark">
-                  ₹{parseFloat(item.grand_total).toFixed(2)}
-                </Text>
+                <Text className="text-base font-black text-on-surface dark:text-text-primary-dark">₹{parseFloat(item.grand_total).toLocaleString("en-IN")}</Text>
               </View>
-              <Pressable
-                onPress={() => openReturn(item)}
-                className="border-t border-gray-100 dark:border-zinc-800 py-2.5 items-center"
-              >
+              <View className="border-t border-outline-variant dark:border-outline py-2.5 items-center">
                 <View className="flex-row items-center" style={{ gap: 5 }}>
-                  <MaterialCommunityIcons name="undo-variant" size={15} color="#D64545" />
-                  <Text className="text-sm font-bold text-error">Return / Debit Note</Text>
+                  <MaterialCommunityIcons name="chevron-right" size={15} color={theme.colors.onSurfaceVariant} />
+                  <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{item.items.length} items</Text>
                 </View>
-              </Pressable>
-            </View>
+              </View>
+            </Pressable>
           )}
         />
       )}
 
-      <Modal visible={returnPurchase !== null} animationType="slide" onRequestClose={closeReturn}>
+      {/* Detail Modal */}
+      <Modal visible={detailPurchase !== null && returnPurchase === null} animationType="slide" onRequestClose={() => setDetailPurchase(null)}>
+        <SafeAreaProvider>
+          <ScrollView className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+            <View className="px-6 pb-10">
+              <View className="flex-row justify-between items-center mb-6">
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
+                  {detailPurchase?.purchase_number || "Purchase"}
+                </Text>
+                <Pressable onPress={() => setDetailPurchase(null)} className="w-11 h-11 items-center justify-center">
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
+                </Pressable>
+              </View>
+
+              {detailPurchase && (
+                <>
+                  <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-1">Supplier</Text>
+                    <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">{detailPurchase.supplier.name}</Text>
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-1">Date</Text>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-3">{formatDate(detailPurchase.date)}</Text>
+                    <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-1">Grand Total</Text>
+                    <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">₹{parseFloat(detailPurchase.grand_total).toLocaleString("en-IN")}</Text>
+                  </View>
+
+                  <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-3">Items ({detailPurchase.items.length})</Text>
+                    {detailPurchase.items.map((item, idx) => (
+                      <View key={item.product.id + idx} className="flex-row items-center py-2.5 border-b border-outline-variant dark:border-outline">
+                        <View className="flex-1 mr-2">
+                          <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{item.product.name}</Text>
+                          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
+                            Qty: {parseFloat(item.quantity).toFixed(0)} × ₹{parseFloat(item.cost).toLocaleString("en-IN")}
+                          </Text>
+                        </View>
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark shrink-0">
+                          ₹{(parseFloat(item.quantity) * parseFloat(item.cost)).toLocaleString("en-IN")}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <Pressable
+                    onPress={() => { setDetailPurchase(null); openReturn(detailPurchase); }}
+                    className="flex-row items-center justify-center bg-error py-4 rounded-xl active:opacity-80"
+                    style={{ gap: 8 }}
+                  >
+                    <MaterialCommunityIcons name="undo-variant" size={18} color="white" />
+                    <Text className="text-white font-bold text-base">Create Return / Debit Note</Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </ScrollView>
+        </SafeAreaProvider>
+      </Modal>
+
+      {/* Return Modal */}
+      <Modal visible={returnPurchase !== null} animationType="slide" onRequestClose={() => setReturnPurchase(null)}>
         <SafeAreaProvider>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
-              Return / Debit Note
-            </Text>
-            <Pressable onPress={closeReturn} className="w-11 h-11 items-center justify-center">
-              <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Return / Debit Note</Text>
+            <Pressable onPress={() => setReturnPurchase(null)} className="w-11 h-11 items-center justify-center">
+              <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
             </Pressable>
           </View>
 
@@ -218,14 +263,11 @@ export default function PurchaseHistoryScreen() {
               </Text>
 
               {returnPurchase.items.map((item) => (
-                <View
-                  key={item.product.id}
-                  className="flex-row justify-between items-center bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-3"
-                >
+                <View key={item.product.id} className="flex-row justify-between items-center bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-outline-variant dark:border-outline mb-3">
                   <View className="flex-1 mr-3">
                     <Text className="font-bold text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
                     <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
-                      Bought: {parseFloat(item.quantity).toFixed(0)} @ ₹{parseFloat(item.cost).toFixed(2)}
+                      Bought: {parseFloat(item.quantity).toFixed(0)} @ ₹{parseFloat(item.cost).toLocaleString("en-IN")}
                     </Text>
                   </View>
                   <TextInput
@@ -238,22 +280,20 @@ export default function PurchaseHistoryScreen() {
                 </View>
               ))}
 
-              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2 mt-2">
-                Reason (optional)
-              </Text>
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2 mt-2">Reason (optional)</Text>
               <TextInput
                 value={returnReason}
                 onChangeText={setReturnReason}
                 placeholder="e.g. damaged goods, wrong item"
                 placeholderTextColor="#A0A0A0"
-                className="bg-surface dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium mb-8"
+                className="bg-surface-container-lowest dark:bg-surface-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-4 text-base font-medium mb-8"
               />
 
               <Pressable
                 onPress={handleSubmitReturn}
                 disabled={submittingReturn}
                 className="bg-error py-4 rounded-xl items-center"
-                style={{ marginBottom: bottomInset }}
+                style={{ marginBottom: bottomInset, opacity: submittingReturn ? 0.5 : 1 }}
               >
                 {submittingReturn ? (
                   <ActivityIndicator color="white" />
@@ -270,4 +310,3 @@ export default function PurchaseHistoryScreen() {
     </View>
   );
 }
-

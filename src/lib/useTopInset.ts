@@ -9,3 +9,8 @@ export function useTopInset(extra: number = 16): number {
   const insets = useSafeAreaInsets();
   return insets.top + extra;
 }
+
+export function useBottomInset(extra: number = 24): number {
+  const insets = useSafeAreaInsets();
+  return insets.bottom + extra;
+}

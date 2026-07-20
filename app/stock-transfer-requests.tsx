@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, TextInput, Modal, ScrollView, Platform, KeyboardAvoidingView } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, TextInput, Modal, ScrollView, Platform, KeyboardAvoidingView, RefreshControl } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -7,6 +7,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import { useTheme } from "react-native-paper";
 
 interface TransferItem {
   id?: string;
@@ -49,11 +50,13 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }>
 export default function StockTransferRequestsScreen() {
   const topInset = useTopInset(); const bottomInset = useBottomInset();
   const confirm = useConfirm(); const router = useRouter();
+  const theme = useTheme();
 
   const [requests, setRequests] = useState<TransferRequest[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadTrigger, setLoadTrigger] = useState(0);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showForm, setShowForm] = useState(false);
@@ -80,6 +83,11 @@ export default function StockTransferRequestsScreen() {
       setProducts(pRes.data ?? []);
     } catch {} finally { setLoading(false); }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
+  }, [load]);
 
   useEffect(() => { load(); }, [load, loadTrigger]);
 
@@ -141,8 +149,8 @@ export default function StockTransferRequestsScreen() {
       <ScrollView className="flex-1 px-6 pb-10" style={{ paddingTop: topInset }}>
         <View className="flex-row justify-between items-center mb-6">
           <View>
-            <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">Transfer #{detailReq.id.slice(0, 8)}</Text>
-            <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-0.5">
+            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Transfer #{detailReq.id.slice(0, 8)}</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
               {new Date(detailReq.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
             </Text>
           </View>
@@ -151,14 +159,14 @@ export default function StockTransferRequestsScreen() {
           </View>
         </View>
 
-        <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
+        <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
           <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
             <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
-              <MaterialCommunityIcons name="export-variant" size={18} color="#0368FE" />
+              <MaterialCommunityIcons name="export-variant" size={18} color={theme.colors.primary} />
             </View>
             <View className="flex-1">
-              <Text className="text-xs font-semibold text-text-secondary uppercase tracking-wider">From</Text>
-              <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{whName(detailReq.from_warehouse_id)}</Text>
+              <Text className="text-xs font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">From</Text>
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{whName(detailReq.from_warehouse_id)}</Text>
             </View>
           </View>
           <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -166,25 +174,25 @@ export default function StockTransferRequestsScreen() {
               <MaterialCommunityIcons name="import" size={18} color="#835400" />
             </View>
             <View className="flex-1">
-              <Text className="text-xs font-semibold text-text-secondary uppercase tracking-wider">To</Text>
-              <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{whName(detailReq.to_warehouse_id)}</Text>
+              <Text className="text-xs font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">To</Text>
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{whName(detailReq.to_warehouse_id)}</Text>
             </View>
           </View>
           {detailReq.notes && (
-            <View className="mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
-              <Text className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">Notes</Text>
-              <Text className="text-sm text-text-primary dark:text-text-primary-dark">{detailReq.notes}</Text>
+            <View className="mt-4 pt-4 border-t border-outline-variant dark:border-outline">
+              <Text className="text-xs font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-1">Notes</Text>
+              <Text className="text-sm text-on-surface dark:text-text-primary-dark">{detailReq.notes}</Text>
             </View>
           )}
         </View>
 
-        <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-          <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Items ({detailReq.items?.length || 0})</Text>
+        <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+          <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-3">Items ({detailReq.items?.length || 0})</Text>
           {detailReq.items?.map((item, idx) => (
             <View key={item.id || item.product_id}
-              className={`flex-row justify-between items-center py-3 ${idx < (detailReq.items?.length || 0) - 1 ? "border-b border-gray-100 dark:border-zinc-800" : ""}`}>
-              <Text className="text-sm font-medium text-text-primary dark:text-text-primary-dark flex-1 mr-2">{item.product_name || item.product_id}</Text>
-              <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">x{item.quantity}</Text>
+              className={`flex-row justify-between items-center py-3 ${idx < (detailReq.items?.length || 0) - 1 ? "border-b border-outline-variant dark:border-outline" : ""}`}>
+              <Text className="text-sm font-medium text-on-surface dark:text-text-primary-dark flex-1 mr-2">{item.product_name || item.product_id}</Text>
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">x{item.quantity}</Text>
             </View>
           ))}
         </View>
@@ -224,23 +232,23 @@ export default function StockTransferRequestsScreen() {
     const s = STATUS_STYLE[item.status] || STATUS_STYLE.draft;
     return (
       <Pressable onPress={() => setShowDetail(item.id)}
-        className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm active:opacity-80">
+        className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-3 shadow-sm active:opacity-80">
         <View className="flex-row items-start">
           <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center mr-3">
-            <MaterialCommunityIcons name="swap-horizontal" size={18} color="#0368FE" />
+            <MaterialCommunityIcons name="swap-horizontal" size={18} color={theme.colors.primary} />
           </View>
           <View className="flex-1">
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">#{item.id.slice(0, 8)}</Text>
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">#{item.id.slice(0, 8)}</Text>
               <View style={{ backgroundColor: s.bg }} className="px-2 py-0.5 rounded-full">
                 <Text style={{ color: s.color }} className="text-xs font-bold">{s.label}</Text>
               </View>
             </View>
             <View className="flex-row items-center mt-1.5" style={{ gap: 4 }}>
-              <Text className="text-xs text-text-secondary dark:text-text-secondary-dark flex-1" numberOfLines={1}>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark flex-1" numberOfLines={1}>
                 {whName(item.from_warehouse_id)} → {whName(item.to_warehouse_id)}
               </Text>
-              <Text className="text-xs text-text-secondary dark:text-text-secondary-dark">
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
                 {new Date(item.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
               </Text>
             </View>
@@ -251,13 +259,13 @@ export default function StockTransferRequestsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
           </Pressable>
-          <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">Stock Transfers</Text>
+          <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Stock Transfers</Text>
         </View>
         <Pressable onPress={() => setShowForm(true)} className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80" style={{ gap: 4 }}>
           <MaterialCommunityIcons name="plus" size={16} color="white" /><Text className="text-white font-bold text-sm">New</Text>
@@ -267,30 +275,31 @@ export default function StockTransferRequestsScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6 mb-3" contentContainerStyle={{ gap: 6 }}>
         {["all", ...STATUSES].map((s) => (
           <Pressable key={s} onPress={() => setFilterStatus(s)}
-            className={`px-4 py-2.5 rounded-xl ${filterStatus === s ? "bg-primary" : "bg-surface dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800"}`}>
-            <Text className={`text-sm font-bold capitalize ${filterStatus === s ? "text-white" : "text-text-secondary dark:text-text-secondary-dark"}`}>{s}</Text>
+            className={`px-4 py-2.5 rounded-xl ${filterStatus === s ? "bg-primary" : "bg-surface-container-lowest dark:bg-zinc-900 border border-outline-variant dark:border-outline"}`}>
+            <Text className={`text-sm font-bold capitalize ${filterStatus === s ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{s}</Text>
           </Pressable>
         ))}
       </ScrollView>
 
-      {loading ? <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color="#0368FE" /></View>
+      {loading ? <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="swap-horizontal-bold" size={48} color="#D1D5DB" />
-          <Text className="text-base font-bold text-text-secondary dark:text-text-secondary-dark mt-4">No transfer requests</Text>
-          <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-1 text-center">Create stock transfers between warehouses.</Text>
+          <MaterialCommunityIcons name="swap-horizontal-bold" size={48} color={theme.colors.outline} />
+          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No transfer requests</Text>
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create stock transfers between warehouses.</Text>
         </View>
       ) : (
         <FlatList data={filtered} keyExtractor={(item) => item.id} renderItem={renderItem}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 24 }} showsVerticalScrollIndicator={false} />
       )}
 
       <Modal visible={!!showDetail} animationType="slide" onRequestClose={() => setShowDetail(null)}>
         <SafeAreaProvider>
-          <View className="flex-1 bg-background dark:bg-background-dark">
+          <View className="flex-1 bg-background dark:bg-bg-dark">
             <View className="flex-row items-center px-6 py-4">
               <Pressable onPress={() => setShowDetail(null)} className="w-9 h-9 items-center justify-center">
-                <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+                <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             </View>
             {renderDetail()}
@@ -301,60 +310,60 @@ export default function StockTransferRequestsScreen() {
       <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
         <SafeAreaProvider>
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-            <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+            <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
               <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">New Transfer</Text>
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">New Transfer</Text>
                 <Pressable onPress={() => setShowForm(false)} className="w-11 h-11 items-center justify-center">
-                  <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">From Warehouse</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-3">From Warehouse</Text>
                 <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                   {warehouses.filter((w) => w.id !== toWarehouse).map((w) => (
                     <Pressable key={w.id} onPress={() => setFromWarehouse(w.id)}
-                      className={`px-4 py-3 rounded-xl border ${fromWarehouse === w.id ? "bg-primary border-primary" : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
-                      <Text className={`text-sm font-bold ${fromWarehouse === w.id ? "text-white" : "text-text-primary dark:text-text-primary-dark"}`}>{w.name}</Text>
+                      className={`px-4 py-3 rounded-xl border ${fromWarehouse === w.id ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-zinc-900 border-outline-variant dark:border-outline"}`}>
+                      <Text className={`text-sm font-bold ${fromWarehouse === w.id ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>{w.name}</Text>
                     </Pressable>
                   ))}
                 </View>
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">To Warehouse</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-3">To Warehouse</Text>
                 <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                   {warehouses.filter((w) => w.id !== fromWarehouse).map((w) => (
                     <Pressable key={w.id} onPress={() => setToWarehouse(w.id)}
-                      className={`px-4 py-3 rounded-xl border ${toWarehouse === w.id ? "bg-primary border-primary" : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
-                      <Text className={`text-sm font-bold ${toWarehouse === w.id ? "text-white" : "text-text-primary dark:text-text-primary-dark"}`}>{w.name}</Text>
+                      className={`px-4 py-3 rounded-xl border ${toWarehouse === w.id ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-zinc-900 border-outline-variant dark:border-outline"}`}>
+                      <Text className={`text-sm font-bold ${toWarehouse === w.id ? "text-white" : "text-on-surface dark:text-text-primary-dark"}`}>{w.name}</Text>
                     </Pressable>
                   ))}
                 </View>
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Items</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-3">Items</Text>
                 <Pressable onPress={() => setShowProductPicker(true)}
                   className="flex-row items-center justify-center bg-primary/10 border border-dashed border-primary rounded-xl py-3.5 mb-3 active:opacity-70">
-                  <MaterialCommunityIcons name="plus" size={16} color="#0368FE" />
+                  <MaterialCommunityIcons name="plus" size={16} color={theme.colors.primary} />
                   <Text className="text-sm font-bold text-primary ml-1">Add Product</Text>
                 </Pressable>
                 {transferItems.length === 0 ? (
-                  <Text className="text-sm text-text-secondary dark:text-text-secondary-dark text-center py-2">No items added yet</Text>
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center py-2">No items added yet</Text>
                 ) : (
                   transferItems.map((item) => (
-                    <View key={item.product_id} className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
-                      <Text className="text-sm font-medium text-text-primary dark:text-text-primary-dark flex-1 mr-2">{item.product_name}</Text>
+                    <View key={item.product_id} className="flex-row items-center justify-between py-3 border-b border-outline-variant dark:border-outline">
+                      <Text className="text-sm font-medium text-on-surface dark:text-text-primary-dark flex-1 mr-2">{item.product_name}</Text>
                       <View className="flex-row items-center" style={{ gap: 6 }}>
                         <Pressable onPress={() => updateItemQty(item.product_id, item.quantity - 1)}
-                          className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center active:opacity-70">
-                          <MaterialCommunityIcons name="minus" size={14} color="#6B7280" />
+                          className="w-8 h-8 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center active:opacity-70">
+                          <MaterialCommunityIcons name="minus" size={14} color={theme.colors.onSurfaceVariant} />
                         </Pressable>
-                        <Text className="text-sm font-bold w-6 text-center text-text-primary dark:text-text-primary-dark">{item.quantity}</Text>
+                        <Text className="text-sm font-bold w-6 text-center text-on-surface dark:text-text-primary-dark">{item.quantity}</Text>
                         <Pressable onPress={() => updateItemQty(item.product_id, item.quantity + 1)}
-                          className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center active:opacity-70">
-                          <MaterialCommunityIcons name="plus" size={14} color="#6B7280" />
+                          className="w-8 h-8 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center active:opacity-70">
+                          <MaterialCommunityIcons name="plus" size={14} color={theme.colors.onSurfaceVariant} />
                         </Pressable>
                         <Pressable onPress={() => removeItem(item.product_id)} className="w-8 h-8 items-center justify-center">
                           <MaterialCommunityIcons name="trash-can-outline" size={16} color="#D64545" />
@@ -365,10 +374,10 @@ export default function StockTransferRequestsScreen() {
                 )}
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Notes</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Notes</Text>
                 <TextInput value={formNotes} onChangeText={setFormNotes} placeholder="Optional notes about this transfer" placeholderTextColor="#A0A0A0" multiline numberOfLines={2}
-                  className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 font-medium" />
+                  className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 font-medium" />
               </View>
 
               <Pressable onPress={handleCreate} disabled={saving}
@@ -382,24 +391,24 @@ export default function StockTransferRequestsScreen() {
 
       <Modal visible={showProductPicker} animationType="slide" onRequestClose={() => setShowProductPicker(false)}>
         <SafeAreaProvider>
-          <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+          <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
             <View className="flex-row items-center justify-between px-6 py-4">
-              <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">Select Product</Text>
+              <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Select Product</Text>
               <Pressable onPress={() => setShowProductPicker(false)} className="w-9 h-9 items-center justify-center">
-                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             </View>
             <FlatList data={products} keyExtractor={(p) => p.id}
               renderItem={({ item }) => (
-                <Pressable onPress={() => addItem(item)} className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 active:bg-gray-50 dark:active:bg-zinc-800 flex-row items-center" style={{ gap: 12 }}>
+                <Pressable onPress={() => addItem(item)} className="px-6 py-4 border-b border-outline-variant dark:border-outline active:bg-gray-50 dark:active:bg-zinc-800 flex-row items-center" style={{ gap: 12 }}>
                   <View className="w-10 h-10 rounded-lg bg-primary/10 items-center justify-center">
-                    <MaterialCommunityIcons name="package-variant" size={18} color="#0368FE" />
+                    <MaterialCommunityIcons name="package-variant" size={18} color={theme.colors.primary} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{item.name}</Text>
-                    <Text className="text-xs text-text-secondary dark:text-text-secondary-dark">{item.sku}</Text>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{item.name}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{item.sku}</Text>
                   </View>
-                  <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#0368FE" />
+                  <MaterialCommunityIcons name="plus-circle-outline" size={20} color={theme.colors.primary} />
                 </Pressable>
               )}
               contentContainerStyle={{ paddingBottom: bottomInset + 24 }} />

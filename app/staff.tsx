@@ -12,9 +12,11 @@ import {
   Platform,
   Linking,
   KeyboardAvoidingView,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
@@ -59,6 +61,7 @@ function roleLabel(role: string) {
 }
 
 export default function StaffScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
@@ -67,6 +70,7 @@ export default function StaffScreen() {
 
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Add Modal
   const [isAdding, setIsAdding] = useState(false);
@@ -106,6 +110,11 @@ export default function StaffScreen() {
       setLoading(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
+  }, [load]);
 
   useEffect(() => {
     load();
@@ -256,16 +265,16 @@ export default function StaffScreen() {
   };
 
   const renderStaffItem = ({ item }: { item: StaffMember }) => (
-    <View className="bg-surface dark:bg-surface-dark p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm">
+    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-2xl border border-outline-variant dark:border-outline mb-3 shadow-sm">
       <View className="flex-row items-start justify-between">
         <View className="flex-1 mr-3">
-          <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">
+          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
             {staffDisplayName(item)}
           </Text>
-          <Text className="text-sm text-text-secondary mt-0.5">{item.email}</Text>
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{item.email}</Text>
           <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
-            <View className="bg-primary/10 px-2.5 py-1 rounded-full">
-              <Text className="text-xs font-bold text-primary">{roleLabel(item.role)}</Text>
+            <View className="bg-primary/10 dark:bg-primary-dark/10 px-2.5 py-1 rounded-full">
+              <Text className="text-xs font-bold text-primary dark:text-primary-dark">{roleLabel(item.role)}</Text>
             </View>
           </View>
         </View>
@@ -273,15 +282,15 @@ export default function StaffScreen() {
           <View className="flex-row" style={{ gap: 4 }}>
             <Pressable
               onPress={() => startEdit(item)}
-              className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center active:opacity-70"
+              className="w-9 h-9 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center active:opacity-70"
             >
-              <MaterialCommunityIcons name="pencil" size={16} color="#6B7280" />
+              <MaterialCommunityIcons name="pencil" size={16} color={theme.colors.onSurfaceVariant} />
             </Pressable>
             <Pressable
               onPress={() => handleDelete(item)}
               className="w-9 h-9 rounded-lg bg-red-50 items-center justify-center active:opacity-70"
             >
-              <MaterialCommunityIcons name="delete-outline" size={16} color="#D64545" />
+              <MaterialCommunityIcons name="delete-outline" size={16} color={theme.colors.error} />
             </Pressable>
           </View>
         )}
@@ -290,14 +299,14 @@ export default function StaffScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
           </Pressable>
-          <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">
+          <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
             Staff & Employees
           </Text>
         </View>
@@ -306,7 +315,7 @@ export default function StaffScreen() {
             resetAddForm();
             setIsAdding(true);
           }}
-          className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80"
+          className="bg-primary dark:bg-primary-dark px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80"
           style={{ gap: 4 }}
         >
           <MaterialCommunityIcons name="plus" size={16} color="white" />
@@ -316,13 +325,13 @@ export default function StaffScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center pb-20">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : staff.length === 0 ? (
         <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="account-group-outline" size={48} color="#D1D5DB" />
-          <Text className="text-base font-bold text-text-secondary mt-4">No team members yet</Text>
-          <Text className="text-sm text-text-secondary mt-1 text-center">
+          <MaterialCommunityIcons name="account-group-outline" size={48} color={theme.colors.onSurfaceVariant} />
+          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No team members yet</Text>
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
             Tap the Add button to invite your first employee.
           </Text>
         </View>
@@ -331,6 +340,7 @@ export default function StaffScreen() {
           data={staff}
           keyExtractor={(item) => item.id}
           renderItem={renderStaffItem}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 24 }}
           showsVerticalScrollIndicator={false}
         />
@@ -344,21 +354,21 @@ export default function StaffScreen() {
           className="flex-1"
         >
           <ScrollView
-            className="flex-1 bg-background dark:bg-background-dark px-6 pb-10"
+            className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10"
             style={{ paddingTop: topInset }}
           >
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 New Employee
               </Text>
               <Pressable onPress={closeAdd} className="w-11 h-11 items-center justify-center">
-                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             </View>
 
             <View className="space-y-4">
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   First Name *
                 </Text>
                 <TextInput
@@ -366,11 +376,11 @@ export default function StaffScreen() {
                   onChangeText={setAddFirstName}
                   placeholder="e.g. Rajesh"
                   placeholderTextColor="#A0A0A0"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Last Name
                 </Text>
                 <TextInput
@@ -378,11 +388,11 @@ export default function StaffScreen() {
                   onChangeText={setAddLastName}
                   placeholder="e.g. Kumar"
                   placeholderTextColor="#A0A0A0"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Email *
                 </Text>
                 <TextInput
@@ -392,11 +402,11 @@ export default function StaffScreen() {
                   placeholderTextColor="#A0A0A0"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Phone
                 </Text>
                 <TextInput
@@ -405,11 +415,11 @@ export default function StaffScreen() {
                   placeholder="e.g. 9876543210"
                   placeholderTextColor="#A0A0A0"
                   keyboardType="phone-pad"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Role
                 </Text>
                 <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -419,12 +429,12 @@ export default function StaffScreen() {
                       onPress={() => setAddRole(r.id)}
                       className={`px-4 py-3 rounded-xl border ${
                         addRole === r.id
-                          ? "bg-primary border-primary"
-                          : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
+                          ? "bg-primary dark:bg-primary-dark border-primary dark:border-primary-dark"
+                          : "bg-surface-container-lowest dark:bg-zinc-900 border-outline-variant dark:border-outline"
                       }`}
                     >
                       <Text
-                        className={`text-sm font-bold ${addRole === r.id ? "text-white" : "text-text-secondary"}`}
+                        className={`text-sm font-bold ${addRole === r.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}
                       >
                         {r.name}
                       </Text>
@@ -434,11 +444,11 @@ export default function StaffScreen() {
               </View>
               <View>
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+                  <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">
                     Temporary Password *
                   </Text>
                   <Pressable onPress={() => setAddPassword(randomTempPassword())}>
-                    <Text className="text-sm font-bold text-primary">Auto-Generate</Text>
+                    <Text className="text-sm font-bold text-primary dark:text-primary-dark">Auto-Generate</Text>
                   </Pressable>
                 </View>
                 <TextInput
@@ -446,7 +456,7 @@ export default function StaffScreen() {
                   onChangeText={setAddPassword}
                   placeholder="Enter a password"
                   placeholderTextColor="#A0A0A0"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-mono"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-mono"
                 />
               </View>
             </View>
@@ -454,14 +464,14 @@ export default function StaffScreen() {
             <View className="flex-row justify-between mt-10" style={{ marginBottom: bottomInset }}>
               <Pressable
                 onPress={closeAdd}
-                className="border border-gray-200 dark:border-zinc-800 py-4 px-6 rounded-xl w-[48%] items-center"
+                className="border border-outline-variant dark:border-outline py-4 px-6 rounded-xl w-[48%] items-center"
               >
-                <Text className="text-text-secondary font-bold">Cancel</Text>
+                <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold">Cancel</Text>
               </Pressable>
               <Pressable
                 onPress={handleAdd}
                 disabled={addSubmitting}
-                className="bg-primary py-4 px-6 rounded-xl w-[48%] items-center"
+                className="bg-primary dark:bg-primary-dark py-4 px-6 rounded-xl w-[48%] items-center"
               >
                 {addSubmitting ? (
                   <ActivityIndicator color="white" />
@@ -483,21 +493,21 @@ export default function StaffScreen() {
           className="flex-1"
         >
           <ScrollView
-            className="flex-1 bg-background dark:bg-background-dark px-6 pb-10"
+            className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10"
             style={{ paddingTop: topInset }}
           >
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                 Edit Employee
               </Text>
               <Pressable onPress={closeEdit} className="w-11 h-11 items-center justify-center">
-                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             </View>
 
             <View className="space-y-4">
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   First Name *
                 </Text>
                 <TextInput
@@ -505,11 +515,11 @@ export default function StaffScreen() {
                   onChangeText={setEditFirstName}
                   placeholder="First name"
                   placeholderTextColor="#A0A0A0"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Last Name
                 </Text>
                 <TextInput
@@ -517,11 +527,11 @@ export default function StaffScreen() {
                   onChangeText={setEditLastName}
                   placeholder="Last name"
                   placeholderTextColor="#A0A0A0"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Email *
                 </Text>
                 <TextInput
@@ -531,11 +541,11 @@ export default function StaffScreen() {
                   placeholderTextColor="#A0A0A0"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Phone
                 </Text>
                 <TextInput
@@ -544,11 +554,11 @@ export default function StaffScreen() {
                   placeholder="Phone"
                   placeholderTextColor="#A0A0A0"
                   keyboardType="phone-pad"
-                  className="bg-surface dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium"
+                  className="bg-surface-container-lowest dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium"
                 />
               </View>
               <View>
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
                   Role
                 </Text>
                 <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -558,12 +568,12 @@ export default function StaffScreen() {
                       onPress={() => setEditRole(r.id)}
                       className={`px-4 py-3 rounded-xl border ${
                         editRole === r.id
-                          ? "bg-primary border-primary"
-                          : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
+                          ? "bg-primary dark:bg-primary-dark border-primary dark:border-primary-dark"
+                          : "bg-surface-container-lowest dark:bg-zinc-900 border-outline-variant dark:border-outline"
                       }`}
                     >
                       <Text
-                        className={`text-sm font-bold ${editRole === r.id ? "text-white" : "text-text-secondary"}`}
+                        className={`text-sm font-bold ${editRole === r.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}
                       >
                         {r.name}
                       </Text>
@@ -576,7 +586,7 @@ export default function StaffScreen() {
             <Pressable
               onPress={handleEditSave}
               disabled={editSubmitting}
-              className="bg-primary py-4 rounded-xl items-center mt-8"
+              className="bg-primary dark:bg-primary-dark py-4 rounded-xl items-center mt-8"
               style={{ marginBottom: bottomInset }}
             >
               {editSubmitting ? (

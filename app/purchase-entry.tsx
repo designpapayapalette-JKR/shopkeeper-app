@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
@@ -41,6 +42,7 @@ interface CartLine {
 }
 
 export default function PurchaseEntryScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
 
@@ -133,7 +135,7 @@ export default function PurchaseEntryScreen() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-bg-dark">
-        <ActivityIndicator color="#0368FE" />
+        <ActivityIndicator color={theme.colors.primary} />
       </View>
     );
   }
@@ -142,9 +144,9 @@ export default function PurchaseEntryScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-bg-dark px-8" style={{ paddingTop: topInset }}>
         <MaterialCommunityIcons name="check-circle" size={48} color="#2E9E5B" />
-        <Text className="text-xl font-black text-text-primary dark:text-text-primary-dark mt-3">Purchase Recorded</Text>
-        <Text className="text-base text-text-secondary mt-1">#{result.purchaseNumber}</Text>
-        <Text className="text-sm text-text-secondary mt-1">₹{Number(result.grandTotal).toLocaleString("en-IN")} — stock updated</Text>
+        <Text className="text-xl font-black text-on-surface dark:text-text-primary-dark mt-3">Purchase Recorded</Text>
+        <Text className="text-base text-on-surface-variant dark:text-text-secondary-dark mt-1">#{result.purchaseNumber}</Text>
+        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">₹{Number(result.grandTotal).toLocaleString("en-IN")} — stock updated</Text>
         <View className="flex-row mt-6" style={{ gap: 10 }}>
           <Pressable onPress={() => setResult(null)} className="bg-primary px-5 py-3 rounded-xl">
             <Text className="text-white font-bold">New Purchase</Text>
@@ -160,8 +162,8 @@ export default function PurchaseEntryScreen() {
   return (
     <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
-        <Text className="text-2xl font-black text-text-primary dark:text-text-primary-dark mb-1">Record Purchase</Text>
-        <Text className="text-sm text-text-secondary mb-4">Log stock received from a supplier.</Text>
+        <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-1">Record Purchase</Text>
+        <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-4">Log stock received from a supplier.</Text>
 
         <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Supplier</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row mb-4">
@@ -169,9 +171,9 @@ export default function PurchaseEntryScreen() {
             <Pressable
               key={s.id}
               onPress={() => setSupplierId(s.id)}
-              className={`mr-2 px-4 py-3 rounded-lg border ${supplierId === s.id ? "bg-primary border-primary" : "bg-surface border-gray-200 dark:border-zinc-800"}`}
+              className={`mr-2 px-4 py-3 rounded-lg border ${supplierId === s.id ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
             >
-              <Text className={`text-sm font-semibold ${supplierId === s.id ? "text-white" : "text-text-secondary"}`}>{s.name}</Text>
+              <Text className={`text-sm font-semibold ${supplierId === s.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{s.name}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -184,9 +186,9 @@ export default function PurchaseEntryScreen() {
                 <Pressable
                   key={w.id}
                   onPress={() => setWarehouseId(w.id)}
-                  className={`mr-2 px-4 py-3 rounded-lg border ${warehouseId === w.id ? "bg-primary border-primary" : "bg-surface border-gray-200 dark:border-zinc-800"}`}
+                  className={`mr-2 px-4 py-3 rounded-lg border ${warehouseId === w.id ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
                 >
-                  <Text className={`text-sm font-semibold ${warehouseId === w.id ? "text-white" : "text-text-secondary"}`}>{w.name}</Text>
+                  <Text className={`text-sm font-semibold ${warehouseId === w.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{w.name}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -196,14 +198,14 @@ export default function PurchaseEntryScreen() {
         {/* RCM Toggle */}
         <Pressable
           onPress={() => setIsRcm(!isRcm)}
-          className={`flex-row items-center p-4 rounded-xl border mb-4 ${isRcm ? "bg-primary/10 border-primary" : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
+          className={`flex-row items-center p-4 rounded-xl border mb-4 ${isRcm ? "bg-primary/10 border-primary" : "bg-surface-container-lowest dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
         >
           <View className={`w-6 h-6 rounded-lg items-center justify-center mr-3 ${isRcm ? "bg-primary" : "bg-gray-200 dark:bg-zinc-800"}`}>
             {isRcm && <MaterialCommunityIcons name="check" size={16} color="white" />}
           </View>
           <View className="flex-1">
-            <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">Reverse Charge (RCM)</Text>
-            <Text className="text-xs text-text-secondary mt-0.5">GST is payable by the buyer</Text>
+            <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">Reverse Charge (RCM)</Text>
+            <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">GST is payable by the buyer</Text>
           </View>
         </Pressable>
 
@@ -213,7 +215,7 @@ export default function PurchaseEntryScreen() {
           onChangeText={setSearch}
           placeholder="Search products..."
           placeholderTextColor="#A0A0A0"
-          className="bg-surface dark:bg-surface-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-base font-medium text-text-primary mb-2"
+          className="bg-surface-container-lowest dark:bg-surface-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-base font-medium text-on-surface dark:text-text-primary-dark mb-2"
         />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row mb-4">
           {filteredProducts.slice(0, 30).map((p) => (
@@ -228,16 +230,16 @@ export default function PurchaseEntryScreen() {
         </ScrollView>
 
         {cart.map((c) => (
-          <View key={c.product.id} className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-3">
+          <View key={c.product.id} className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-3">
             <View className="flex-row justify-between items-center mb-2">
               <Text className="font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">{c.product.name}</Text>
               <Pressable onPress={() => removeLine(c.product.id)}>
-                <MaterialCommunityIcons name="trash-can-outline" size={18} color="#D64545" />
+                <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.colors.error} />
               </Pressable>
             </View>
             <View className="flex-row" style={{ gap: 8 }}>
               <View className="flex-1">
-                <Text className="text-xs text-text-secondary mb-1">Quantity</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-1">Quantity</Text>
                 <TextInput
                   value={c.quantity}
                   onChangeText={(v) => updateLine(c.product.id, "quantity", v)}
@@ -246,7 +248,7 @@ export default function PurchaseEntryScreen() {
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-xs text-text-secondary mb-1">Cost / Unit (₹)</Text>
+                <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-1">Cost / Unit (₹)</Text>
                 <TextInput
                   value={c.cost}
                   onChangeText={(v) => updateLine(c.product.id, "cost", v)}
@@ -261,8 +263,8 @@ export default function PurchaseEntryScreen() {
 
         {cart.length > 0 && (
           <View className="flex-row justify-between items-center py-3 border-t border-gray-100 dark:border-zinc-800 mb-4">
-            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">Subtotal</Text>
-            <Text className="text-lg font-black text-text-primary dark:text-text-primary-dark">₹{subtotal.toLocaleString("en-IN")}</Text>
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">Subtotal</Text>
+            <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark">₹{subtotal.toLocaleString("en-IN")}</Text>
           </View>
         )}
 

@@ -13,6 +13,7 @@ import {
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
@@ -36,6 +37,7 @@ interface MismatchItem {
 const GST_SLABS = ["0", "5", "12", "18", "28"];
 
 export default function GstRateToolsScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
@@ -119,13 +121,13 @@ export default function GstRateToolsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       {/* Header */}
       <View className="flex-row items-center px-6 py-4">
         <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
         </Pressable>
-        <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark ml-2">
+        <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark ml-2">
           GST Rate Tools
         </Text>
       </View>
@@ -136,16 +138,16 @@ export default function GstRateToolsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Bulk Update by Category ── */}
-        <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-4">
+        <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+          <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-4">
             Bulk Update by Category
           </Text>
 
-          <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+          <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">
             Category
           </Text>
           {catsLoading ? (
-            <ActivityIndicator size="small" color="#0368FE" />
+            <ActivityIndicator size="small" color={theme.colors.primary} />
           ) : (
             <View className="flex-row flex-wrap" style={{ gap: 8 }}>
               <Pressable
@@ -153,11 +155,11 @@ export default function GstRateToolsScreen() {
                 className={`px-4 py-3 rounded-xl border ${
                   bulkCategoryId === ""
                     ? "bg-primary border-primary"
-                    : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
+                    : "bg-surface-container-lowest dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
                 }`}
               >
                 <Text
-                  className={`text-sm font-bold ${bulkCategoryId === "" ? "text-white" : "text-text-secondary"}`}
+                  className={`text-sm font-bold ${bulkCategoryId === "" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}
                 >
                   All Products
                 </Text>
@@ -169,11 +171,11 @@ export default function GstRateToolsScreen() {
                   className={`px-4 py-3 rounded-xl border ${
                     bulkCategoryId === c.id
                       ? "bg-primary border-primary"
-                      : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
+                      : "bg-surface-container-lowest dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
                   }`}
                 >
                   <Text
-                    className={`text-sm font-bold ${bulkCategoryId === c.id ? "text-white" : "text-text-secondary"}`}
+                    className={`text-sm font-bold ${bulkCategoryId === c.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}
                   >
                     {c.name}
                   </Text>
@@ -182,7 +184,7 @@ export default function GstRateToolsScreen() {
             </View>
           )}
 
-          <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2 mt-5">
+          <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2 mt-5">
             GST Rate (%)
           </Text>
           <GstRatePicker value={bulkRate} onChange={setBulkRate} />
@@ -201,9 +203,9 @@ export default function GstRateToolsScreen() {
         </View>
 
         {/* ── Rate Mismatch Review ── */}
-        <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+        <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark flex-1 mr-2">
+            <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark flex-1 mr-2">
               Rate Mismatch Review
             </Text>
             <Pressable
@@ -220,18 +222,18 @@ export default function GstRateToolsScreen() {
           </View>
 
           {!reviewLoaded ? (
-            <Text className="text-sm text-text-secondary">Tap "Check" to find products whose GST rate differs from what their HSN code suggests.</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Tap "Check" to find products whose GST rate differs from what their HSN code suggests.</Text>
           ) : reviewLoading ? (
-            <ActivityIndicator size="large" color="#0368FE" />
+            <ActivityIndicator size="large" color={theme.colors.primary} />
           ) : mismatches.length === 0 ? (
             <View className="py-6 items-center">
               <MaterialCommunityIcons name="check-circle-outline" size={36} color="#22C55E" />
-              <Text className="text-sm font-bold text-text-secondary mt-2">No mismatches found</Text>
-              <Text className="text-xs text-text-secondary mt-1">All products with an HSN code match their suggested rate.</Text>
+              <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark mt-2">No mismatches found</Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-1">All products with an HSN code match their suggested rate.</Text>
             </View>
           ) : (
             <View>
-              <Text className="text-xs font-bold text-text-secondary mb-2">
+              <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark mb-2">
                 {mismatches.length} product{mismatches.length !== 1 ? "s" : ""} with rate mismatch
               </Text>
               {mismatches.map((p) => (
@@ -240,15 +242,15 @@ export default function GstRateToolsScreen() {
                   className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800"
                 >
                   <View className="flex-1 mr-2">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
                       {p.name}
                     </Text>
-                    <Text className="text-xs text-text-secondary">
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
                       HSN {p.hsn_code} · {p.sku || ""}
                     </Text>
                   </View>
                   <Text className="text-sm font-bold">
-                    <Text className="text-text-secondary">{Number(p.tax_rate)}%</Text>
+                    <Text className="text-on-surface-variant dark:text-text-secondary-dark">{Number(p.tax_rate)}%</Text>
                     {" → "}
                     <Text className="text-amber-600">{p.suggested_rate}%</Text>
                   </Text>

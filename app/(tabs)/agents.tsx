@@ -15,6 +15,7 @@ import { api } from "../../src/lib/api";
 import AgentMapView from "../../src/components/AgentMapView";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
+import { useTheme } from "react-native-paper";
 
 interface AgentPing {
   id: string;
@@ -83,6 +84,7 @@ export default function AgentsScreen() {
   const mapRef = useRef<MapView>(null);
   const topInset = useTopInset();
   const bottomInset = useBottomInset(24);
+  const theme = useTheme();
 
   const [agents, setAgents] = useState<AgentSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,7 +200,7 @@ export default function AgentsScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background dark:bg-bg-dark justify-center items-center">
-        <ActivityIndicator size="large" color="#0368FE" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text className="text-on-surface-variant mt-3 text-sm">
           Loading agent locations…
         </Text>
@@ -241,7 +243,7 @@ export default function AgentsScreen() {
                   <MaterialCommunityIcons
                     name={mode === "map" ? "map-outline" : "format-list-bulleted"}
                     size={16}
-                    color={viewMode === mode ? "#0368FE" : "#3e4944"}
+                    color={viewMode === mode ? theme.colors.primary : theme.colors.onSurfaceVariant}
                   />
                   <Text
                     className={`text-sm font-bold capitalize ${
@@ -265,7 +267,7 @@ export default function AgentsScreen() {
         <View className="flex-1">
           {agentsOnMap.length === 0 ? (
             <View className="flex-1 justify-center items-center px-8">
-              <MaterialCommunityIcons name="map-marker-off-outline" size={40} color="#6e7a74" style={{ marginBottom: 16 }} />
+              <MaterialCommunityIcons name="map-marker-off-outline" size={40} color={theme.colors.outline} style={{ marginBottom: 16 }} />
               <Text className="text-on-surface dark:text-text-primary-dark font-bold text-center text-base">
                 {agents.length === 0 ? "No field agents added yet" : "No agents have checked in yet"}
               </Text>
@@ -353,7 +355,7 @@ export default function AgentsScreen() {
           }
           ListEmptyComponent={
             <View className="flex-1 py-24 items-center">
-              <MaterialCommunityIcons name="account-group-outline" size={40} color="#6e7a74" style={{ marginBottom: 12 }} />
+              <MaterialCommunityIcons name="account-group-outline" size={40} color={theme.colors.outline} style={{ marginBottom: 12 }} />
               <Text className="text-on-surface dark:text-text-primary-dark font-bold text-base text-center">
                 No field agents tracked yet
               </Text>

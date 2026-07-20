@@ -11,7 +11,9 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from "react-native";
+import { Searchbar } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -19,6 +21,8 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import { shareDataAsPdf } from "../src/lib/pdfExport";
+import { useTheme } from "react-native-paper";
 
 interface Product {
   id: string;
@@ -80,11 +84,15 @@ export default function SalesOrdersScreen() {
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
   const router = useRouter();
+  const theme = useTheme();
 
   const [tab, setTab] = useState<"list" | "new">("list");
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadTrigger, setLoadTrigger] = useState(0);
+  const [listSearchQuery, setListSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // New SO form
   const [products, setProducts] = useState<Product[]>([]);
@@ -103,6 +111,17 @@ export default function SalesOrdersScreen() {
   const [showDeliver, setShowDeliver] = useState(false);
   const [deliverQtys, setDeliverQtys] = useState<Record<string, string>>({});
   const [delivering, setDelivering] = useState(false);
+  const [converting, setConverting] = useState(false);
+
+  const filteredOrders = orders.filter((o) => {
+    const q = listSearchQuery.toLowerCase();
+    const matchesSearch =
+      !listSearchQuery ||
+      o.so_number.toLowerCase().includes(q) ||
+      o.customer.name.toLowerCase().includes(q);
+    const matchesStatus = !statusFilter || o.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -115,6 +134,11 @@ export default function SalesOrdersScreen() {
       setLoading(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await loadOrders(); } finally { setRefreshing(false); }
+  }, [loadOrders]);
 
   useEffect(() => {
     loadOrders();
@@ -232,6 +256,21 @@ export default function SalesOrdersScreen() {
     }
   };
 
+  const handleConvert = async () => {
+    if (!activeSO) return;
+    setConverting(true);
+    try {
+      await api.post(`/sales-orders/${activeSO.id}/convert`);
+      Alert.alert("Success", "Invoice created from this sales order.");
+      setActiveSO(null);
+      setLoadTrigger((n) => n + 1);
+    } catch (e) {
+      Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to convert to invoice.");
+    } finally {
+      setConverting(false);
+    }
+  };
+
   const openDetail = (so: SalesOrder) => setActiveSO(so);
 
   const openDeliver = () => {
@@ -278,24 +317,24 @@ export default function SalesOrdersScreen() {
     return (
       <Pressable
         onPress={() => openDetail(item)}
-        className="bg-surface dark:bg-surface-dark p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm active:opacity-80"
+        className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-2xl border border-outline-variant dark:border-outline mb-3 shadow-sm active:opacity-80"
       >
         <View className="flex-row items-start justify-between">
           <View className="flex-1 mr-2">
-            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
               {item.so_number}
             </Text>
-            <Text className="text-sm text-text-secondary mt-0.5">{item.customer.name}</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{item.customer.name}</Text>
             <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
               <View style={{ backgroundColor: cfg.bg }} className="px-2.5 py-1 rounded-full">
                 <Text style={{ color: cfg.color }} className="text-xs font-bold">
                   {cfg.label}
                 </Text>
               </View>
-              <Text className="text-xs text-text-secondary">{totalQty} items</Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{totalQty} items</Text>
             </View>
           </View>
-          <Text className="text-sm text-text-secondary">
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
             {new Date(item.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </Text>
         </View>
@@ -304,17 +343,25 @@ export default function SalesOrdersScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <View className="flex-row items-center" style={{ gap: 8 }}>
-          <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
+        <View className="flex-row items-center justify-between px-6 py-4">
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
+              <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
+            </Pressable>
+            <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
+              Sales Orders
+            </Text>
+          </View>
+          <Pressable onPress={() => {
+            const headers = ["Order #", "Customer", "Date", "Status", "Items"];
+            const rows = orders.map((o) => [o.so_number, o.customer.name, new Date(o.date).toLocaleDateString("en-IN"), o.status, String(o.items.length)]);
+            shareDataAsPdf("Sales Orders", headers, rows, "sales-orders.pdf");
+          }} className="flex-row items-center gap-1 bg-primary px-3 py-2 rounded-lg">
+            <MaterialCommunityIcons name="file-pdf-box" size={16} color="white" />
+            <Text className="text-xs font-bold text-white">Export</Text>
           </Pressable>
-          <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">
-            Sales Orders
-          </Text>
         </View>
-      </View>
 
       {/* Tab Switcher */}
       <View className="px-6 mb-4 flex-row" style={{ gap: 8 }}>
@@ -323,10 +370,10 @@ export default function SalesOrdersScreen() {
           className={`flex-1 py-2.5 rounded-xl items-center border ${
             tab === "list"
               ? "bg-primary border-primary"
-              : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"
+              : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
           }`}
         >
-          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "list" ? "text-white" : "text-text-secondary"}`}>
+          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "list" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
             Orders
           </Text>
         </Pressable>
@@ -335,38 +382,83 @@ export default function SalesOrdersScreen() {
           className={`flex-1 py-2.5 rounded-xl items-center border ${
             tab === "new"
               ? "bg-primary border-primary"
-              : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"
+              : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
           }`}
         >
-          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "new" ? "text-white" : "text-text-secondary"}`}>
+          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "new" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
             New Order
           </Text>
         </Pressable>
       </View>
 
       {tab === "list" ? (
-        loading ? (
-          <View className="flex-1 items-center justify-center pb-20">
-            <ActivityIndicator size="large" color="#0368FE" />
+        <View className="flex-1">
+          <View className="px-6 mb-2 mt-2">
+            <Searchbar
+              placeholder="Search by order number or customer..."
+              value={listSearchQuery}
+              onChangeText={setListSearchQuery}
+            />
           </View>
-        ) : orders.length === 0 ? (
-          <View className="flex-1 items-center justify-center pb-20 px-6">
-            <MaterialCommunityIcons name="file-document-outline" size={48} color="#D1D5DB" />
-            <Text className="text-base font-bold text-text-secondary mt-4">No sales orders yet</Text>
-            <Text className="text-sm text-text-secondary mt-1 text-center">Create your first sales order to track commitments before billing.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={orders}
-            keyExtractor={(item) => item.id}
-            renderItem={renderOrder}
-            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 24 }}
-            showsVerticalScrollIndicator={false}
-          />
-        )
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="px-6 mb-3"
+          >
+            <View className="flex-row" style={{ gap: 6 }}>
+              {[null, "draft", "confirmed", "partially_delivered", "delivered", "cancelled"].map((s) => {
+                const active = statusFilter === s;
+                const cfg = s
+                  ? STATUS_CONFIG[s]
+                  : { label: "All", color: "#6B7280", bg: "#F3F4F6" };
+                return (
+                  <Pressable
+                    key={s ?? "all"}
+                    onPress={() => setStatusFilter(s)}
+                    style={{ backgroundColor: active ? cfg.color : cfg.bg }}
+                    className="px-3.5 py-1.5 rounded-full"
+                  >
+                    <Text
+                      className="text-xs font-bold"
+                      style={{ color: active ? "#FFF" : cfg.color }}
+                    >
+                      {cfg.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
+          {loading ? (
+            <View className="flex-1 items-center justify-center pb-20">
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+          ) : filteredOrders.length === 0 ? (
+            <View className="flex-1 items-center justify-center pb-20 px-6">
+              <MaterialCommunityIcons name="file-document-outline" size={48} color={theme.colors.outline} />
+              <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">
+                {orders.length === 0 ? "No sales orders yet" : "No orders match your search"}
+              </Text>
+              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
+                {orders.length === 0
+                  ? "Create your first sales order to track commitments before billing."
+                  : "Try a different search term or clear the filters."}
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredOrders}
+              keyExtractor={(item) => item.id}
+              renderItem={renderOrder}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+              contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 24 }}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
       ) : formLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <KeyboardAvoidingView
@@ -379,11 +471,11 @@ export default function SalesOrdersScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Customer Picker */}
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Customer *</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Customer *</Text>
               <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                 {customers.length === 0 ? (
-                  <Text className="text-sm text-text-secondary">No customers found. Add one from Ledger.</Text>
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">No customers found. Add one from Ledger.</Text>
                 ) : (
                   customers.slice(0, 20).map((c) => (
                     <Pressable
@@ -392,11 +484,11 @@ export default function SalesOrdersScreen() {
                       className={`px-3.5 py-2.5 rounded-xl border ${
                         customerId === c.id
                           ? "bg-primary border-primary"
-                          : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
+                          : "bg-surface-container-lowest dark:bg-zinc-900 border-outline-variant dark:border-outline"
                       }`}
                     >
                       <Text
-                        className={`text-sm font-bold ${customerId === c.id ? "text-white" : "text-text-secondary"}`}
+                        className={`text-sm font-bold ${customerId === c.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}
                       >
                         {c.name}
                       </Text>
@@ -407,59 +499,59 @@ export default function SalesOrdersScreen() {
             </View>
 
             {/* Product Search */}
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Products</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Products</Text>
               <TextInput
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholder="Search products..."
                 placeholderTextColor="#A0A0A0"
-                className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 font-medium mb-3"
+                className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 font-medium mb-3"
               />
               <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                 {filteredProducts.slice(0, 30).map((p) => (
                   <Pressable
                     key={p.id}
                     onPress={() => addToCart(p)}
-                    className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-surface dark:bg-zinc-900 active:opacity-70"
+                    className="px-3.5 py-2.5 rounded-xl border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-zinc-900 active:opacity-70"
                   >
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{p.name}</Text>
-                    <Text className="text-xs text-text-secondary">{p.sku || "No SKU"}</Text>
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{p.name}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{p.sku || "No SKU"}</Text>
                   </Pressable>
                 ))}
               </View>
             </View>
 
             {/* Cart */}
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">
                 Cart ({cart.length})
               </Text>
               {cart.length === 0 ? (
-                <Text className="text-sm text-text-secondary">No items added yet.</Text>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">No items added yet.</Text>
               ) : (
                 cart.map((item) => (
                   <View
                     key={item.productId}
-                    className="flex-row items-center py-3 border-b border-gray-100 dark:border-zinc-800"
+                    className="flex-row items-center py-3 border-b border-outline-variant dark:border-outline"
                   >
                     <View className="flex-1 mr-2">
-                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
                         {item.name}
                       </Text>
                       <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
-                        <Pressable onPress={() => updateCartQty(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center">
-                          <MaterialCommunityIcons name="minus" size={12} color="#6B7280" />
+                        <Pressable onPress={() => updateCartQty(item.productId, -1)} className="w-7 h-7 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center">
+                          <MaterialCommunityIcons name="minus" size={12} color={theme.colors.onSurfaceVariant} />
                         </Pressable>
                         <Text className="text-sm font-bold w-6 text-center">{item.quantity}</Text>
-                        <Pressable onPress={() => updateCartQty(item.productId, 1)} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center">
-                          <MaterialCommunityIcons name="plus" size={12} color="#6B7280" />
+                        <Pressable onPress={() => updateCartQty(item.productId, 1)} className="w-7 h-7 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center">
+                          <MaterialCommunityIcons name="plus" size={12} color={theme.colors.onSurfaceVariant} />
                         </Pressable>
                         <TextInput
                           value={item.unitPrice.toString()}
                           onChangeText={(v) => updateCartPrice(item.productId, v)}
                           keyboardType="decimal-pad"
-                          className="bg-background dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg px-2 py-1 text-xs font-bold w-20 text-right"
+                          className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-lg px-2 py-1 text-xs font-bold w-20 text-right"
                         />
                       </View>
                     </View>
@@ -470,15 +562,15 @@ export default function SalesOrdersScreen() {
                 ))
               )}
               {cart.length > 0 && (
-                <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark text-right mt-3">
+                <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark text-right mt-3">
                   Total: ₹{cartTotal.toLocaleString("en-IN")}
                 </Text>
               )}
             </View>
 
             {/* Notes */}
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Notes</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Notes</Text>
               <TextInput
                 value={notes}
                 onChangeText={setNotes}
@@ -486,7 +578,7 @@ export default function SalesOrdersScreen() {
                 placeholderTextColor="#A0A0A0"
                 multiline
                 numberOfLines={2}
-                className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 font-medium"
+                className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 font-medium"
               />
             </View>
 
@@ -508,23 +600,23 @@ export default function SalesOrdersScreen() {
       {/* Detail Modal */}
       <Modal visible={!!activeSO && !showDeliver} animationType="slide" onRequestClose={() => setActiveSO(null)}>
         <SafeAreaProvider>
-          <ScrollView className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+          <ScrollView className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
             <View className="px-6 pb-8">
               <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                   {activeSO?.so_number}
                 </Text>
                 <Pressable onPress={() => setActiveSO(null)} className="w-11 h-11 items-center justify-center">
-                  <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
               </View>
 
               {activeSO && (
                 <>
-                  <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                    <Text className="text-sm font-bold text-text-secondary">{activeSO.customer.name}</Text>
+                  <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                    <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">{activeSO.customer.name}</Text>
                     {activeSO.customer.phone && (
-                      <Text className="text-sm text-text-secondary mt-1">{activeSO.customer.phone}</Text>
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">{activeSO.customer.phone}</Text>
                     )}
                     {(() => {
                       const cfg = STATUS_CONFIG[activeSO.status] || STATUS_CONFIG.draft;
@@ -536,17 +628,17 @@ export default function SalesOrdersScreen() {
                     })()}
                   </View>
 
-                  <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark mb-3">Items</Text>
+                  <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-3">Items</Text>
                     {activeSO.items.map((item) => (
-                      <View key={item.id} className="flex-row items-center py-2 border-b border-gray-100 dark:border-zinc-800">
+                      <View key={item.id} className="flex-row items-center py-2 border-b border-outline-variant dark:border-outline">
                         <View className="flex-1 mr-2">
-                          <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{item.product.name}</Text>
-                          <Text className="text-xs text-text-secondary">
+                          <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
+                          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
                             Qty: {item.quantity} · Delivered: {item.delivered_quantity}
                           </Text>
                         </View>
-                        <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
                           ₹{Number(item.unit_price).toLocaleString("en-IN")}
                         </Text>
                       </View>
@@ -554,16 +646,16 @@ export default function SalesOrdersScreen() {
                   </View>
 
                   {activeSO.notes && (
-                    <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark mb-1">Notes</Text>
-                      <Text className="text-sm text-text-secondary">{activeSO.notes}</Text>
+                    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-1">Notes</Text>
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{activeSO.notes}</Text>
                     </View>
                   )}
 
                   {/* Status Actions */}
                   {(VALID_TRANSITIONS[activeSO.status] || []).length > 0 && (
-                    <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark mb-3">Actions</Text>
+                    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-3">Actions</Text>
                       <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                         {VALID_TRANSITIONS[activeSO.status].map((nextStatus) => {
                           const cfg = STATUS_CONFIG[nextStatus];
@@ -594,12 +686,21 @@ export default function SalesOrdersScreen() {
                           );
                         })}
                         {(activeSO.status === "confirmed" || activeSO.status === "partially_delivered") && (
-                          <Pressable
-                            onPress={openDeliver}
-                            className="px-4 py-3 rounded-xl bg-primary active:opacity-70"
-                          >
-                            <Text className="text-sm font-bold text-white">Record Delivery</Text>
-                          </Pressable>
+                          <>
+                            <Pressable
+                              onPress={openDeliver}
+                              className="px-4 py-3 rounded-xl bg-primary active:opacity-70"
+                            >
+                              <Text className="text-sm font-bold text-white">Record Delivery</Text>
+                            </Pressable>
+                            <Pressable
+                              onPress={handleConvert}
+                              disabled={converting}
+                              className="px-4 py-3 rounded-xl bg-green-600 active:opacity-70"
+                            >
+                              <Text className="text-sm font-bold text-white">{converting ? "..." : "Convert to Invoice"}</Text>
+                            </Pressable>
+                          </>
                         )}
                       </View>
                     </View>
@@ -614,33 +715,33 @@ export default function SalesOrdersScreen() {
       {/* Deliver Modal */}
       <Modal visible={showDeliver} animationType="slide" onRequestClose={() => setShowDeliver(false)}>
         <SafeAreaProvider>
-          <ScrollView className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+          <ScrollView className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
             <View className="px-6 pb-8">
               <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
                   Record Delivery
                 </Text>
                 <Pressable onPress={() => setShowDeliver(false)} className="w-11 h-11 items-center justify-center">
-                  <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
               </View>
 
-              <Text className="text-sm font-bold text-text-secondary mb-4">
+              <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark mb-4">
                 {activeSO?.so_number} · {activeSO?.customer.name}
               </Text>
 
               {activeSO?.items.map((item) => (
-                <View key={item.id} className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3">
-                  <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{item.product.name}</Text>
+                <View key={item.id} className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-3">
+                  <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
                   <View className="flex-row items-center justify-between mt-2">
-                    <Text className="text-xs text-text-secondary">
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
                       Ordered: {item.quantity} · Delivered: {item.delivered_quantity}
                     </Text>
                     <TextInput
                       value={deliverQtys[item.id] || "0"}
                       onChangeText={(v) => setDeliverQtys((prev) => ({ ...prev, [item.id]: v }))}
                       keyboardType="numeric"
-                      className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-sm font-bold w-24 text-right"
+                      className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-sm font-bold w-24 text-right"
                     />
                   </View>
                 </View>

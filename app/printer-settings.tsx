@@ -9,6 +9,7 @@ import {
   TextInput,
  PermissionsAndroid, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import {
   scanBluetoothPrinters,
   scanUsbPrinters,
@@ -76,6 +77,7 @@ async function ensureBluetoothPermissions(): Promise<boolean> {
 }
 
 export default function PrinterSettingsScreen() {
+  const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const [activeTab, setActiveTab] = useState<PrinterConnectionType>("bluetooth");
@@ -214,7 +216,7 @@ export default function PrinterSettingsScreen() {
                   </Pressable>
                 )}
                 <Pressable onPress={() => handleRemove(p)} className="w-9 h-9 rounded-full bg-error/10 items-center justify-center">
-                  <MaterialCommunityIcons name="trash-can-outline" size={16} color="#D64545" />
+                  <MaterialCommunityIcons name="trash-can-outline" size={16} color={theme.colors.error} />
                 </Pressable>
               </View>
             </View>
@@ -257,7 +259,7 @@ export default function PrinterSettingsScreen() {
             disabled={scanning}
             className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl py-3.5 items-center mb-4"
           >
-            {scanning ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Scan for Bluetooth Printers</Text>}
+            {scanning ? <ActivityIndicator color={theme.colors.primary} /> : <Text className="text-primary font-bold text-base">Scan for Bluetooth Printers</Text>}
           </Pressable>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-3">
             Note: the printer must already be paired in your phone&apos;s Android Bluetooth settings before it will show up here.
@@ -272,13 +274,13 @@ export default function PrinterSettingsScreen() {
                 )
               }
               disabled={connectingKey === d.inner_mac_address}
-              className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center"
+              className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-outline-variant dark:border-zinc-800 mb-2 flex-row justify-between items-center"
             >
               <View>
                 <Text className="font-bold text-on-surface dark:text-text-primary-dark">{d.device_name || "Unnamed Printer"}</Text>
                 <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{d.inner_mac_address}</Text>
               </View>
-              {connectingKey === d.inner_mac_address ? <ActivityIndicator size="small" color="#0368FE" /> : <Text className="text-primary font-bold">Add</Text>}
+              {connectingKey === d.inner_mac_address ? <ActivityIndicator size="small" color={theme.colors.primary} /> : <Text className="text-primary font-bold">Add</Text>}
             </Pressable>
           ))}
         </View>
@@ -291,7 +293,7 @@ export default function PrinterSettingsScreen() {
             disabled={scanning}
             className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-xl py-3.5 items-center mb-4"
           >
-            {scanning ? <ActivityIndicator color="#0368FE" /> : <Text className="text-primary font-bold text-base">Scan for USB Printers</Text>}
+            {scanning ? <ActivityIndicator color={theme.colors.primary} /> : <Text className="text-primary font-bold text-base">Scan for USB Printers</Text>}
           </Pressable>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-3">
             Connect your printer via a USB-OTG cable before scanning.
@@ -308,13 +310,13 @@ export default function PrinterSettingsScreen() {
                   )
                 }
                 disabled={connectingKey === key}
-                className="bg-surface dark:bg-surface-dark p-4 rounded-xl border border-gray-100 dark:border-zinc-800 mb-2 flex-row justify-between items-center"
+                className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-outline-variant dark:border-zinc-800 mb-2 flex-row justify-between items-center"
               >
                 <View>
                   <Text className="font-bold text-on-surface dark:text-text-primary-dark">{d.device_name || "USB Printer"}</Text>
                   <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Vendor {d.vendor_id} · Product {d.product_id}</Text>
                 </View>
-                {connectingKey === key ? <ActivityIndicator size="small" color="#0368FE" /> : <Text className="text-primary font-bold">Add</Text>}
+                {connectingKey === key ? <ActivityIndicator size="small" color={theme.colors.primary} /> : <Text className="text-primary font-bold">Add</Text>}
               </Pressable>
             );
           })}

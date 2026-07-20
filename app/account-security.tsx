@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Pressable, TextInput, Alert, Switch } from "react-native";
 import { useRouter } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, resendVerificationEmail, enableTwoFactor, disableTwoFactor } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
@@ -16,6 +17,7 @@ interface Me {
 // card — same two endpoints (/auth/verify-email/resend, /auth/2fa/enable
 // or /disable), just a native shell around them.
 export default function AccountSecurityScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
@@ -90,7 +92,7 @@ export default function AccountSecurityScreen() {
     <View className="flex-1 bg-background dark:bg-bg-dark">
       <View className="bg-surface-container-lowest dark:bg-surface-dark border-b border-outline-variant dark:border-outline flex-row items-center px-margin-mobile pb-3" style={{ gap: 12, paddingTop: topInset }}>
         <Pressable onPress={() => router.back()} className="w-touch-target h-touch-target items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.primary} />
         </Pressable>
         <Text className="font-headline-md text-headline-md text-on-surface dark:text-text-primary-dark">
           Account Security
@@ -99,53 +101,53 @@ export default function AccountSecurityScreen() {
 
       {loading || !me ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
-          <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+          <View className="bg-surface-container-lowest dark:bg-surface-dark p-6 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-6">
             <View className="flex-row items-start justify-between" style={{ gap: 12 }}>
               <View className="flex-1 flex-row items-start" style={{ gap: 10 }}>
-                <MaterialCommunityIcons name="email-outline" size={18} color="#71717a" style={{ marginTop: 2 }} />
+                <MaterialCommunityIcons name="email-outline" size={18} color={theme.colors.onSurfaceVariant} style={{ marginTop: 2 }} />
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">{me.email}</Text>
+                  <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">{me.email}</Text>
                   {me.email_verified ? (
                     <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
                       <MaterialCommunityIcons name="check-circle" size={13} color="#16a34a" />
                       <Text className="text-xs font-semibold" style={{ color: "#16a34a" }}>Verified</Text>
                     </View>
                   ) : (
-                    <Text className="text-xs text-text-secondary mt-1">Not verified yet.</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-1">Not verified yet.</Text>
                   )}
                 </View>
               </View>
               {!me.email_verified && (
-                <Pressable onPress={handleResendVerification} disabled={sendingVerify} className="py-2 px-3 rounded-lg bg-background dark:bg-background-dark border border-gray-200 dark:border-zinc-800">
+                <Pressable onPress={handleResendVerification} disabled={sendingVerify} className="py-2 px-3 rounded-lg bg-background dark:bg-bg-dark border border-outline-variant dark:border-outline">
                   <Text className="text-primary dark:text-primary-dark font-bold text-xs">
                     {sendingVerify ? "Sending..." : "Resend"}
                   </Text>
                 </Pressable>
               )}
             </View>
-            {verifyMsg && <Text className="text-xs text-text-secondary mt-3">{verifyMsg}</Text>}
+            {verifyMsg && <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-3">{verifyMsg}</Text>}
           </View>
 
-          <View className="bg-surface dark:bg-surface-dark p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-6">
+          <View className="bg-surface-container-lowest dark:bg-surface-dark p-6 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-6">
             <View className="flex-row items-center justify-between" style={{ gap: 12 }}>
               <View className="flex-1">
-                <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">
+                <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
                   Two-Factor Authentication
                 </Text>
-                <Text className="text-sm text-text-secondary mt-1">
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">
                   After entering your password, we'll also email a 6-digit code you must enter to finish signing in.
                 </Text>
               </View>
-              <Switch value={me.two_factor_enabled} disabled={toggling} onValueChange={handleToggle} trackColor={{ true: "#0368FE" }} />
+              <Switch value={me.two_factor_enabled} disabled={toggling} onValueChange={handleToggle} trackColor={{ true: theme.colors.primary }} />
             </View>
 
             {showDisableConfirm && (
-              <View className="mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
-                <Text className="text-sm font-semibold text-text-primary dark:text-text-primary-dark mb-2">
+              <View className="mt-4 pt-4 border-t border-outline-variant dark:border-outline">
+                <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark mb-2">
                   Confirm your password to disable 2FA
                 </Text>
                 <TextInput
@@ -155,14 +157,14 @@ export default function AccountSecurityScreen() {
                   placeholderTextColor="#A0A0A0"
                   secureTextEntry
                   autoCapitalize="none"
-                  className="bg-background dark:bg-background-dark text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-base font-medium mb-3"
+                  className="bg-background dark:bg-bg-dark text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 text-base font-medium mb-3"
                 />
                 <View className="flex-row" style={{ gap: 8 }}>
                   <Pressable
                     onPress={() => { setShowDisableConfirm(false); setDisablePassword(""); }}
-                    className="flex-1 py-3 rounded-xl items-center border border-gray-200 dark:border-zinc-800"
+                    className="flex-1 py-3 rounded-xl items-center border border-outline-variant dark:border-outline"
                   >
-                    <Text className="text-text-secondary font-bold text-sm">Cancel</Text>
+                    <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-sm">Cancel</Text>
                   </Pressable>
                   <Pressable
                     onPress={handleDisable}

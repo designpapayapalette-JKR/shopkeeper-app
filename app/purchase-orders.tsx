@@ -11,6 +11,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -19,6 +20,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import { useTheme } from "react-native-paper";
 
 interface Product {
   id: string;
@@ -80,10 +82,12 @@ export default function PurchaseOrdersScreen() {
   const bottomInset = useBottomInset();
   const confirm = useConfirm();
   const router = useRouter();
+  const theme = useTheme();
 
   const [tab, setTab] = useState<"list" | "new">("list");
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadTrigger, setLoadTrigger] = useState(0);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -111,6 +115,11 @@ export default function PurchaseOrdersScreen() {
       setLoading(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await loadOrders(); } finally { setRefreshing(false); }
+  }, [loadOrders]);
 
   useEffect(() => {
     loadOrders();
@@ -250,20 +259,20 @@ export default function PurchaseOrdersScreen() {
     return (
       <Pressable
         onPress={() => openDetail(item)}
-        className="bg-surface dark:bg-surface-dark p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm active:opacity-80"
+        className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-2xl border border-outline-variant dark:border-outline mb-3 shadow-sm active:opacity-80"
       >
         <View className="flex-row items-start justify-between">
           <View className="flex-1 mr-2">
-            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">{item.po_number}</Text>
-            <Text className="text-sm text-text-secondary mt-0.5">{item.supplier.name}</Text>
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">{item.po_number}</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">{item.supplier.name}</Text>
             <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
               <View style={{ backgroundColor: cfg.bg }} className="px-2.5 py-1 rounded-full">
                 <Text style={{ color: cfg.color }} className="text-xs font-bold">{cfg.label}</Text>
               </View>
-              <Text className="text-xs text-text-secondary">{totalQty} items</Text>
+              <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{totalQty} items</Text>
             </View>
           </View>
-          <Text className="text-sm text-text-secondary">
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
             {new Date(item.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </Text>
         </View>
@@ -272,99 +281,100 @@ export default function PurchaseOrdersScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
           </Pressable>
-          <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">Purchase Orders</Text>
+          <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Purchase Orders</Text>
         </View>
       </View>
 
       <View className="px-6 mb-4 flex-row" style={{ gap: 8 }}>
         <Pressable
           onPress={() => setTab("list")}
-          className={`flex-1 py-2.5 rounded-xl items-center border ${tab === "list" ? "bg-primary border-primary" : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
+          className={`flex-1 py-2.5 rounded-xl items-center border ${tab === "list" ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"}`}
         >
-          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "list" ? "text-white" : "text-text-secondary"}`}>Orders</Text>
+          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "list" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>Orders</Text>
         </Pressable>
         <Pressable
           onPress={openNewTab}
-          className={`flex-1 py-2.5 rounded-xl items-center border ${tab === "new" ? "bg-primary border-primary" : "bg-surface dark:bg-surface-dark border-gray-200 dark:border-zinc-800"}`}
+          className={`flex-1 py-2.5 rounded-xl items-center border ${tab === "new" ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"}`}
         >
-          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "new" ? "text-white" : "text-text-secondary"}`}>New PO</Text>
+          <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "new" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>New PO</Text>
         </Pressable>
       </View>
 
       {tab === "list" ? (
         loading ? (
-          <View className="flex-1 items-center justify-center pb-20"><ActivityIndicator size="large" color="#0368FE" /></View>
+          <View className="flex-1 items-center justify-center pb-20"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
         ) : orders.length === 0 ? (
           <View className="flex-1 items-center justify-center pb-20 px-6">
-            <MaterialCommunityIcons name="file-document-outline" size={48} color="#D1D5DB" />
-            <Text className="text-base font-bold text-text-secondary mt-4">No purchase orders yet</Text>
-            <Text className="text-sm text-text-secondary mt-1 text-center">Create a PO to track orders before they arrive.</Text>
+            <MaterialCommunityIcons name="file-document-outline" size={48} color={theme.colors.outline} />
+            <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No purchase orders yet</Text>
+            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create a PO to track orders before they arrive.</Text>
           </View>
         ) : (
           <FlatList data={orders} keyExtractor={(item) => item.id} renderItem={renderOrder}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 24 }} showsVerticalScrollIndicator={false} />
         )
       ) : formLoading ? (
-        <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color="#0368FE" /></View>
+        <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       ) : (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
           <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }} showsVerticalScrollIndicator={false}>
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Supplier *</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Supplier *</Text>
               <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                 {suppliers.length === 0 ? (
-                  <Text className="text-sm text-text-secondary">No suppliers found.</Text>
+                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">No suppliers found.</Text>
                 ) : (
                   suppliers.slice(0, 20).map((s) => (
                     <Pressable key={s.id} onPress={() => setSupplierId(s.id)}
-                      className={`px-3.5 py-2.5 rounded-xl border ${supplierId === s.id ? "bg-primary border-primary" : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
-                      <Text className={`text-sm font-bold ${supplierId === s.id ? "text-white" : "text-text-secondary"}`}>{s.name}</Text>
+                      className={`px-3.5 py-2.5 rounded-xl border ${supplierId === s.id ? "bg-primary border-primary" : "bg-surface-container-lowest dark:bg-zinc-900 border-outline-variant dark:border-outline"}`}>
+                      <Text className={`text-sm font-bold ${supplierId === s.id ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{s.name}</Text>
                     </Pressable>
                   ))
                 )}
               </View>
             </View>
 
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Products</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Products</Text>
               <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Search products..." placeholderTextColor="#A0A0A0"
-                className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 font-medium mb-3" />
+                className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 font-medium mb-3" />
               <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                 {filteredProducts.slice(0, 30).map((p) => (
                   <Pressable key={p.id} onPress={() => addToCart(p)}
-                    className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-surface dark:bg-zinc-900 active:opacity-70">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{p.name}</Text>
-                    <Text className="text-xs text-text-secondary">{p.sku || "No SKU"}</Text>
+                    className="px-3.5 py-2.5 rounded-xl border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-zinc-900 active:opacity-70">
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{p.name}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{p.sku || "No SKU"}</Text>
                   </Pressable>
                 ))}
               </View>
             </View>
 
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-lg font-bold text-text-primary dark:text-text-primary-dark mb-3">Cart ({cart.length})</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-lg font-bold text-on-surface dark:text-text-primary-dark mb-3">Cart ({cart.length})</Text>
               {cart.length === 0 ? (
-                <Text className="text-sm text-text-secondary">No items added yet.</Text>
+                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">No items added yet.</Text>
               ) : (
                 cart.map((item) => (
-                  <View key={item.productId} className="flex-row items-center py-3 border-b border-gray-100 dark:border-zinc-800">
+                  <View key={item.productId} className="flex-row items-center py-3 border-b border-outline-variant dark:border-outline">
                     <View className="flex-1 mr-2">
-                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark" numberOfLines={1}>{item.name}</Text>
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark" numberOfLines={1}>{item.name}</Text>
                       <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
-                        <Pressable onPress={() => updateCartQty(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center">
-                          <MaterialCommunityIcons name="minus" size={12} color="#6B7280" />
+                        <Pressable onPress={() => updateCartQty(item.productId, -1)} className="w-7 h-7 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center">
+                          <MaterialCommunityIcons name="minus" size={12} color={theme.colors.onSurfaceVariant} />
                         </Pressable>
                         <Text className="text-sm font-bold w-6 text-center">{item.quantity}</Text>
-                        <Pressable onPress={() => updateCartQty(item.productId, 1)} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center">
-                          <MaterialCommunityIcons name="plus" size={12} color="#6B7280" />
+                        <Pressable onPress={() => updateCartQty(item.productId, 1)} className="w-7 h-7 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center">
+                          <MaterialCommunityIcons name="plus" size={12} color={theme.colors.onSurfaceVariant} />
                         </Pressable>
                         <TextInput value={item.unitCost.toString()} onChangeText={(v) => updateCartCost(item.productId, v)} keyboardType="decimal-pad"
-                          className="bg-background dark:bg-zinc-900 text-text-primary border border-gray-200 dark:border-zinc-800 rounded-lg px-2 py-1 text-xs font-bold w-20 text-right" />
+                          className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-lg px-2 py-1 text-xs font-bold w-20 text-right" />
                       </View>
                     </View>
                     <Pressable onPress={() => removeCartItem(item.productId)} className="w-8 h-8 items-center justify-center">
@@ -375,10 +385,10 @@ export default function PurchaseOrdersScreen() {
               )}
             </View>
 
-            <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-              <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Notes</Text>
+            <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+              <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Notes</Text>
               <TextInput value={notes} onChangeText={setNotes} placeholder="Order notes..." placeholderTextColor="#A0A0A0" multiline numberOfLines={2}
-                className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 font-medium" />
+                className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3 font-medium" />
             </View>
 
             <Pressable onPress={handleCreatePO} disabled={submitting || !supplierId || cart.length === 0}
@@ -391,19 +401,19 @@ export default function PurchaseOrdersScreen() {
 
       <Modal visible={!!activePO && !showReceive} animationType="slide" onRequestClose={() => setActivePO(null)}>
         <SafeAreaProvider>
-          <ScrollView className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+          <ScrollView className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
             <View className="px-6 pb-8">
               <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">{activePO?.po_number}</Text>
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">{activePO?.po_number}</Text>
                 <Pressable onPress={() => setActivePO(null)} className="w-11 h-11 items-center justify-center">
-                  <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
               </View>
               {activePO && (
                 <>
-                  <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                    <Text className="text-sm font-bold text-text-secondary">{activePO.supplier.name}</Text>
-                    {activePO.supplier.phone && <Text className="text-sm text-text-secondary mt-1">{activePO.supplier.phone}</Text>}
+                  <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                    <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark">{activePO.supplier.name}</Text>
+                    {activePO.supplier.phone && <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">{activePO.supplier.phone}</Text>}
                     {(() => { const cfg = STATUS_CONFIG[activePO.status] || STATUS_CONFIG.draft; return (
                       <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1.5 rounded-full self-start mt-2">
                         <Text style={{ color: cfg.color }} className="text-xs font-bold">{cfg.label}</Text>
@@ -411,29 +421,29 @@ export default function PurchaseOrdersScreen() {
                     ); })()}
                   </View>
 
-                  <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                    <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark mb-3">Items</Text>
+                  <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                    <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-3">Items</Text>
                     {activePO.items.map((item) => (
-                      <View key={item.id} className="flex-row items-center py-2 border-b border-gray-100 dark:border-zinc-800">
+                      <View key={item.id} className="flex-row items-center py-2 border-b border-outline-variant dark:border-outline">
                         <View className="flex-1 mr-2">
-                          <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{item.product.name}</Text>
-                          <Text className="text-xs text-text-secondary">Qty: {item.quantity} · Received: {item.received_quantity}</Text>
+                          <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
+                          <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">Qty: {item.quantity} · Received: {item.received_quantity}</Text>
                         </View>
-                        <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">₹{Number(item.unit_cost).toLocaleString("en-IN")}</Text>
+                        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{Number(item.unit_cost).toLocaleString("en-IN")}</Text>
                       </View>
                     ))}
                   </View>
 
                   {activePO.notes && (
-                    <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark mb-1">Notes</Text>
-                      <Text className="text-sm text-text-secondary">{activePO.notes}</Text>
+                    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-1">Notes</Text>
+                      <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{activePO.notes}</Text>
                     </View>
                   )}
 
                   {(VALID_TRANSITIONS[activePO.status] || []).length > 0 && (
-                    <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                      <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark mb-3">Actions</Text>
+                    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark mb-3">Actions</Text>
                       <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                         {VALID_TRANSITIONS[activePO.status].map((nextStatus) => {
                           const cfg = STATUS_CONFIG[nextStatus];
@@ -467,23 +477,23 @@ export default function PurchaseOrdersScreen() {
 
       <Modal visible={showReceive} animationType="slide" onRequestClose={() => setShowReceive(false)}>
         <SafeAreaProvider>
-          <ScrollView className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+          <ScrollView className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
             <View className="px-6 pb-8">
               <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">Receive Items</Text>
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Receive Items</Text>
                 <Pressable onPress={() => setShowReceive(false)} className="w-11 h-11 items-center justify-center">
-                  <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
               </View>
-              <Text className="text-sm font-bold text-text-secondary mb-4">{activePO?.po_number} · {activePO?.supplier.name}</Text>
+              <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark mb-4">{activePO?.po_number} · {activePO?.supplier.name}</Text>
               {activePO?.items.map((item) => (
-                <View key={item.id} className="bg-surface dark:bg-surface-dark p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3">
-                  <Text className="text-sm font-bold text-text-primary dark:text-text-primary-dark">{item.product.name}</Text>
+                <View key={item.id} className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline mb-3">
+                  <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
                   <View className="flex-row items-center justify-between mt-2">
-                    <Text className="text-xs text-text-secondary">Ordered: {item.quantity} · Received: {item.received_quantity}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">Ordered: {item.quantity} · Received: {item.received_quantity}</Text>
                     <TextInput value={receiveQtys[item.id] || "0"} onChangeText={(v) => setReceiveQtys((prev) => ({ ...prev, [item.id]: v }))}
                       keyboardType="numeric"
-                      className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-sm font-bold w-24 text-right" />
+                      className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-3 py-2 text-sm font-bold w-24 text-right" />
                   </View>
                 </View>
               ))}

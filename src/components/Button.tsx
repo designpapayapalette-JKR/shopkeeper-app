@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, ActivityIndicator, PressableProps, ViewStyle } from "react-native";
+import { useTheme } from "react-native-paper";
 
 type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 
@@ -57,6 +58,7 @@ export default function Button({
   className = "",
   ...props
 }: ButtonProps) {
+  const theme = useTheme();
   const vs = variantStyles[variant];
   const ss = sizeStyles[size];
 
@@ -73,7 +75,7 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "outline" || variant === "ghost" ? "#0368FE" : "white"} size="small" />
+        <ActivityIndicator color={variant === "outline" || variant === "ghost" ? theme.colors.primary : "white"} size="small" />
       ) : (
         <>
           {icon && icon}

@@ -1,11 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Searchbar, useTheme } from "react-native-paper";
 import { useAuth } from "../src/lib/auth-context";
 import { api } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
-import { useTopInset } from "../src/lib/useTopInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 
 type Kind = "products" | "parties" | "invoices";
 
@@ -21,36 +22,61 @@ const KINDS: { key: Kind; label: string; icon: keyof typeof MaterialCommunityIco
   { key: "invoices", label: "Invoices", icon: "receipt", labelField: "invoice_number" },
 ];
 
+const PAGE_SIZE = 50;
+
 export default function RecycleBinScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const confirm = useConfirm();
+  const theme = useTheme();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const [activeKind, setActiveKind] = useState<Kind>("products");
   const [items, setItems] = useState<DeletedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const load = useCallback(async () => {
+  const filteredItems = useMemo(
+    () => (searchQuery ? items.filter((i) => i.label.toLowerCase().includes(searchQuery.toLowerCase())) : items),
+    [items, searchQuery],
+  );
+
+  const load = useCallback(async (pageNum = 1, append = false) => {
     if (!user?.company_id) return;
-    setLoading(true);
+    if (!append) { setPage(1); setLoading(true); }
     try {
       const kindMeta = KINDS.find((k) => k.key === activeKind)!;
-      const res = await api.get<{ data: any[] }>(`/${activeKind}/recycle-bin/list`);
-      setItems(
-        (res.data ?? []).map((row) => ({
-          id: row.id,
-          label: row[kindMeta.labelField] ?? "(untitled)",
-          deleted_at: row.deleted_at,
-        }))
-      );
+      const res = await api.get<{ data: any[] }>(`/${activeKind}/recycle-bin/list`, { params: { page: pageNum, limit: PAGE_SIZE } });
+      const mapped = (res.data ?? []).map((row) => ({
+        id: row.id,
+        label: row[kindMeta.labelField] ?? "(untitled)",
+        deleted_at: row.deleted_at,
+      }));
+      if (append) {
+        setItems(prev => [...prev, ...mapped]);
+      } else {
+        setItems(mapped);
+      }
+      setHasMore((res.data ?? []).length >= PAGE_SIZE);
     } catch (e) {
       console.error("Failed to load recycle bin:", e);
       setItems([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, [user, activeKind]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    await load(page + 1, true);
+    setPage(p => p + 1);
+  }, [loadingMore, hasMore, page, load]);
 
   useEffect(() => {
     load();
@@ -80,7 +106,7 @@ export default function RecycleBinScreen() {
     <View className="flex-1 bg-background dark:bg-bg-dark">
       <View className="bg-surface-container-lowest dark:bg-surface-dark border-b border-outline-variant dark:border-outline flex-row items-center px-margin-mobile pb-3" style={{ gap: 12, paddingTop: topInset }}>
         <Pressable onPress={() => router.back()} className="w-touch-target h-touch-target items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.primary} />
         </Pressable>
         <Text className="font-headline-md text-headline-md text-on-surface dark:text-text-primary-dark">
           Recycle Bin
@@ -109,20 +135,32 @@ export default function RecycleBinScreen() {
         ))}
       </View>
 
+      <View className="px-margin-mobile pt-sm">
+        <Searchbar
+          placeholder="Search..."
+          onChangeText={setSearchQuery}
+          value={searchQuery}
+          className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline"
+        />
+      </View>
+
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <FlatList
-          data={items}
+          data={filteredItems}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? <View className="py-4"><ActivityIndicator size="small" color={theme.colors.primary} /></View> : !hasMore && items.length > 0 ? <View className="py-4"><Text className="text-center text-sm text-on-surface-variant dark:text-text-secondary-dark">All items loaded</Text></View> : null}
+          contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: bottomInset + 24 }}
           ListEmptyComponent={
             <View className="items-center py-24">
-              <MaterialCommunityIcons name="trash-can-outline" size={40} color="#6e7a74" style={{ marginBottom: 12 }} />
+              <MaterialCommunityIcons name="trash-can-outline" size={40} color={theme.colors.onSurfaceVariant} style={{ marginBottom: 12 }} />
               <Text className="font-body-md text-body-md text-on-surface-variant dark:text-text-secondary-dark">
-                Nothing deleted here.
+                {searchQuery ? "No matches found." : "Nothing deleted here."}
               </Text>
             </View>
           }
@@ -143,10 +181,10 @@ export default function RecycleBinScreen() {
                 style={{ gap: 4 }}
               >
                 {restoringId === item.id ? (
-                  <ActivityIndicator size="small" color="#0368FE" />
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="backup-restore" size={16} color="#0368FE" />
+                    <MaterialCommunityIcons name="backup-restore" size={16} color={theme.colors.primary} />
                     <Text className="text-primary dark:text-primary-dark font-label-md text-label-md">Restore</Text>
                   </>
                 )}

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, TextInput, Alert } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { View, Text, FlatList, ActivityIndicator, Pressable, TextInput, Alert, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
@@ -18,31 +19,58 @@ interface UnifiedEntry {
 
 type PartyFilter = "all" | "customer" | "supplier";
 
+const PAGE_SIZE = 50;
+
 export default function UnifiedLedgerScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const [entries, setEntries] = useState<UnifiedEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [partyFilter, setPartyFilter] = useState<PartyFilter>("all");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const fetchAll = async () => {
-    setLoading(true);
+  const fetchAll = async (pageNum = 1, append = false) => {
+    if (!append) { setPage(1); setLoading(true); }
     try {
-      const res = await api.get<{ data: UnifiedEntry[] }>("/ledger/unified/all");
-      setEntries(res.data);
+      const res = await api.get<{ data: UnifiedEntry[] }>("/ledger/unified/all", { params: { page: pageNum, limit: PAGE_SIZE } });
+      if (append) {
+        setEntries(prev => [...prev, ...(res.data ?? [])]);
+      } else {
+        setEntries(res.data ?? []);
+      }
+      setHasMore((res.data ?? []).length >= PAGE_SIZE);
     } catch (e) {
       console.error("Failed to load unified ledger:", e);
       Alert.alert("Error", "Could not load ledger entries. Please try again.");
       setEntries([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    await fetchAll(page + 1, true);
+    setPage(p => p + 1);
+  }, [loadingMore, hasMore, page]);
+
   useEffect(() => {
     fetchAll();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setPage(1);
+    try { await fetchAll(); } finally { setRefreshing(false); }
   }, []);
 
   const filtered = entries.filter((e) => {
@@ -59,7 +87,7 @@ export default function UnifiedLedgerScreen() {
           onPress={() => router.back()}
           className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center"
         >
-          <MaterialCommunityIcons name="arrow-left" size={20} color="#3e4944" />
+          <MaterialCommunityIcons name="arrow-left" size={20} color={theme.colors.onSurfaceVariant} />
         </Pressable>
         <View>
           <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">
@@ -83,7 +111,7 @@ export default function UnifiedLedgerScreen() {
       </View>
 
       {/* Party type filter */}
-      <View className="flex-row bg-surface-container-lowest dark:bg-surface-dark border border-gray-150 dark:border-zinc-800 p-1.5 rounded-full mb-6">
+      <View className="flex-row bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline p-1.5 rounded-full mb-6">
         {(["all", "customer", "supplier"] as const).map((f) => (
           <Pressable
             key={f}
@@ -106,7 +134,7 @@ export default function UnifiedLedgerScreen() {
       {/* List */}
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 justify-center items-center py-20">
@@ -118,6 +146,10 @@ export default function UnifiedLedgerScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? <View className="py-4"><ActivityIndicator size="small" color={theme.colors.primary} /></View> : !hasMore && entries.length > 0 ? <View className="py-4"><Text className="text-center text-sm text-on-surface-variant dark:text-text-secondary-dark">All entries loaded</Text></View> : null}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 + bottomInset }}
           renderItem={({ item }) => {
@@ -128,7 +160,7 @@ export default function UnifiedLedgerScreen() {
                 onPress={() =>
                   router.push(`/ledger?openPartyId=${item.party.id}&openPartyType=${item.party.type}` as any)
                 }
-                className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline shadow-sm mb-3 flex-row items-center active:bg-gray-50 dark:active:bg-zinc-800"
+                className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline shadow-sm mb-3 flex-row items-center active:bg-surface-container dark:active:bg-zinc-800"
               >
                 <View
                   className="w-11 h-11 rounded-xl items-center justify-center mr-3"
@@ -147,7 +179,7 @@ export default function UnifiedLedgerScreen() {
                   </Text>
                 </View>
                 <View className="items-end">
-                  <Text className={`text-base font-black ${isDebit ? "text-red-500" : "text-green-600"}`}>
+                  <Text className={`text-base font-black ${isDebit ? "text-error" : "text-success"}`}>
                     {isDebit ? "+" : "-"} ₹{parseFloat(item.amount).toFixed(2)}
                   </Text>
                   <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark mt-0.5 uppercase tracking-widest">

@@ -3,10 +3,13 @@ import { api, login as apiLogin, logout as apiLogout, registerCompany as apiRegi
 import { setPin, verifyPin, hasPin, setLastUserId, getLastUserId } from "./pin";
 import { registerForPushNotifications } from "./pushNotifications";
 
+import type { UserRole } from "./moduleCategories";
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: any | null;
+  userRole: UserRole | null;
   activeCompany: any | null;
   activeBrand: any | null;
   availableBrands: any[];
@@ -36,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [activeCompany, setActiveCompany] = useState<any | null>(null);
   const [activeBrand, setActiveBrand] = useState<any | null>(null);
   const [availableBrands, setAvailableBrands] = useState<any[]>([]);
@@ -87,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const me = await fetchMe();
         if (me) {
           setUser(me);
+          setUserRole(me.role || null);
           setIsAuthenticated(true);
           if (me.company_id) {
             await fetchTenantData();
@@ -98,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         setIsAuthenticated(false);
         setUser(null);
+        setUserRole(null);
         setActiveCompany(null);
         setActiveBrand(null);
         setAvailableBrands([]);
@@ -118,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await apiLogin(email, password);
       setUser(me);
+      setUserRole(me.role || null);
       setIsAuthenticated(true);
       await setLastUserId(me.id);
       setPinLoginAvailable(await hasPin(me.id));
@@ -144,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await apiVerifyTwoFactor(pendingToken, code);
       setUser(me);
+      setUserRole(me.role || null);
       setIsAuthenticated(true);
       await setLastUserId(me.id);
       setPinLoginAvailable(await hasPin(me.id));
@@ -175,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await apiRegisterCompany(data);
       setUser(me);
+      setUserRole(me.role || null);
       setIsAuthenticated(true);
       await setLastUserId(me.id);
       if (me.company_id) {
@@ -212,14 +221,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const me = await fetchMe();
       if (!me) return false;
       setUser(me);
+      setUserRole(me.role || null);
       setIsAuthenticated(true);
       if (me.company_id) {
         await fetchTenantData();
       }
       return true;
     } catch (error) {
-      // Underlying session/refresh token has expired — a full email/password
-      // sign-in is required before PIN-unlock can work again.
+      setUserRole(null);
       return false;
     }
   };
@@ -231,6 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Logout failed:", error);
     } finally {
       setUser(null);
+      setUserRole(null);
       setIsAuthenticated(false);
       setActiveCompany(null);
       setActiveBrand(null);
@@ -239,15 +249,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        isLoading,
-        user,
-        activeCompany,
-        activeBrand,
-        availableBrands,
-        setActiveBrand,
+      <AuthContext.Provider
+        value={{
+          isAuthenticated,
+          isLoading,
+          user,
+          userRole,
+          activeCompany,
+          activeBrand,
+          availableBrands,
+          setActiveBrand,
         login,
         verifyTwoFactor,
         register,

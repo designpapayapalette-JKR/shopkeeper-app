@@ -1,127 +1,64 @@
-import { Tabs } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import React, { useState, useMemo } from "react";
+import { BottomNavigation, useTheme } from "react-native-paper";
+import { useAuth } from "../../src/lib/auth-context";
+import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useMemo } from "react";
-import { useEnabledModules } from "../../src/lib/useEnabledModules";
-
-type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
-
-function TabIcon({
-  active,
-  inactive,
-  focused,
-}: {
-  active: IconName;
-  inactive: IconName;
-  focused: boolean;
-}) {
-  return (
-    <MaterialCommunityIcons
-      name={focused ? active : inactive}
-      size={focused ? 24 : 22}
-      color={focused ? "#0368FE" : "#9E9E9E"}
-    />
-  );
-}
+import HomeScreen from "./index";
+import PosScreen from "./pos";
+import GlobalSearchScreen from "../global-search";
+import ProfileScreen from "../profile";
 
 export default function TabsLayout() {
+  const theme = useTheme();
+  const { userRole } = useAuth();
+  const { isModuleEnabled } = useModuleVisibility(userRole);
   const insets = useSafeAreaInsets();
-  const { isEnabled } = useEnabledModules();
 
-  const baseOptions = {
-    headerShown: false,
-    tabBarStyle: {
-      backgroundColor: "#FFFFFF",
-      borderTopWidth: 0,
-      elevation: 12,
-      shadowColor: "#000",
-      shadowOpacity: 0.06,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: -2 },
-      height: 62 + insets.bottom,
-      paddingBottom: 8 + insets.bottom,
-      paddingTop: 8,
-    },
-    tabBarActiveTintColor: "#0368FE",
-    tabBarInactiveTintColor: "#9E9E9E",
-    tabBarLabelStyle: {
-      fontSize: 10.5,
-      fontWeight: "700" as const,
-      marginTop: 3,
-    },
-  };
+  const showPos = isModuleEnabled("pos") && userRole !== "warehouse_manager";
 
-  const dashboardOptions = useMemo(() => ({
-    ...baseOptions,
-    title: "Home",
-    tabBarIcon: ({ focused }: { focused: boolean }) => (
-      <TabIcon active="view-dashboard" inactive="view-dashboard-outline" focused={focused} />
-    ),
-  }), []);
+  const routes = useMemo(() => {
+    const items: { key: string; title: string; focusedIcon: string; unfocusedIcon: string }[] = [
+      { key: "home", title: "Home", focusedIcon: "view-dashboard", unfocusedIcon: "view-dashboard-outline" },
+    ];
+    if (showPos) {
+      items.push({ key: "pos", title: "POS", focusedIcon: "point-of-sale", unfocusedIcon: "point-of-sale" });
+    }
+    items.push(
+      { key: "search", title: "Search", focusedIcon: "magnify", unfocusedIcon: "magnify" },
+      { key: "profile", title: "Me", focusedIcon: "account", unfocusedIcon: "account-outline" }
+    );
+    return items;
+  }, [showPos]);
 
-  const posOptions = useMemo(() => ({
-    ...baseOptions,
-    title: "POS",
-    tabBarIcon: ({ focused }: { focused: boolean }) => (
-      <TabIcon active="point-of-sale" inactive="point-of-sale" focused={focused} />
-    ),
-    tabBarButton: isEnabled("pos") ? undefined : (() => null) as any,
-  }), [isEnabled]);
+  const [index, setIndex] = useState(0);
 
-  const b2bOptions = useMemo(() => ({
-    ...baseOptions,
-    title: "B2B",
-    tabBarIcon: ({ focused }: { focused: boolean }) => (
-      <TabIcon active="briefcase-account" inactive="briefcase-account-outline" focused={focused} />
-    ),
-    tabBarButton: isEnabled("b2b") ? undefined : (() => null) as any,
-  }), [isEnabled]);
-
-  const inventoryOptions = useMemo(() => ({
-    ...baseOptions,
-    title: "Stock",
-    tabBarIcon: ({ focused }: { focused: boolean }) => (
-      <TabIcon active="package-variant" inactive="package-variant-closed" focused={focused} />
-    ),
-    tabBarButton: isEnabled("inventory") ? undefined : (() => null) as any,
-  }), [isEnabled]);
-
-  const ledgerOptions = useMemo(() => ({
-    ...baseOptions,
-    title: "Party",
-    tabBarIcon: ({ focused }: { focused: boolean }) => (
-      <TabIcon active="account-group" inactive="account-group-outline" focused={focused} />
-    ),
-    tabBarButton: isEnabled("ledger") ? undefined : (() => null) as any,
-  }), [isEnabled]);
-
-  const estimatesOptions = useMemo(() => ({
-    ...baseOptions,
-    title: "Estimates",
-    tabBarIcon: ({ focused }: { focused: boolean }) => (
-      <TabIcon active="file-document" inactive="file-document-outline" focused={focused} />
-    ),
-    tabBarButton: isEnabled("estimates") ? undefined : (() => null) as any,
-  }), [isEnabled]);
-
-  const agentsOptions = useMemo(() => ({
-    ...baseOptions,
-    title: "Agents",
-    tabBarIcon: ({ focused }: { focused: boolean }) => (
-      <TabIcon active="map-marker-radius" inactive="map-marker-radius-outline" focused={focused} />
-    ),
-    tabBarButton: isEnabled("agents") ? undefined : (() => null) as any,
-  }), [isEnabled]);
+  const renderScene = BottomNavigation.SceneMap({
+    home: HomeScreen,
+    pos: PosScreen,
+    search: GlobalSearchScreen,
+    profile: ProfileScreen,
+  });
 
   return (
-    <Tabs screenOptions={baseOptions as any}>
-      <Tabs.Screen name="index" options={dashboardOptions as any} />
-      <Tabs.Screen name="pos" options={posOptions as any} />
-      <Tabs.Screen name="b2b" options={b2bOptions as any} />
-      <Tabs.Screen name="estimates" options={estimatesOptions as any} />
-      <Tabs.Screen name="inventory" options={inventoryOptions as any} />
-      <Tabs.Screen name="ledger" options={ledgerOptions as any} />
-      <Tabs.Screen name="agents" options={agentsOptions as any} />
-    </Tabs>
+    <BottomNavigation
+      navigationState={{ index, routes }}
+      onIndexChange={setIndex}
+      renderScene={renderScene}
+      activeColor={theme.colors.primary}
+      inactiveColor={theme.colors.onSurfaceVariant}
+      barStyle={{
+        backgroundColor: theme.colors.surface,
+        height: 62 + insets.bottom,
+        paddingBottom: 8 + insets.bottom,
+        paddingTop: 4,
+        borderTopWidth: 0,
+        elevation: 12,
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: -2 },
+      }}
+      labeled
+    />
   );
 }

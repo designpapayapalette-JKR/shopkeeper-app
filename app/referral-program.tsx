@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, TextInput, Modal, ScrollView, Platform, KeyboardAvoidingView } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
@@ -21,6 +22,7 @@ interface Program {
 }
 
 export default function ReferralProgramScreen() {
+  const theme = useTheme();
   const topInset = useTopInset(); const bottomInset = useBottomInset();
   const confirm = useConfirm(); const router = useRouter();
 
@@ -42,7 +44,7 @@ export default function ReferralProgramScreen() {
     try {
       const res = await api.get<{ data: Program[] }>("/referral-programs");
       setPrograms(res.data ?? []);
-    } catch {} finally { setLoading(false); }
+    } catch { Alert.alert("Error", "Could not load programs."); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load, loadTrigger]);
@@ -69,26 +71,26 @@ export default function ReferralProgramScreen() {
   };
 
   const renderItem = ({ item }: { item: Program }) => (
-    <View className="bg-surface dark:bg-surface-dark p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 mb-3 shadow-sm">
+    <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-2xl border border-outline-variant dark:border-outline mb-3 shadow-sm">
       <View className="flex-row items-start justify-between">
         <View className="flex-1 mr-2">
           <View className="flex-row items-center" style={{ gap: 6 }}>
-            <Text className="text-base font-bold text-text-primary dark:text-text-primary-dark">{item.name}</Text>
+            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">{item.name}</Text>
             <View className={`px-2 py-0.5 rounded-full ${item.is_active ? "bg-green-100" : "bg-gray-100"}`}>
-              <Text className={`text-xs font-bold ${item.is_active ? "text-green-600" : "text-gray-500"}`}>{item.is_active ? "Active" : "Inactive"}</Text>
+              <Text className={`text-xs font-bold ${item.is_active ? "text-success" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>{item.is_active ? "Active" : "Inactive"}</Text>
             </View>
           </View>
-          <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-1">
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1">
             {item.reward_type === "percentage" ? `${item.reward_value}% off` : `₹${item.reward_value} off`} per referral
           </Text>
         </View>
         <View className="flex-row" style={{ gap: 4 }}>
-          <Pressable onPress={() => toggleActive(item)} className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name={item.is_active ? "pause" : "play"} size={16} color="#6B7280" />
+          <Pressable onPress={() => toggleActive(item)} className="w-9 h-9 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center active:opacity-70">
+            <MaterialCommunityIcons name={item.is_active ? "pause" : "play"} size={16} color={theme.colors.onSurfaceVariant} />
           </Pressable>
           <Pressable onPress={() => { setEditing(item); setFormName(item.name); setFormRewardType(item.reward_type); setFormRewardValue(item.reward_value); setFormMinAmount(item.min_invoice_amount || ""); setFormMaxRewards(item.max_rewards_per_referrer?.toString() || ""); setFormIsActive(item.is_active); setShowForm(true); }}
-            className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="pencil" size={16} color="#6B7280" />
+            className="w-9 h-9 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center active:opacity-70">
+            <MaterialCommunityIcons name="pencil" size={16} color={theme.colors.onSurfaceVariant} />
           </Pressable>
         </View>
       </View>
@@ -96,26 +98,26 @@ export default function ReferralProgramScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark" style={{ paddingTop: topInset }}>
+    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#6B7280" />
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
           </Pressable>
-          <Text className="text-xl font-bold text-text-primary dark:text-text-primary-dark">Referral Program</Text>
+          <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Referral Program</Text>
         </View>
         <Pressable onPress={() => { setEditing(null); setFormName(""); setFormRewardType("percentage"); setFormRewardValue("5"); setFormMinAmount(""); setFormMaxRewards(""); setFormIsActive(true); setShowForm(true); }}
-          className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80" style={{ gap: 4 }}>
+          className="bg-primary dark:bg-primary-dark px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80" style={{ gap: 4 }}>
           <MaterialCommunityIcons name="plus" size={16} color="white" /><Text className="text-white font-bold text-sm">Add</Text>
         </Pressable>
       </View>
 
-      {loading ? <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color="#0368FE" /></View>
+      {loading ? <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       : programs.length === 0 ? (
         <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="gift-outline" size={48} color="#D1D5DB" />
-          <Text className="text-base font-bold text-text-secondary dark:text-text-secondary-dark mt-4">No referral programs yet</Text>
-          <Text className="text-sm text-text-secondary dark:text-text-secondary-dark mt-1 text-center">Create a program to reward customers who refer others.</Text>
+          <MaterialCommunityIcons name="gift-outline" size={48} color={theme.colors.onSurfaceVariant} />
+          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No referral programs yet</Text>
+          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create a program to reward customers who refer others.</Text>
         </View>
       ) : (
         <FlatList data={programs} keyExtractor={(item) => item.id} renderItem={renderItem}
@@ -125,55 +127,55 @@ export default function ReferralProgramScreen() {
       <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
         <SafeAreaProvider>
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-            <ScrollView className="flex-1 bg-background dark:bg-background-dark px-6 pb-10" style={{ paddingTop: topInset }}>
+            <ScrollView className="flex-1 bg-background dark:bg-bg-dark px-6 pb-10" style={{ paddingTop: topInset }}>
               <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">{editing ? "Edit" : "Add"} Program</Text>
+                <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">{editing ? "Edit" : "Add"} Program</Text>
                 <Pressable onPress={() => setShowForm(false)} className="w-11 h-11 items-center justify-center">
-                  <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Name *</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2">Name *</Text>
                 <TextInput value={formName} onChangeText={setFormName} placeholder="e.g. Refer & Earn" autoFocus
-                  className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium" />
+                  className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium" />
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Reward Type</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-3">Reward Type</Text>
                 <View className="flex-row" style={{ gap: 8 }}>
                   {["percentage", "fixed"].map((t) => (
                     <Pressable key={t} onPress={() => setFormRewardType(t)}
-                      className={`flex-1 py-3 rounded-xl border items-center ${formRewardType === t ? "bg-primary border-primary" : "bg-surface dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
-                      <Text className={`text-sm font-bold ${formRewardType === t ? "text-white" : "text-text-secondary capitalize"}`}>{t}</Text>
+                      className={`flex-1 py-3 rounded-xl border items-center ${formRewardType === t ? "bg-primary dark:bg-primary-dark border-primary dark:border-primary-dark" : "bg-surface-container-lowest dark:bg-zinc-900 border-outline-variant dark:border-outline"}`}>
+                      <Text className={`text-sm font-bold ${formRewardType === t ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark capitalize"}`}>{t}</Text>
                     </Pressable>
                   ))}
                 </View>
 
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2 mt-4">Reward Value *</Text>
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-2 mt-4">Reward Value *</Text>
                 <TextInput value={formRewardValue} onChangeText={setFormRewardValue} keyboardType="decimal-pad"
                   placeholder={formRewardType === "percentage" ? "e.g. 5" : "e.g. 100"}
                   placeholderTextColor="#A0A0A0"
-                  className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium" />
+                  className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium" />
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
-                <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Limits (Optional)</Text>
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
+                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider mb-3">Limits (Optional)</Text>
 
-                <Text className="text-sm font-medium text-text-secondary mb-2">Min Invoice Amount</Text>
+                <Text className="text-sm font-medium text-on-surface-variant dark:text-text-secondary-dark mb-2">Min Invoice Amount</Text>
                 <TextInput value={formMinAmount} onChangeText={setFormMinAmount} keyboardType="decimal-pad" placeholder="e.g. 500"
                   placeholderTextColor="#A0A0A0"
-                  className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium mb-3" />
+                  className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium mb-3" />
 
-                <Text className="text-sm font-medium text-text-secondary mb-2">Max Rewards per Referrer</Text>
+                <Text className="text-sm font-medium text-on-surface-variant dark:text-text-secondary-dark mb-2">Max Rewards per Referrer</Text>
                 <TextInput value={formMaxRewards} onChangeText={setFormMaxRewards} keyboardType="numeric" placeholder="e.g. 10 (leave empty for unlimited)"
                   placeholderTextColor="#A0A0A0"
-                  className="bg-background dark:bg-zinc-900 text-text-primary dark:text-text-primary-dark border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 font-medium" />
+                  className="bg-background dark:bg-zinc-900 text-on-surface dark:text-text-primary-dark border border-outline-variant dark:border-outline rounded-xl px-4 py-3.5 font-medium" />
               </View>
 
-              <View className="bg-surface dark:bg-surface-dark p-5 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm mb-4">
+              <View className="bg-surface-container-lowest dark:bg-surface-dark p-5 rounded-3xl border border-outline-variant dark:border-outline shadow-sm mb-4">
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Active</Text>
+                  <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">Active</Text>
                   <ToggleSwitch value={formIsActive} onValueChange={setFormIsActive} />
                 </View>
               </View>

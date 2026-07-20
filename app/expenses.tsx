@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, FlatList, Pressable, ActivityIndicator, Image, Modal, Alert, TextInput, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, Image, Modal, Alert, TextInput, ScrollView, KeyboardAvoidingView, Platform, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { api, ApiError } from "../src/lib/api";
@@ -61,11 +62,13 @@ function startOfPeriod(period: PeriodKey): Date {
 // spend this month"), not a raw chronological dump.
 export default function ExpensesScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<string[]>(["Travel", "Fuel", "Food", "Other"]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [viewingUri, setViewingUri] = useState<string | null>(null);
   const [editingExpense, setEditingExpense] = useState<ExpenseRecord | null>(null);
@@ -111,6 +114,11 @@ export default function ExpensesScreen() {
     }
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
+  }, [load]);
+
   useEffect(() => {
     load();
     api.get<{ data: string[] }>("/expenses/categories")
@@ -131,7 +139,7 @@ export default function ExpensesScreen() {
     <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
       <View className="px-6 pb-4 flex-row items-center" style={{ gap: 12 }}>
         <Pressable onPress={() => router.back()} className="w-10 h-10 items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.primary} />
         </Pressable>
         <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Expenses</Text>
       </View>
@@ -163,7 +171,7 @@ export default function ExpensesScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0368FE" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
@@ -175,6 +183,7 @@ export default function ExpensesScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 16, gap: 10 }}
           renderItem={({ item }) => (
             <Pressable
@@ -189,7 +198,7 @@ export default function ExpensesScreen() {
               style={{ gap: 12 }}
             >
               <View className="w-11 h-11 rounded-full bg-primary/10 items-center justify-center">
-                <MaterialCommunityIcons name={categoryIcon(item.category)} size={20} color="#0368FE" />
+                <MaterialCommunityIcons name={categoryIcon(item.category)} size={20} color={theme.colors.primary} />
               </View>
               <View className="flex-1">
                 <Text className="font-bold text-on-surface dark:text-text-primary-dark capitalize">{item.category}</Text>
@@ -199,7 +208,7 @@ export default function ExpensesScreen() {
                 </Text>
               </View>
               {item.attachment && (
-                <MaterialCommunityIcons name="paperclip" size={16} color="#9E9E9E" style={{ marginRight: 2 }} />
+                <MaterialCommunityIcons name="paperclip" size={16} color={theme.colors.onSurfaceVariant} style={{ marginRight: 2 }} />
               )}
               <Text className="font-bold text-on-surface dark:text-text-primary-dark">₹{parseFloat(item.amount).toFixed(2)}</Text>
             </Pressable>
@@ -214,7 +223,7 @@ export default function ExpensesScreen() {
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Edit Expense</Text>
               <Pressable onPress={() => setEditingExpense(null)} className="w-10 h-10 items-center justify-center">
-                <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+                <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
               </Pressable>
             </View>
 

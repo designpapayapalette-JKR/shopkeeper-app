@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, Pressable, Image, Alert, Modal } from "react-native";
 import { useRouter } from "expo-router";
+import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTopInset } from "../src/lib/useTopInset";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { listScans, deleteScan, ScanRecord, ScanCategory } from "../src/lib/scanCapture";
 
 const TABS: { key: ScanCategory | "all"; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
@@ -26,8 +27,10 @@ function timeAgo(iso: string): string {
 // single searchable/filterable record of everything that's been scanned,
 // so a capture is never a "where did that go?" one-shot action.
 export default function ScannedDocumentsScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const topInset = useTopInset();
+  const bottomInset = useBottomInset();
   const [activeTab, setActiveTab] = useState<ScanCategory | "all">("all");
   const [records, setRecords] = useState<ScanRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +73,7 @@ export default function ScannedDocumentsScreen() {
         style={{ gap: 12, paddingTop: topInset }}
       >
         <Pressable onPress={() => router.back()} className="w-touch-target h-touch-target items-center justify-center -ml-2">
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#0368FE" />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.primary} />
         </Pressable>
         <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">Scanned Documents</Text>
       </View>
@@ -86,7 +89,7 @@ export default function ScannedDocumentsScreen() {
                 : "bg-surface-container-lowest dark:bg-surface-dark border-outline-variant dark:border-outline"
             }`}
           >
-            <MaterialCommunityIcons name={tab.icon} size={16} color={activeTab === tab.key ? "#FFFFFF" : "#6e7a74"} />
+            <MaterialCommunityIcons name={tab.icon} size={16} color={activeTab === tab.key ? "#FFFFFF" : theme.colors.outline} />
             <Text className={`text-xs font-bold mt-1 ${activeTab === tab.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
               {tab.label}
             </Text>
@@ -98,13 +101,13 @@ export default function ScannedDocumentsScreen() {
         data={filtered}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        contentContainerStyle={{ padding: 16, gap: 12 }}
+        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: bottomInset + 24 }}
         columnWrapperStyle={{ gap: 12 }}
         refreshing={loading}
         onRefresh={load}
         ListEmptyComponent={
           <View className="items-center py-20">
-            <MaterialCommunityIcons name="camera-outline" size={40} color="#9E9E9E" style={{ marginBottom: 12 }} />
+            <MaterialCommunityIcons name="camera-outline" size={40} color={theme.colors.onSurfaceVariant} style={{ marginBottom: 12 }} />
             <Text className="text-on-surface-variant dark:text-text-secondary-dark font-semibold text-sm text-center">
               Nothing scanned yet. Use the Scan option on the Dashboard to photograph a purchase bill, product, or expense receipt.
             </Text>
@@ -114,7 +117,7 @@ export default function ScannedDocumentsScreen() {
           <Pressable
             onPress={() => setViewingUri(item.uri)}
             onLongPress={() => handleDelete(item)}
-            className="flex-1 bg-surface dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden"
+            className="flex-1 bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline overflow-hidden"
           >
             <Image source={{ uri: item.uri }} style={{ width: "100%", height: 130 }} resizeMode="cover" />
             <View className="px-3 py-2">
