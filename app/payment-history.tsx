@@ -4,6 +4,7 @@ import { useTheme } from "react-native-paper";
 import { api } from "../src/lib/api";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import EmptyState from "../src/components/EmptyState";
 
 interface PaymentRow {
   id: string;
@@ -114,10 +115,7 @@ export default function PaymentHistoryScreen() {
           {loading ? (
             <View className="py-12 items-center"><ActivityIndicator color={theme.colors.primary} /></View>
           ) : payments.length === 0 ? (
-            <View className="py-12 items-center">
-              <MaterialCommunityIcons name="credit-card-outline" size={32} color={theme.colors.onSurfaceVariant} />
-              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-2">No payments found</Text>
-            </View>
+            <EmptyState icon="credit-card-outline" title="No payments found" />
           ) : (
             payments.map((p) => (
               <View key={p.id} className="px-4 py-3 border-b border-outline-variant dark:border-outline flex-row justify-between items-center">

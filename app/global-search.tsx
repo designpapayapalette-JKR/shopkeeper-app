@@ -7,6 +7,7 @@ import { useAuth } from "../src/lib/auth-context";
 import { useModuleVisibility } from "../src/lib/useModuleVisibility";
 import { type ModuleItem } from "../src/lib/moduleCategories";
 import { useTopInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 export default function GlobalSearchScreen() {
   const { userRole } = useAuth();
@@ -47,10 +48,7 @@ export default function GlobalSearchScreen() {
           keyExtractor={(item) => item.key}
           contentContainerStyle={{ padding: 16, gap: 8 }}
           ListEmptyComponent={
-            <View className="items-center py-20">
-              <MaterialCommunityIcons name="magnify-close" size={48} color="#9E9E9E" />
-              <Text className="text-base text-on-surface-variant text-center mt-4">No results found</Text>
-            </View>
+            <EmptyState icon="magnify-close" title="No results found" description="Try a different word, or check the spelling." />
           }
           renderItem={({ item }: { item: ModuleItem }) => (
             <Card mode="elevated" className="mb-1" onPress={() => router.push(item.route as any)}>

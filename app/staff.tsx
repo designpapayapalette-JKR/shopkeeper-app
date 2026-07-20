@@ -23,6 +23,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useAuth } from "../src/lib/auth-context";
+import EmptyState from "../src/components/EmptyState";
 
 const AGENT_APP_DOWNLOAD_URL =
   "https://github.com/designpapayapalette-JKR/agent-app/releases/download/beta-latest/agent-app-latest.apk";
@@ -328,13 +329,11 @@ export default function StaffScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : staff.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="account-group-outline" size={48} color={theme.colors.onSurfaceVariant} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No team members yet</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
-            Tap the Add button to invite your first employee.
-          </Text>
-        </View>
+        <EmptyState
+          icon="account-group-outline"
+          title="No team members yet"
+          description="Tap the Add button above to invite your first employee."
+        />
       ) : (
         <FlatList
           data={staff}

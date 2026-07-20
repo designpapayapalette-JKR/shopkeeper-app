@@ -7,6 +7,7 @@ import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { getAvatarColor, getInitial } from "../src/lib/avatarColor";
+import EmptyState from "../src/components/EmptyState";
 
 interface UnifiedEntry {
   id: string;
@@ -137,11 +138,7 @@ export default function UnifiedLedgerScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filtered.length === 0 ? (
-        <View className="flex-1 justify-center items-center py-20">
-          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base text-center">
-            No ledger entries found
-          </Text>
-        </View>
+        <EmptyState icon="book-account-outline" title="No ledger entries found" />
       ) : (
         <FlatList
           data={filtered}
@@ -180,7 +177,7 @@ export default function UnifiedLedgerScreen() {
                 </View>
                 <View className="items-end">
                   <Text className={`text-base font-black ${isDebit ? "text-error" : "text-success"}`}>
-                    {isDebit ? "+" : "-"} ₹{parseFloat(item.amount).toFixed(2)}
+                    {isDebit ? "+" : "-"} ₹{parseFloat(item.amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Text>
                   <Text className="text-xs font-bold text-on-surface-variant dark:text-text-secondary-dark mt-0.5 uppercase tracking-widest">
                     {item.party.type}

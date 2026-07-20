@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Card, useTheme, Button, Snackbar, Chip, Searchbar, FAB } from "react-native-paper";
 import { api } from "../src/lib/api";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 interface NotificationItem {
   id: string;
@@ -265,15 +266,7 @@ export default function NotificationsScreen() {
             paddingBottom: bottomInset + 24,
           }}
           ListEmptyComponent={
-            <View className="items-center py-32">
-              <MaterialCommunityIcons name="bell-off-outline" size={48} color={theme.colors.onSurfaceVariant} style={{ marginBottom: 16 }} />
-              <Text className="font-body-lg text-body-lg text-on-surface-variant dark:text-text-secondary-dark text-center">
-                No notifications yet
-              </Text>
-              <Text className="font-body-md text-body-md text-outline dark:text-text-disabled-dark text-center mt-1">
-                Updates and alerts will appear here
-              </Text>
-            </View>
+            <EmptyState icon="bell-off-outline" title="No notifications yet" description="Updates and alerts will appear here." />
           }
         />
       )}

@@ -21,6 +21,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { shareDataAsPdf } from "../src/lib/pdfExport";
+import EmptyState from "../src/components/EmptyState";
 
 interface PurchaseItem {
   quantity: string;
@@ -156,11 +157,7 @@ export default function PurchaseHistoryScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filtered.length === 0 ? (
-        <View className="flex-1 justify-center items-center py-20 px-6">
-          <MaterialCommunityIcons name="truck-delivery" size={48} color={theme.colors.outline} />
-          <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No Purchases Found</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Register purchase intakes in Inventory.</Text>
-        </View>
+        <EmptyState icon="truck-delivery" title="No purchases found" description="Register purchase intakes in Inventory." />
       ) : (
         <FlatList
           data={filtered}

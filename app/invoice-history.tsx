@@ -6,6 +6,7 @@ import { api, ApiError, apiUrl } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { Searchbar, useTheme } from "react-native-paper";
 import { shareDataAsPdf } from "../src/lib/pdfExport";
+import EmptyState from "../src/components/EmptyState";
 
 type HistoryTab = "sales" | "b2b" | "purchases";
 
@@ -544,31 +545,19 @@ export default function InvoiceHistoryScreen() {
         </View>
       ) : activeTab === "sales" ? (
         filteredInvoices.length === 0 ? (
-          <View className="flex-1 items-center justify-center px-8">
-            <MaterialCommunityIcons name="cash-register" size={48} color={theme.colors.outline} />
-            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No Retail Invoices</Text>
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Start selling at POS to register sales history.</Text>
-          </View>
+          <EmptyState icon="cash-register" title="No retail invoices yet" description="Start selling at POS to register sales history." />
         ) : (
           <FlatList data={filteredInvoices} keyExtractor={(i) => i.id} renderItem={({ item }) => renderInvoiceItem(item)} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} />
         )
       ) : activeTab === "b2b" ? (
         filteredB2bInvoices.length === 0 ? (
-          <View className="flex-1 items-center justify-center px-8">
-            <MaterialCommunityIcons name="briefcase-account" size={48} color={theme.colors.outline} />
-            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No B2B Orders</Text>
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Create B2B invoices from the B2B sales module.</Text>
-          </View>
+          <EmptyState icon="briefcase-account" title="No B2B orders yet" description="Create B2B invoices from the B2B sales module." />
         ) : (
           <FlatList data={filteredB2bInvoices} keyExtractor={(i) => i.id} renderItem={({ item }) => renderB2bItem(item)} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} />
         )
       ) : (
         filteredPurchases.length === 0 ? (
-          <View className="flex-1 items-center justify-center px-8">
-            <MaterialCommunityIcons name="truck-delivery" size={48} color={theme.colors.outline} />
-            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No Purchases</Text>
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Register purchase intakes in Inventory.</Text>
-          </View>
+          <EmptyState icon="truck-delivery" title="No purchases yet" description="Register purchase intakes in Inventory." />
         ) : (
           <FlatList data={filteredPurchases} keyExtractor={(i) => i.id} renderItem={({ item }) => renderPurchaseItem(item)} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} />
         )

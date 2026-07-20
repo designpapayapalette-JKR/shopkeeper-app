@@ -36,8 +36,18 @@ import { enqueueSale, isNetworkFailure } from "../../src/lib/offlineQueue";
 import { useTerminology } from "../../src/lib/terminology-context";
 import { useKeepAwake } from "expo-keep-awake";
 import { writeCache, readCache, getCacheKey } from "../../src/lib/apiCache";
-import { getIsConnected, subscribeToConnectivity } from "../../src/lib/connectivity";
 import { verifyPin } from "../../src/lib/pin";
+
+// Indian lakh/crore grouping — shopkeeper-mobile-design-system.md §3.1.
+// Money is what this screen is for; formatting it the way a shopkeeper
+// actually reads it (₹1,20,000, not ₹120,000) applies everywhere on POS.
+// `decimals` defaults to 0 (catalogue/unit prices, which were whole-rupee
+// before); checkout totals pass 2 to preserve exact paise owed — rounding
+// those to whole rupees would silently disagree with the printed receipt.
+function formatRupee(n: number, decimals: 0 | 2 = 0): string {
+  const val = Number.isFinite(n) ? n : 0;
+  return `₹${val.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+}
 
 interface Product {
   id: string;
@@ -279,14 +289,6 @@ export default function PosScreen() {
   const [newProductTax, setNewProductTax] = useState("18.00");
   const [newProductStock, setNewProductStock] = useState("");
   const [addProductLoading, setAddProductLoading] = useState(false);
-
-  // Offline-aware state
-  const [isOffline, setIsOffline] = useState(!getIsConnected());
-
-  useEffect(() => {
-    const unsub = subscribeToConnectivity(setIsOffline);
-    return unsub;
-  }, []);
 
   // Held Bills State
   const [heldBills, setHeldBills] = useState<any[]>([]);
@@ -547,32 +549,32 @@ export default function PosScreen() {
                     <View className="flex-row items-baseline mt-2" style={{ gap: 4 }}>
                       {item.mrp && parseFloat(item.mrp) > 0 && (
                         <Text className="text-xs text-on-surface-variant line-through">
-                          ₹{parseFloat(item.mrp).toFixed(0)}
+                          {formatRupee(parseFloat(item.mrp))}
                         </Text>
                       )}
                       {item.has_alternate_pricing ? (
                         <View className="flex-col items-start">
                           <Text className="font-bold text-sm text-primary dark:text-primary-dark">
-                            ₹{parseFloat(item.alternate_price ?? item.price).toFixed(0)}/{item.alternate_unit || "pkt"}
+                            {formatRupee(parseFloat(item.alternate_price ?? item.price))}/{item.alternate_unit || "pkt"}
                           </Text>
                           <Text className="text-[10px] font-bold text-on-surface-variant">
-                            ₹{parseFloat(item.price_per_unit ?? item.price).toFixed(0)}/{item.weight_unit || "kg"}
+                            {formatRupee(parseFloat(item.price_per_unit ?? item.price))}/{item.weight_unit || "kg"}
                           </Text>
                         </View>
                       ) : item.mrp && parseFloat(item.mrp) > 0 ? (
                         <View className="flex-col items-start">
                           <Text className="font-bold text-sm text-primary dark:text-primary-dark">
-                            ₹{parseFloat(item.mrp).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                            {formatRupee(parseFloat(item.mrp))}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
                           </Text>
                           {parseFloat(item.price) < parseFloat(item.mrp) && (
                             <Text className="text-[10px] text-on-surface-variant line-through">
-                              ₹{parseFloat(item.price).toFixed(0)}
+                              {formatRupee(parseFloat(item.price))}
                             </Text>
                           )}
                         </View>
                       ) : (
                         <Text className="font-black text-base text-primary dark:text-primary-dark">
-                          ₹{parseFloat(item.price).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                          {formatRupee(parseFloat(item.price))}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
                         </Text>
                       )}
                     </View>
@@ -580,7 +582,7 @@ export default function PosScreen() {
                       <Text className="text-xs text-on-surface-variant mt-1">Stk: {item.stock_quantity}</Text>
                     )}
                     {item.is_returnable_container && item.container_deposit && parseFloat(item.container_deposit) > 0 && (
-                      <Text className="text-[9px] font-bold text-purple-600 mt-1">+₹{parseFloat(item.container_deposit).toFixed(0)} deposit</Text>
+                      <Text className="text-[9px] font-bold text-purple-600 mt-1">+{formatRupee(parseFloat(item.container_deposit))} deposit</Text>
                     )}
                   </View>
                   {inCart && (
@@ -1270,38 +1272,38 @@ export default function PosScreen() {
               <View className="flex-row items-center" style={{ gap: 4 }}>
                 {item.mrp && parseFloat(item.mrp) > 0 && (
                   <Text className="text-xs text-on-surface-variant line-through">
-                    ₹{parseFloat(item.mrp).toFixed(0)}
+                    {formatRupee(parseFloat(item.mrp))}
                   </Text>
                 )}
                 {item.has_alternate_pricing ? (
                   <View className="items-end">
                     <Text className="text-sm font-black text-primary dark:text-primary-dark">
-                      ₹{parseFloat(item.alternate_price ?? item.price).toFixed(0)}/{item.alternate_unit || "pkt"}
+                      {formatRupee(parseFloat(item.alternate_price ?? item.price))}/{item.alternate_unit || "pkt"}
                     </Text>
                     <Text className="text-xs font-bold text-on-surface-variant">
-                      ₹{parseFloat(item.price_per_unit ?? item.price).toFixed(0)}/{item.weight_unit || "kg"}
+                      {formatRupee(parseFloat(item.price_per_unit ?? item.price))}/{item.weight_unit || "kg"}
                     </Text>
                   </View>
                 ) : item.mrp && parseFloat(item.mrp) > 0 ? (
                   <View className="items-end">
                     <Text className="font-black text-base text-primary dark:text-primary-dark">
-                      ₹{parseFloat(item.mrp).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                      {formatRupee(parseFloat(item.mrp))}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
                     </Text>
                     {parseFloat(item.price) < parseFloat(item.mrp) && (
                       <Text className="text-[10px] text-on-surface-variant line-through">
-                        ₹{parseFloat(item.price).toFixed(0)}
+                        {formatRupee(parseFloat(item.price))}
                       </Text>
                     )}
                   </View>
                 ) : (
                   <Text className="font-black text-base text-primary dark:text-primary-dark">
-                    ₹{parseFloat(item.price).toFixed(0)}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
+                    {formatRupee(parseFloat(item.price))}{item.sell_by_weight ? `/${item.weight_unit || "kg"}` : ""}
                   </Text>
                 )}
               </View>
               {item.mrp && parseFloat(item.mrp) > parseFloat(item.price) && (
                 <Text className="text-[10px] text-green-600 font-semibold">
-                  Save ₹{(parseFloat(item.mrp) - parseFloat(item.price)).toFixed(0)}
+                  Save {formatRupee((parseFloat(item.mrp) - parseFloat(item.price)))}
                 </Text>
               )}
               {item.stock_quantity !== undefined && (
@@ -1312,7 +1314,7 @@ export default function PosScreen() {
               {item.is_returnable_container && item.container_deposit && parseFloat(item.container_deposit) > 0 && (
                 <View className="bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded mt-1">
                   <Text className="text-[9px] font-bold text-purple-700 dark:text-purple-400">
-                    +₹{parseFloat(item.container_deposit).toFixed(0)} deposit
+                    +{formatRupee(parseFloat(item.container_deposit))} deposit
                   </Text>
                 </View>
               )}
@@ -1389,14 +1391,14 @@ export default function PosScreen() {
             {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
               <View className={`px-2 py-1 rounded-lg ${parseFloat(selectedParty.current_balance) > 0 ? "bg-red-50 dark:bg-red-950/20" : "bg-green-50 dark:bg-green-950/20"}`}>
                 <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-600" : "text-green-600"}`}>
-                  ₹{Math.abs(parseFloat(selectedParty.current_balance)).toFixed(0)} {parseFloat(selectedParty.current_balance) > 0 ? "due" : "credit"}
+                  {formatRupee(Math.abs(parseFloat(selectedParty.current_balance)))} {parseFloat(selectedParty.current_balance) > 0 ? "due" : "credit"}
                 </Text>
               </View>
             )}
             {selectedParty.credit_limit != null && (
               <View className="px-2 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
                 <Text className="text-[10px] font-bold text-yellow-700 dark:text-yellow-400">
-                  Limit: ₹{Number(selectedParty.credit_limit).toFixed(0)}
+                  Limit: {formatRupee(Number(selectedParty.credit_limit))}
                 </Text>
               </View>
             )}
@@ -1421,9 +1423,9 @@ export default function PosScreen() {
                   <Text numberOfLines={1} className="font-bold text-sm text-on-surface dark:text-text-primary-dark">{item.product.name}</Text>
                   <View className="flex-row items-center" style={{ gap: 3 }}>
                     {item.product.mrp && parseFloat(item.product.mrp) > 0 && (
-                      <Text className="text-[10px] text-on-surface-variant line-through">₹{parseFloat(item.product.mrp).toFixed(0)}</Text>
+                      <Text className="text-[10px] text-on-surface-variant line-through">{formatRupee(parseFloat(item.product.mrp))}</Text>
                     )}
-                    <Text className="text-xs text-on-surface-variant">₹{unitPriceFor(item).toFixed(2)}{item.billingMode === "weight" ? `/${item.product.weight_unit || "kg"}` : item.billingMode === "fixed" ? `/${item.product.alternate_unit || "unit"}` : " each"}</Text>
+                    <Text className="text-xs text-on-surface-variant">{formatRupee(unitPriceFor(item), 2)}{item.billingMode === "weight" ? `/${item.product.weight_unit || "kg"}` : item.billingMode === "fixed" ? `/${item.product.alternate_unit || "unit"}` : " each"}</Text>
                   </View>
                 </View>
                 {item.billingMode === "weight" ? (
@@ -1456,13 +1458,13 @@ export default function PosScreen() {
                   </View>
                 )}
                 <Text className="font-black text-base text-primary dark:text-primary-dark min-w-[60px] text-right">
-                  ₹{lineTotal(item).toFixed(0)}
+                  {formatRupee(lineTotal(item))}
                 </Text>
               </View>
               {item.product.is_returnable_container && item.product.container_deposit && parseFloat(item.product.container_deposit) > 0 && (
                 <View className="bg-purple-100 dark:bg-purple-900/30 self-start px-2 py-0.5 rounded mt-1">
                   <Text className="text-[9px] font-bold text-purple-700 dark:text-purple-400">
-                    +₹{parseFloat(item.product.container_deposit).toFixed(0)}/unit crate deposit
+                    +{formatRupee(parseFloat(item.product.container_deposit))}/unit crate deposit
                   </Text>
                 </View>
               )}
@@ -1511,7 +1513,7 @@ export default function PosScreen() {
                     className={`px-3 py-1.5 rounded-full border ${item.billingMode === "fixed" ? "bg-primary border-primary" : "bg-surface-container border-outline-variant dark:border-outline"}`}
                   >
                     <Text className={`text-[10px] font-bold ${item.billingMode === "fixed" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
-                      Per {item.product.alternate_unit || "Packet"} ₹{parseFloat(item.product.alternate_price ?? item.product.price).toFixed(0)}
+                      Per {item.product.alternate_unit || "Packet"} {formatRupee(parseFloat(item.product.alternate_price ?? item.product.price))}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -1523,7 +1525,7 @@ export default function PosScreen() {
                     className={`px-3 py-1.5 rounded-full border ${item.billingMode === "weight" ? "bg-primary border-primary" : "bg-surface-container border-outline-variant dark:border-outline"}`}
                   >
                     <Text className={`text-[10px] font-bold ${item.billingMode === "weight" ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
-                      Per {item.product.weight_unit || "Kg"} ₹{parseFloat(item.product.price_per_unit ?? item.product.price).toFixed(0)}
+                      Per {item.product.weight_unit || "Kg"} {formatRupee(parseFloat(item.product.price_per_unit ?? item.product.price))}
                     </Text>
                   </Pressable>
                 </View>
@@ -1679,7 +1681,7 @@ export default function PosScreen() {
               <Text className="text-xs font-bold text-primary">Add split payment</Text>
             </Pressable>
             <Text className="text-xs text-on-surface-variant text-right">
-              Total: ₹{splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0).toFixed(0)} / ₹{getTotal().toFixed(0)}
+              Total: {formatRupee(splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0))} / {formatRupee(getTotal())}
             </Text>
           </View>
         ) : (
@@ -1701,18 +1703,19 @@ export default function PosScreen() {
                     setCreditDueDateLabel("");
                   }
                 }}
-                className={`flex-1 py-2.5 rounded-xl items-center border ${
+                className={`flex-1 items-center justify-center rounded-xl border ${
                   paymentMode === opt.key
                     ? "bg-primary dark:bg-primary-dark border-primary"
                     : "border-outline-variant dark:border-outline"
                 }`}
+                style={{ minHeight: 52 }}
               >
                 <MaterialCommunityIcons
                   name={opt.icon}
-                  size={18}
+                  size={20}
                   color={paymentMode === opt.key ? "#FFFFFF" : "#6e7a74"}
                 />
-                <Text className={`text-xs font-bold mt-0.5 ${paymentMode === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
+                <Text className={`text-xs font-bold mt-1 ${paymentMode === opt.key ? "text-white" : "text-on-surface-variant dark:text-text-secondary-dark"}`}>
                   {opt.label}
                 </Text>
               </Pressable>
@@ -1849,36 +1852,36 @@ export default function PosScreen() {
       <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-2xl border border-outline-variant dark:border-outline p-4 mb-4">
         <View className="flex-row justify-between mb-2">
           <Text className="text-sm text-on-surface-variant font-medium">Subtotal</Text>
-          <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">₹{getSubtotal().toFixed(2)}</Text>
+          <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">{formatRupee(getSubtotal(), 2)}</Text>
         </View>
         {shouldApplyTax && getTaxTotal() > 0 && (
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-on-surface-variant font-medium">GST</Text>
-            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getTaxTotal().toFixed(2)}</Text>
+            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+{formatRupee(getTaxTotal(), 2)}</Text>
           </View>
         )}
         {getDepositTotal() > 0 && (
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-on-surface-variant font-medium">Crate Deposit</Text>
-            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getDepositTotal().toFixed(2)}</Text>
+            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+{formatRupee(getDepositTotal(), 2)}</Text>
           </View>
         )}
         {getExtraChargeValue() > 0 && (
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-on-surface-variant font-medium">Credit Charge</Text>
-            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+₹{getExtraChargeValue().toFixed(2)}</Text>
+            <Text className="text-sm font-semibold text-on-surface dark:text-text-primary-dark">+{formatRupee(getExtraChargeValue(), 2)}</Text>
           </View>
         )}
         {getDiscountValue() > 0 && (
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-on-surface-variant font-medium">Discount</Text>
-            <Text className="text-sm font-semibold text-red-500">−₹{getDiscountValue().toFixed(2)}</Text>
+            <Text className="text-sm font-semibold text-red-500">−{formatRupee(getDiscountValue(), 2)}</Text>
           </View>
         )}
         <View className="h-px bg-surface-container my-2" />
         <View className="flex-row justify-between items-center">
           <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">Total</Text>
-          <Text className="text-2xl font-black text-primary dark:text-primary-dark">₹{getTotal().toFixed(2)}</Text>
+          <Text className="text-2xl font-black text-primary dark:text-primary-dark">{formatRupee(getTotal(), 2)}</Text>
         </View>
       </View>
 
@@ -1940,12 +1943,10 @@ export default function PosScreen() {
 
   return (
     <View className="flex-1 bg-background dark:bg-bg-dark">
-      {isOffline && (
-        <View className="bg-amber-500 px-4 py-2 flex-row items-center justify-center" style={{ gap: 6, paddingTop: topInset }}>
-          <MaterialCommunityIcons name="wifi-off" size={14} color="white" />
-          <Text className="text-white text-xs font-bold">You&apos;re offline — showing cached data</Text>
-        </View>
-      )}
+      {/* Offline state is now shown by the app-wide OfflineBanner (app/_layout.tsx)
+          — one calm, consistent banner instead of a screen-local amber one,
+          per shopkeeper-mobile-design-system.md §6.13 ("patchy network is
+          normal here, not an error — never alarming red/amber"). */}
       {isTablet ? (
         /* ══════ TABLET: side-by-side layout ══════ */
         <View className="flex-1 flex-row" style={{ paddingTop: topInset }}>
@@ -2100,12 +2101,12 @@ export default function PosScreen() {
                     <Text className="text-primary dark:text-primary-dark text-sm font-bold">{selectedParty.name}</Text>
                     {selectedParty.current_balance && parseFloat(selectedParty.current_balance) !== 0 && (
                       <Text className={`text-[10px] font-bold ${parseFloat(selectedParty.current_balance) > 0 ? "text-red-500" : "text-green-600"}`}>
-                        ₹{Math.abs(parseFloat(selectedParty.current_balance)).toFixed(0)}
+                        {formatRupee(Math.abs(parseFloat(selectedParty.current_balance)))}
                       </Text>
                     )}
                     {selectedParty.credit_limit != null && (
                       <Text className="text-[10px] font-bold text-yellow-600">
-                        L:₹{Number(selectedParty.credit_limit).toFixed(0)}
+                        L:{formatRupee(Number(selectedParty.credit_limit))}
                       </Text>
                     )}
                   </Pressable>
@@ -2196,7 +2197,7 @@ export default function PosScreen() {
                 <Text className="text-white/70 text-xs font-semibold uppercase tracking-wider">
                   {cart.reduce((s, i) => s + i.quantity, 0)} item{cart.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
                 </Text>
-                <Text className="text-white font-black text-lg">₹{getTotal().toFixed(2)}</Text>
+                <Text className="text-white font-black text-lg">{formatRupee(getTotal(), 2)}</Text>
               </View>
               <View className="flex-row items-center gap-2">
                 <Text className="text-white font-bold text-base">View Cart</Text>
@@ -2217,7 +2218,7 @@ export default function PosScreen() {
             <View className="px-5 pb-4 border-b border-outline-variant dark:border-outline flex-row justify-between items-center" style={{ paddingTop: topInset }}>
               <View>
                 <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark">Checkout</Text>
-                <Text className="text-sm text-on-surface-variant mt-0.5">{cart.reduce((s, i) => s + i.quantity, 0)} items · ₹{getTotal().toFixed(2)}</Text>
+                <Text className="text-sm text-on-surface-variant mt-0.5">{cart.reduce((s, i) => s + i.quantity, 0)} items · {formatRupee(getTotal(), 2)}</Text>
               </View>
               <Pressable onPress={() => setIsCheckoutOpen(false)} className="w-10 h-10 rounded-full bg-surface-container dark:bg-surface-dark items-center justify-center">
                 <MaterialCommunityIcons name="close" size={18} color="#3e4944" />

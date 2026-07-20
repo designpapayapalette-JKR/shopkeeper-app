@@ -7,6 +7,7 @@ import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { useConfirm } from "../src/components/ConfirmDialog";
+import EmptyState from "../src/components/EmptyState";
 
 type PayrollSetting = {
   id: string;
@@ -193,11 +194,7 @@ export default function PayrollScreen() {
         {activeTab === "settings" && (
           <>
             {settings.length === 0 ? (
-              <View className="items-center py-10">
-                <MaterialCommunityIcons name="cog-off" size={40} color="#9E9E9E" />
-                <Text className="text-sm text-on-surface-variant mt-2">No payroll settings configured</Text>
-                <Text className="text-xs text-on-surface-variant mt-1">Add staff members first</Text>
-              </View>
+              <EmptyState icon="cog-off" title="No payroll settings yet" description="Add staff members first, then set up their pay here." />
             ) : (
               settings.map((setting) => {
                 const name = `${setting.user.first_name || ""} ${setting.user.last_name || ""}`.trim();

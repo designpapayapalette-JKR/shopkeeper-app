@@ -21,6 +21,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useTheme } from "react-native-paper";
+import EmptyState from "../src/components/EmptyState";
 
 interface Product {
   id: string;
@@ -310,11 +311,13 @@ export default function PurchaseOrdersScreen() {
         loading ? (
           <View className="flex-1 items-center justify-center pb-20"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
         ) : orders.length === 0 ? (
-          <View className="flex-1 items-center justify-center pb-20 px-6">
-            <MaterialCommunityIcons name="file-document-outline" size={48} color={theme.colors.outline} />
-            <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No purchase orders yet</Text>
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create a PO to track orders before they arrive.</Text>
-          </View>
+          <EmptyState
+            icon="file-document-outline"
+            title="No purchase orders yet"
+            description="Create a PO to track orders before they arrive."
+            actionLabel="New PO"
+            onAction={() => setTab("new")}
+          />
         ) : (
           <FlatList data={orders} keyExtractor={(item) => item.id} renderItem={renderOrder}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

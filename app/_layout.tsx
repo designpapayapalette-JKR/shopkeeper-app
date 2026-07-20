@@ -8,6 +8,7 @@ import { PaperProvider, useTheme } from "react-native-paper";
 import { colorScheme } from "nativewind";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
 import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
+import OfflineBanner from "../src/components/OfflineBanner";
 import { syncQueuedSales } from "../src/lib/offlineQueue";
 import { startConnectivityMonitoring } from "../src/lib/connectivity";
 
@@ -84,10 +85,13 @@ function NavigationGuard() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <OfflineBanner />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </View>
   );
 }
 

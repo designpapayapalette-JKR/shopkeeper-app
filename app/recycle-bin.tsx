@@ -7,6 +7,7 @@ import { useAuth } from "../src/lib/auth-context";
 import { api } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 type Kind = "products" | "parties" | "invoices";
 
@@ -157,12 +158,11 @@ export default function RecycleBinScreen() {
           ListFooterComponent={loadingMore ? <View className="py-4"><ActivityIndicator size="small" color={theme.colors.primary} /></View> : !hasMore && items.length > 0 ? <View className="py-4"><Text className="text-center text-sm text-on-surface-variant dark:text-text-secondary-dark">All items loaded</Text></View> : null}
           contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: bottomInset + 24 }}
           ListEmptyComponent={
-            <View className="items-center py-24">
-              <MaterialCommunityIcons name="trash-can-outline" size={40} color={theme.colors.onSurfaceVariant} style={{ marginBottom: 12 }} />
-              <Text className="font-body-md text-body-md text-on-surface-variant dark:text-text-secondary-dark">
-                {searchQuery ? "No matches found." : "Nothing deleted here."}
-              </Text>
-            </View>
+            <EmptyState
+              icon="trash-can-outline"
+              title={searchQuery ? "No matches found" : "Nothing deleted here"}
+              description={searchQuery ? undefined : "Deleted parties, products, and invoices can be restored here."}
+            />
           }
           renderItem={({ item }) => (
             <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl border border-outline-variant dark:border-outline p-md flex-row items-center justify-between">

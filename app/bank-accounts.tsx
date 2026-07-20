@@ -19,6 +19,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import BulkUploadCard from "../src/components/BulkUploadCard";
+import EmptyState from "../src/components/EmptyState";
 
 export interface BankAccount {
   id: string;
@@ -175,11 +176,11 @@ export default function BankAccountsScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : accounts.length === 0 ? (
-        <View className="flex-1 justify-center items-center py-20 px-6">
-          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base text-center">
-            No bank accounts yet. Add one to track which account payments are credited or debited from.
-          </Text>
-        </View>
+        <EmptyState
+          icon="bank-outline"
+          title="No bank accounts yet"
+          description="Add one to track which account payments are credited or debited from."
+        />
       ) : (
         <FlatList
           data={accounts}
@@ -198,7 +199,7 @@ export default function BankAccountsScreen() {
               </View>
               <View className="items-end">
                 <Text className="text-base font-black text-on-surface dark:text-text-primary-dark">
-                  ₹{parseFloat(item.current_balance).toFixed(2)}
+                  ₹{parseFloat(item.current_balance).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
                 <Pressable onPress={() => handleDelete(item)} disabled={deletingId === item.id} className="mt-1.5">
                   {deletingId === item.id ? (

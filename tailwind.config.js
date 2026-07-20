@@ -72,6 +72,14 @@ module.exports = {
         "primary-fixed": "#d9e8ff",
         "surface-container-high": "#eae7e7",
         tertiary: "#873d34",
+        // Role badge colors — shopkeeper-mobile-design-system.md §4.1.
+        // Deliberately distinct per role so a shared-device handoff (e.g.
+        // owner unlocking the phone for a cashier) is identifiable at a
+        // glance without reading the label.
+        "role-owner": "#0368FE",
+        "role-manager": "#feb64e",
+        "role-staff": "#2E9E5B",
+        "role-warehouse": "#873d34",
       },
       borderRadius: {
         DEFAULT: "0.25rem",
@@ -104,7 +112,9 @@ module.exports = {
         "numeric-emphasis": ["Poppins_600SemiBold"],
         "headline-sm": ["Poppins_600SemiBold"],
         "label-md": ["Poppins_500Medium"],
+        "label-sm": ["Poppins_500Medium"],
         "display-lg": ["Poppins_700Bold"],
+        "display-md": ["Poppins_700Bold"],
         "body-md": ["Poppins_400Regular"],
       },
       fontSize: {
@@ -121,10 +131,17 @@ module.exports = {
           "14px",
           { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500" },
         ],
+        // Smallest interactive/supplementary text in the app (role badges,
+        // count badges) — see shopkeeper-mobile-design-system.md §4.2.
+        // Never used for anything the user must act on.
+        "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500" }],
         "display-lg": [
           "40px",
           { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700" },
         ],
+        // KPI hero numbers on role dashboards — display-lg (40px) is too
+        // large for a 4-tile KPI row; this is the next step down.
+        "display-md": ["32px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "700" }],
         "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
       },
     },

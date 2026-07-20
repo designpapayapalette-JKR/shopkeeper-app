@@ -8,6 +8,7 @@ import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { shareDataAsPdf } from "../src/lib/pdfExport";
+import EmptyState from "../src/components/EmptyState";
 
 interface LogEntry {
   id: string;
@@ -246,12 +247,10 @@ export default function ActivityLogScreen() {
             />
           }
           ListEmptyComponent={
-            <View className="items-center py-24">
-              <MaterialCommunityIcons name={searchQuery || actionFilter !== "all" ? "magnify-close" : "history"} size={40} color={theme.colors.outline} style={{ marginBottom: 12 }} />
-              <Text className="font-body-md text-body-md text-on-surface-variant dark:text-text-secondary-dark">
-                {searchQuery || actionFilter !== "all" ? "No matching activity found." : "No activity recorded yet."}
-              </Text>
-            </View>
+            <EmptyState
+              icon={searchQuery || actionFilter !== "all" ? "magnify-close" : "history"}
+              title={searchQuery || actionFilter !== "all" ? "No matching activity found" : "No activity recorded yet"}
+            />
           }
           renderItem={({ item }) => {
             const meta = ACTION_META[item.action];

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface ConfirmOptions {
@@ -14,14 +15,19 @@ type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
 
 const ConfirmDialogContext = createContext<ConfirmFn | null>(null);
 
-// App-wide confirmation dialog: works identically on web and native (unlike
-// Alert.alert, which is a no-op on react-native-web), and returns a promise
-// so call sites can `if (!(await confirm({...}))) return;` before any
-// destructive action.
+// App-wide confirmation — a bottom sheet, not a centered dialog, per
+// shopkeeper-mobile-design-system.md §6.8: thumb-reachable one-handed, and
+// call sites are expected to pass the specific amount/party name in
+// `message` rather than a generic "Are you sure?" (a generic confirm gets
+// tapped through on autopilot; a restated amount doesn't).
+// Works identically on web and native (unlike Alert.alert, which is a no-op
+// on react-native-web), and returns a promise so call sites can
+// `if (!(await confirm({...}))) return;` before any destructive action.
 export function ConfirmDialogProvider({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions>({ title: "" });
   const resolver = useRef<((value: boolean) => void) | null>(null);
+  const insets = useSafeAreaInsets();
 
   const confirm = useCallback<ConfirmFn>((opts) => {
     setOptions(opts);
@@ -40,9 +46,19 @@ export function ConfirmDialogProvider({ children }: { children: React.ReactNode 
   return (
     <ConfirmDialogContext.Provider value={confirm}>
       {children}
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={() => handle(false)}>
-        <View className="flex-1 bg-black/40 items-center justify-center px-8">
-          <View className="bg-surface-container-lowest dark:bg-surface-dark rounded-xl p-lg w-full" style={{ maxWidth: 360 }}>
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={() => handle(false)}>
+        <Pressable
+          className="flex-1 bg-black/40 justify-end"
+          onPress={() => handle(false)}
+        >
+          <Pressable
+            onPress={() => {}}
+            className="bg-surface-container-lowest dark:bg-surface-dark rounded-t-2xl px-lg pt-lg"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
+          >
+            {/* Grab-handle affordance signals "this can be swiped down" even though we don't wire swipe-to-dismiss */}
+            <View className="self-center rounded-full bg-outline-variant mb-lg" style={{ width: 40, height: 4 }} />
+
             <View className="flex-row items-center" style={{ gap: 12 }}>
               {options.destructive && (
                 <View className="w-10 h-10 rounded-full bg-error/10 items-center justify-center">
@@ -53,33 +69,38 @@ export function ConfirmDialogProvider({ children }: { children: React.ReactNode 
                 {options.title}
               </Text>
             </View>
+
             {options.message && (
-              <Text className="font-body-md text-body-md text-on-surface-variant dark:text-text-secondary-dark mt-sm">
+              <Text className="font-body-lg text-body-md text-on-surface-variant dark:text-text-secondary-dark mt-sm" style={{ fontSize: 16, lineHeight: 22 }}>
                 {options.message}
               </Text>
             )}
-            <View className="flex-row mt-lg" style={{ gap: 8 }}>
-              <Pressable
-                onPress={() => handle(false)}
-                className="flex-1 py-3 rounded-xl items-center border border-outline-variant dark:border-outline active:bg-surface-container"
-              >
-                <Text className="font-label-md text-label-md text-on-surface dark:text-text-primary-dark">
-                  {options.cancelLabel ?? "Cancel"}
-                </Text>
-              </Pressable>
+
+            {/* Stacked, not side-by-side — same-weight buttons next to each other invite mis-taps under time pressure (§6.8) */}
+            <View className="mt-lg" style={{ gap: 10 }}>
               <Pressable
                 onPress={() => handle(true)}
-                className={`flex-1 py-3 rounded-xl items-center active:opacity-90 ${
+                className={`items-center justify-center rounded-xl active:opacity-90 ${
                   options.destructive ? "bg-error" : "bg-primary dark:bg-primary-dark"
                 }`}
+                style={{ minHeight: 52 }}
               >
-                <Text className="font-label-md text-label-md text-white">
+                <Text className="font-label-md text-white" style={{ fontSize: 16, fontWeight: "700" }}>
                   {options.confirmLabel ?? "Confirm"}
                 </Text>
               </Pressable>
+              <Pressable
+                onPress={() => handle(false)}
+                className="items-center justify-center rounded-xl border border-outline-variant dark:border-outline active:bg-surface-container"
+                style={{ minHeight: 52 }}
+              >
+                <Text className="font-label-md text-on-surface dark:text-text-primary-dark" style={{ fontSize: 16, fontWeight: "600" }}>
+                  {options.cancelLabel ?? "Cancel"}
+                </Text>
+              </Pressable>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </ConfirmDialogContext.Provider>
   );

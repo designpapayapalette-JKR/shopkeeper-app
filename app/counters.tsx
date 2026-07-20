@@ -13,6 +13,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 import {
   Card,
   useTheme,
@@ -229,15 +230,11 @@ export default function CountersScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : counters.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="counter" size={48} color={theme.colors.outline} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">
-            No counters yet
-          </Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
-            Tap the Add button to create your first counter.
-          </Text>
-        </View>
+        <EmptyState
+          icon="counter"
+          title="No counters yet"
+          description="Tap the Add button above to create your first counter."
+        />
       ) : (
         <FlatList
           data={counters}

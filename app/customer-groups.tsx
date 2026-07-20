@@ -21,6 +21,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useTheme } from "react-native-paper";
+import EmptyState from "../src/components/EmptyState";
 
 interface Group {
   id: string;
@@ -205,11 +206,7 @@ export default function CustomerGroupsScreen() {
       {loading ? (
         <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       ) : groups.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="account-group-outline" size={48} color={theme.colors.outlineVariant} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No groups yet</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create groups to organize your customers for price lists.</Text>
-        </View>
+        <EmptyState icon="account-group-outline" title="No groups yet" description="Create groups to organize your customers for price lists." />
       ) : (
         <FlatList data={groups} keyExtractor={(item) => item.id} renderItem={renderGroup}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

@@ -174,7 +174,7 @@ export default function OnboardingScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-1">Let&apos;s set up your business</Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-6">
-            This appears on every GST invoice you print or share. You can change it later from More {"→"} Business Profile.
+            This appears on every GST invoice you print or share. You can change it later from Home {"→"} Settings.
           </Text>
 
           {[
@@ -215,7 +215,7 @@ export default function OnboardingScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text className="text-2xl font-black text-on-surface dark:text-text-primary-dark mb-1">Add your team</Text>
           <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-6">
-            Optional — each person gets their own login for the MMC Agent app, sent straight to their WhatsApp. You can add more anytime from More {"→"} Staff.
+            Optional — each person gets their own login for the MMC Agent app, sent straight to their WhatsApp. You can add more anytime from Home {"→"} Staff & HR.
           </Text>
 
           <View className="bg-surface-container-lowest dark:bg-surface-dark border border-outline-variant dark:border-outline rounded-2xl p-4 mb-5">

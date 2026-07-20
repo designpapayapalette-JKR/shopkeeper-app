@@ -19,6 +19,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import EmptyState from "../src/components/EmptyState";
 import {
   Card,
   useTheme,
@@ -238,15 +239,11 @@ export default function OutletsScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : outlets.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="store-outline" size={48} color={theme.colors.outlineVariant} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">
-            No outlets yet
-          </Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
-            Tap the Add button to create your first outlet.
-          </Text>
-        </View>
+        <EmptyState
+          icon="store-outline"
+          title="No outlets yet"
+          description="Tap the Add button above to create your first outlet."
+        />
       ) : (
         <FlatList
           data={outlets}

@@ -20,6 +20,7 @@ import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 interface CListItem {
   id: string;
@@ -216,15 +217,11 @@ export default function CategoriesScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : items.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name={tab === "categories" ? "shape-outline" : "trademark"} size={48} color={theme.colors.outline} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">
-            No {tab} yet
-          </Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
-            Tap the Add button to create your first {tab.slice(0, -1)}.
-          </Text>
-        </View>
+        <EmptyState
+          icon={tab === "categories" ? "shape-outline" : "trademark"}
+          title={`No ${tab} yet`}
+          description={`Tap the Add button above to create your first ${tab.slice(0, -1)}.`}
+        />
       ) : (
         <FlatList
           data={items}

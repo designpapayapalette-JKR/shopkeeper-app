@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 type ChallanItem = {
   id: string;
@@ -310,11 +311,11 @@ export default function ChallansScreen() {
         </View>
 
         {challans.length === 0 ? (
-          <View className="items-center py-16">
-            <MaterialCommunityIcons name="clipboard-list-outline" size={48} color={theme.colors.outlineVariant} />
-            <Text className="text-sm text-on-surface-variant mt-3">No challans yet</Text>
-            {canEdit && <Text className="text-xs text-on-surface-variant mt-1">Tap "+" to create one</Text>}
-          </View>
+          <EmptyState
+            icon="clipboard-list-outline"
+            title="No challans yet"
+            description={canEdit ? 'Tap "+" above to create your first delivery challan.' : undefined}
+          />
         ) : (
           challans.map((c) => {
             const status = getStatusLabel(c.status);

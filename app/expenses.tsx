@@ -6,6 +6,7 @@ import { useTheme } from "react-native-paper";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { api, ApiError } from "../src/lib/api";
+import EmptyState from "../src/components/EmptyState";
 
 interface ExpenseRecord {
   id: string;
@@ -166,7 +167,7 @@ export default function ExpensesScreen() {
         <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">
           Total {PERIODS.find((p) => p.key === period)?.label}
         </Text>
-        <Text className="text-xl font-black text-primary dark:text-primary-dark">₹{total.toFixed(2)}</Text>
+        <Text className="text-xl font-black text-primary dark:text-primary-dark">₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
       </View>
 
       {loading ? (
@@ -174,11 +175,11 @@ export default function ExpensesScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filtered.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-center">
-            No expenses recorded for this period.
-          </Text>
-        </View>
+        <EmptyState
+          icon="wallet-outline"
+          title="No expenses recorded"
+          description="Nothing recorded for this period yet."
+        />
       ) : (
         <FlatList
           data={filtered}
@@ -210,7 +211,7 @@ export default function ExpensesScreen() {
               {item.attachment && (
                 <MaterialCommunityIcons name="paperclip" size={16} color={theme.colors.onSurfaceVariant} style={{ marginRight: 2 }} />
               )}
-              <Text className="font-bold text-on-surface dark:text-text-primary-dark">₹{parseFloat(item.amount).toFixed(2)}</Text>
+              <Text className="font-bold text-on-surface dark:text-text-primary-dark">₹{parseFloat(item.amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
             </Pressable>
           )}
         />

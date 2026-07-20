@@ -18,6 +18,7 @@ import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import EmptyState from "../src/components/EmptyState";
 
 interface TicketMessage {
   id: string;
@@ -237,14 +238,13 @@ export default function SupportTicketsScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : tickets.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8">
-          <MaterialCommunityIcons name="headset" size={48} color={theme.colors.outlineVariant} />
-          <Text className="text-base text-on-surface-variant dark:text-text-secondary-dark mt-4 text-center">No support tickets yet</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create one and our team will get back to you.</Text>
-          <Pressable onPress={() => setShowCreate(true)} className="mt-6 bg-primary dark:bg-primary-dark rounded-xl px-6 py-3">
-            <Text className="text-sm font-bold text-white">Create Ticket</Text>
-          </Pressable>
-        </View>
+        <EmptyState
+          icon="headset"
+          title="No support tickets yet"
+          description="Create one and our team will get back to you."
+          actionLabel="Create Ticket"
+          onAction={() => setShowCreate(true)}
+        />
       ) : (
         <FlatList
           data={tickets}

@@ -27,6 +27,15 @@ import BulkUploadCard from "../../src/components/BulkUploadCard";
 import type { BankAccount } from "../bank-accounts";
 import { useTerminology } from "../../src/lib/terminology-context";
 import { StatePicker } from "../../src/components/StatePicker";
+import ListRow from "../../src/components/ListRow";
+import EmptyState from "../../src/components/EmptyState";
+
+// Indian lakh/crore grouping, not Western thousands grouping — a
+// shopkeeper reads "₹1,20,000" fluently and "₹1,20,000.00" as foreign.
+// shopkeeper-mobile-design-system.md §3.1.
+function formatRupee(n: number): string {
+  return `₹${Math.abs(n).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
 
 interface Party {
   id: string;
@@ -389,7 +398,7 @@ export default function LedgerScreen() {
       title: `Delete this ${party.type}?`,
       message:
         balance !== 0
-          ? `"${party.name}" has an outstanding balance of ₹${Math.abs(balance).toFixed(2)}. It will be moved to the Recycle Bin, not permanently erased — you can restore it from More > Recycle Bin.`
+          ? `"${party.name}" has an outstanding balance of ${formatRupee(balance)}. It will be moved to the Recycle Bin, not deleted forever — you can restore it later from More > Recycle Bin.`
           : `"${party.name}" will be moved to the Recycle Bin. You can restore it later from More > Recycle Bin.`,
       confirmLabel: "Delete",
       destructive: true,
@@ -414,7 +423,7 @@ export default function LedgerScreen() {
       return;
     }
     const balance = parseFloat(party.current_balance || "0");
-    const balStr = Math.abs(balance).toFixed(2);
+    const balStr = formatRupee(balance).replace("₹", "");
 
     // In our simplified logic: Customer positive balance = they owe us. Supplier positive balance = we owe them.
     const message = party.type === "customer"
@@ -509,17 +518,23 @@ export default function LedgerScreen() {
         />
       </View>
 
-      {/* List */}
+      {/* List — ListRow per shopkeeper-mobile-design-system.md §6.7: title +
+          subtitle + trailing amount, status conveyed by icon+color+word
+          together (never color alone). WhatsApp reminder and edit stay as
+          separate affordances below each row since they're secondary
+          actions, not part of the row's own tap target. */}
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filteredParties.length === 0 ? (
-        <View className="flex-1 justify-center items-center py-20">
-          <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-base text-center">
-            No {activeTab}s found
-          </Text>
-        </View>
+        <EmptyState
+          icon={activeTab === "customer" ? "account-group" : "truck-outline"}
+          title={activeTab === "customer" ? "No customers yet" : "No suppliers yet"}
+          description={`Add your first ${activeTab} to start tracking their balance.`}
+          actionLabel={`Add ${activeTab === "customer" ? "Customer" : "Supplier"}`}
+          onAction={() => setIsAddingParty(true)}
+        />
       ) : (
         <FlatList
           data={filteredParties}
@@ -530,77 +545,44 @@ export default function LedgerScreen() {
             const bal = parseFloat(item.current_balance || "0");
             const isReceivable = activeTab === "customer";
             const owed = bal > 0;
-            const amountColor = owed ? (isReceivable ? "text-success" : "text-error") : "text-on-surface-variant dark:text-text-secondary-dark";
             const avatarColor = getAvatarColor(item.name);
+            const tone: "success" | "error" | "neutral" = !owed ? "neutral" : isReceivable ? "success" : "error";
+            const statusLabel = !owed ? "No dues" : isReceivable ? "You'll get" : "You owe";
 
             return (
-              <Pressable
-                onPress={() => handleSelectParty(item)}
-                className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-2xl border border-outline-variant dark:border-outline shadow-sm mb-3 flex-row items-center active:bg-gray-50 dark:active:bg-zinc-800"
-              >
-                <View
-                  className="w-11 h-11 rounded-xl items-center justify-center mr-3"
-                  style={{ backgroundColor: avatarColor.bg }}
-                >
-                  <Text className="font-black text-base" style={{ color: avatarColor.text }}>
-                    {getInitial(item.name)}
-                  </Text>
-                </View>
-                <View className="flex-1 mr-2">
-                  <Text className="font-bold text-base text-on-surface dark:text-text-primary-dark" numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
-                    {item.phone || "No phone"}
-                  </Text>
+              <View className="mb-1">
+                <ListRow
+                  title={item.name}
+                  subtitle={item.phone || "No phone number"}
+                  amount={formatRupee(bal)}
+                  status={{ label: statusLabel, tone }}
+                  avatarLabel={getInitial(item.name)}
+                  avatarColor={avatarColor.text}
+                  onPress={() => handleSelectParty(item)}
+                />
+                <View className="flex-row items-center px-2 -mt-1 mb-2" style={{ gap: 16 }}>
+                  <Pressable
+                    onPress={() => handleOpenEditParty(item)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    className="flex-row items-center"
+                    style={{ gap: 4 }}
+                  >
+                    <MaterialCommunityIcons name="pencil-outline" size={14} color="#6B7280" />
+                    <Text className="text-xs font-bold text-on-surface-variant">Edit</Text>
+                  </Pressable>
                   {item.phone && bal !== 0 && (
                     <Pressable
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        handleSendReminder(item);
-                      }}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                      className="flex-row items-center mt-1"
+                      onPress={() => handleSendReminder(item)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      className="flex-row items-center"
                       style={{ gap: 4 }}
                     >
-                      <MaterialCommunityIcons name="whatsapp" size={13} color="#128C7E" />
-                      <Text className="text-sm font-bold text-[#128C7E] dark:text-[#25D366]">Send Reminder</Text>
+                      <MaterialCommunityIcons name="whatsapp" size={14} color="#128C7E" />
+                      <Text className="text-xs font-bold text-[#128C7E] dark:text-[#25D366]">Send Reminder</Text>
                     </Pressable>
                   )}
                 </View>
-                <View className="items-end">
-                  <View className="flex-row items-center" style={{ gap: 3 }}>
-                    <MaterialCommunityIcons
-                      name={owed ? "arrow-down-bold" : "arrow-up-bold"}
-                      size={13}
-                      color={owed ? (isReceivable ? "#2E9E5B" : "#D64545") : "#9E9E9E"}
-                    />
-                    <Text className={`text-base font-black ${amountColor}`}>
-                      ₹{Math.abs(bal).toFixed(2)}
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center mt-2" style={{ gap: 6 }}>
-                    <Pressable
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        handleOpenEditParty(item);
-                      }}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                      className="w-7 h-7 rounded-lg bg-surface-container dark:bg-zinc-800 items-center justify-center"
-                    >
-                      <MaterialCommunityIcons name="pencil-outline" size={14} color="#6B7280" />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleSelectParty(item)}
-                      className="flex-row items-center bg-primary/10 px-2.5 py-1.5 rounded-lg"
-                      style={{ gap: 3 }}
-                    >
-                      <MaterialCommunityIcons name="book-account-outline" size={13} color={theme.colors.primary} />
-                      <Text className="text-xs font-bold text-primary dark:text-primary-dark">Ledger</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              </Pressable>
+              </View>
             );
           }}
         />
@@ -719,8 +701,8 @@ export default function LedgerScreen() {
                   <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark uppercase tracking-wider">
                     Outstanding Balance
                   </Text>
-                  <Text className="text-2xl font-black text-primary dark:text-primary-dark mt-1">
-                    ₹{parseFloat(selectedParty.current_balance || "0").toFixed(2)}
+                  <Text className="font-display-md text-primary dark:text-primary-dark mt-1" style={{ fontSize: 28, fontWeight: "700" }}>
+                    {formatRupee(parseFloat(selectedParty.current_balance || "0"))}
                   </Text>
                 </View>
                 <Pressable
@@ -835,7 +817,7 @@ export default function LedgerScreen() {
                         </View>
                         <View className="items-end">
                           <Text className={`text-lg ${indicatorColor}`}>
-                            {isDebit ? "+" : "-"} ₹{parseFloat(item.amount).toFixed(2)}
+                            {isDebit ? "+" : "-"} {formatRupee(parseFloat(item.amount))}
                           </Text>
                           <Text className="text-sm font-bold text-on-surface-variant dark:text-text-secondary-dark mt-1 uppercase tracking-widest">
                             {typeLabel}

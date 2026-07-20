@@ -21,6 +21,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useTheme } from "react-native-paper";
+import EmptyState from "../src/components/EmptyState";
 
 interface PriceList {
   id: string;
@@ -252,11 +253,7 @@ export default function PriceListsScreen() {
       {loading ? (
         <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       ) : lists.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="tag-outline" size={48} color={theme.colors.outline} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No price lists yet</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create price lists to offer different pricing tiers.</Text>
-        </View>
+        <EmptyState icon="tag-outline" title="No price lists yet" description="Create price lists to offer different pricing tiers." />
       ) : (
         <FlatList data={lists} keyExtractor={(item) => item.id} renderItem={renderList}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

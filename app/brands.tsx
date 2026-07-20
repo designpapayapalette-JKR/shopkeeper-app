@@ -7,6 +7,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import EmptyState from "../src/components/EmptyState";
 
 interface Brand {
   id: string;
@@ -165,13 +166,13 @@ export default function BrandsScreen() {
       </View>
 
       {items.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="trademark" size={48} color="#D1D5DB" />
-          <Text className="text-base font-bold text-on-surface-variant mt-4">No brands yet</Text>
-          <Text className="text-sm text-on-surface-variant mt-1 text-center">
-            Tap the Add button to create your first brand.
-          </Text>
-        </View>
+        <EmptyState
+          icon="trademark"
+          title="No brands yet"
+          description="Tap the Add button above to create your first brand."
+          actionLabel="Add Brand"
+          onAction={openAdd}
+        />
       ) : (
         <FlatList
           data={items}

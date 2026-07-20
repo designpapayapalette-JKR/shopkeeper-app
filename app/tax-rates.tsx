@@ -7,6 +7,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import EmptyState from "../src/components/EmptyState";
 
 interface TaxRate {
   id: string;
@@ -173,13 +174,7 @@ export default function TaxRatesScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : taxRates.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="percent" size={48} color={theme.colors.onSurfaceVariant} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No tax rates yet</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
-            Tap Add to create your first tax rate.
-          </Text>
-        </View>
+        <EmptyState icon="percent" title="No tax rates yet" description="Tap Add above to create your first tax rate." />
       ) : (
         <FlatList
           data={taxRates}

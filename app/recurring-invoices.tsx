@@ -19,6 +19,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import DatePickerModal from "../src/components/DatePickerModal";
+import EmptyState from "../src/components/EmptyState";
 
 interface Party {
   id: string;
@@ -240,11 +241,7 @@ export default function RecurringInvoicesScreen() {
         {loading ? (
           <View className="py-10 items-center"><ActivityIndicator color={theme.colors.primary} /></View>
         ) : templates.length === 0 ? (
-          <View className="py-10 items-center">
-            <MaterialCommunityIcons name="repeat" size={48} color={theme.colors.outlineVariant} />
-            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark mt-4">No Recurring Invoices</Text>
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark text-center mt-2">Set up auto-repeating invoices for regular customers.</Text>
-          </View>
+          <EmptyState icon="repeat" title="No recurring invoices yet" description="Set up auto-repeating invoices for regular customers." />
         ) : (
           templates.map((t) => (
             <Pressable key={t.id} onPress={() => openEdit(t)} onLongPress={() => {

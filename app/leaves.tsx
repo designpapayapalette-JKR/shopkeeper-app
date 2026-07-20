@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 type LeaveRequest = {
   id: string;
@@ -207,10 +208,7 @@ export default function LeavesScreen() {
             </View>
 
             {requests.length === 0 ? (
-              <View className="items-center py-10">
-                <MaterialCommunityIcons name="clipboard-remove" size={40} color="#9E9E9E" />
-                <Text className="text-sm text-on-surface-variant mt-2">No leave requests</Text>
-              </View>
+              <EmptyState icon="clipboard-remove" title="No leave requests" />
             ) : (
               requests.map((req) => {
                 const statusOpt = LEAVE_STATUS_OPTIONS.find((s) => s.value === req.status);
@@ -281,10 +279,7 @@ export default function LeavesScreen() {
         {activeTab === "balances" && (
           <>
             {balances.length === 0 ? (
-              <View className="items-center py-10">
-                <MaterialCommunityIcons name="scale-balance" size={40} color="#9E9E9E" />
-                <Text className="text-sm text-on-surface-variant mt-2">No leave balances configured</Text>
-              </View>
+              <EmptyState icon="scale-balance" title="No leave balances configured" />
             ) : (
               balances.map((bal) => {
                 const name = bal.user ? `${bal.user.first_name} ${bal.user.last_name}`.trim() : "—";

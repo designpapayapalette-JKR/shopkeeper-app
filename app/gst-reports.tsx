@@ -16,6 +16,13 @@ import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { useTerminology } from "../src/lib/terminology-context";
 import { useTheme } from "react-native-paper";
 
+// Indian lakh/crore grouping for on-screen amounts only — CSV export rows
+// below intentionally keep plain toFixed() decimals (comma-grouping would
+// corrupt CSV column parsing). shopkeeper-mobile-design-system.md §3.1.
+function formatRupee(n: number): string {
+  return `₹${(Number.isFinite(n) ? n : 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 // Note: shopkeeper-api returns camelCase, but src/lib/api.ts converts every
 // response body through toSnakeCase() before handing it back — so every
 // field here is snake_case, matching the convention used across the rest of
@@ -125,15 +132,15 @@ function GstSaleRowCard({ row }: { row: GstSaleRow }) {
     <View className="p-3 border-b border-outline-variant dark:border-outline last:border-b-0">
       <View className="flex-row justify-between items-center mb-1">
         <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{row.invoice_number}</Text>
-        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{row.grand_total.toFixed(2)}</Text>
+        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{formatRupee(row.grand_total)}</Text>
       </View>
       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-1">
         {new Date(row.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} · {row.party_name}
         {row.gstin ? ` · ${row.gstin}` : ""}
       </Text>
       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
-        Taxable ₹{row.taxable_value.toFixed(2)}
-        {row.igst > 0 ? ` · IGST ₹${row.igst.toFixed(2)}` : ` · CGST ₹${row.cgst.toFixed(2)} · SGST ₹${row.sgst.toFixed(2)}`}
+        Taxable {formatRupee(row.taxable_value)}
+        {row.igst > 0 ? ` · IGST ${formatRupee(row.igst)}` : ` · CGST ${formatRupee(row.cgst)} · SGST ${formatRupee(row.sgst)}`}
       </Text>
     </View>
   );
@@ -144,14 +151,14 @@ function GstPurchaseRowCard({ row }: { row: GstPurchaseRow }) {
     <View className="p-3 border-b border-outline-variant dark:border-outline last:border-b-0">
       <View className="flex-row justify-between items-center mb-1">
         <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{row.purchase_number}</Text>
-        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{row.grand_total.toFixed(2)}</Text>
+        <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{formatRupee(row.grand_total)}</Text>
       </View>
       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mb-1">
         {new Date(row.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} · {row.supplier_name}
         {row.gstin ? ` · ${row.gstin}` : ""}
       </Text>
       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">
-        Taxable ₹{row.taxable_value.toFixed(2)} · Tax ₹{row.tax_total.toFixed(2)}
+        Taxable {formatRupee(row.taxable_value)} · Tax {formatRupee(row.tax_total)}
       </Text>
     </View>
   );
@@ -373,7 +380,7 @@ export default function GstReportsScreen() {
                     <Text className="font-bold text-on-surface dark:text-text-primary-dark">{row.tax_rate}%</Text>
                   </View>
                   <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">
-                    Qty {row.total_quantity.toFixed(2)} · Taxable ₹{row.total_taxable_value.toFixed(2)} · Tax ₹{row.total_tax_amount.toFixed(2)}
+                    Qty {row.total_quantity.toFixed(2)} · Taxable {formatRupee(row.total_taxable_value)} · Tax {formatRupee(row.total_tax_amount)}
                   </Text>
                 </View>
               ))}
@@ -438,15 +445,15 @@ export default function GstReportsScreen() {
           <View className="bg-surface-container-lowest dark:bg-surface-dark p-4 rounded-xl border border-outline-variant dark:border-outline mb-4">
             <View className="flex-row justify-between mb-1.5">
               <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm">Total Inflow</Text>
-              <Text className="font-bold text-success text-sm">₹{dayBook.total_in.toFixed(2)}</Text>
+              <Text className="font-bold text-success text-sm">{formatRupee(dayBook.total_in)}</Text>
             </View>
             <View className="flex-row justify-between mb-1.5">
               <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm">Total Outflow</Text>
-              <Text className="font-bold text-error text-sm">₹{dayBook.total_out.toFixed(2)}</Text>
+              <Text className="font-bold text-error text-sm">{formatRupee(dayBook.total_out)}</Text>
             </View>
             <View className="flex-row justify-between pt-1.5 border-t border-outline-variant dark:border-outline">
               <Text className="text-on-surface-variant dark:text-text-secondary-dark font-bold text-sm">Net Balance</Text>
-              <Text className={`font-black text-sm ${dayBook.net >= 0 ? "text-primary dark:text-primary-dark" : "text-error"}`}>₹{dayBook.net.toFixed(2)}</Text>
+              <Text className={`font-black text-sm ${dayBook.net >= 0 ? "text-primary dark:text-primary-dark" : "text-error"}`}>{formatRupee(dayBook.net)}</Text>
             </View>
           </View>
 
@@ -469,7 +476,7 @@ export default function GstReportsScreen() {
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{i.invoice_number}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{i.party_name}</Text>
                     </View>
-                    <Text className="font-bold text-success text-sm">₹{i.grand_total.toFixed(2)}</Text>
+                    <Text className="font-bold text-success text-sm">{formatRupee(i.grand_total)}</Text>
                   </View>
                 ))
               )}
@@ -487,7 +494,7 @@ export default function GstReportsScreen() {
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{p.purchase_number}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{p.supplier_name}</Text>
                     </View>
-                    <Text className="font-bold text-error text-sm">₹{p.grand_total.toFixed(2)}</Text>
+                    <Text className="font-bold text-error text-sm">{formatRupee(p.grand_total)}</Text>
                   </View>
                 ))
               )}
@@ -505,7 +512,7 @@ export default function GstReportsScreen() {
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{pi.party_name}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{pi.mode || "Payment"} {pi.reference ? `· ${pi.reference}` : ""}</Text>
                     </View>
-                    <Text className="font-bold text-success text-sm">₹{pi.amount.toFixed(2)}</Text>
+                    <Text className="font-bold text-success text-sm">{formatRupee(pi.amount)}</Text>
                   </View>
                 ))
               )}
@@ -523,7 +530,7 @@ export default function GstReportsScreen() {
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm">{po.party_name}</Text>
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{po.mode || "Payment"} {po.reference ? `· ${po.reference}` : ""}</Text>
                     </View>
-                    <Text className="font-bold text-error text-sm">₹{po.amount.toFixed(2)}</Text>
+                    <Text className="font-bold text-error text-sm">{formatRupee(po.amount)}</Text>
                   </View>
                 ))
               )}
@@ -541,7 +548,7 @@ export default function GstReportsScreen() {
                       <Text className="font-bold text-on-surface dark:text-text-primary-dark text-sm capitalize">{e.category}</Text>
                       {e.notes ? <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{e.notes}</Text> : null}
                     </View>
-                    <Text className="font-bold text-error text-sm">₹{e.amount.toFixed(2)}</Text>
+                    <Text className="font-bold text-error text-sm">{formatRupee(e.amount)}</Text>
                   </View>
                 ))
               )}

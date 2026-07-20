@@ -21,6 +21,7 @@ import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import ToggleSwitch from "../src/components/ToggleSwitch";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 interface TemplateConfig {
   paper_size?: string;
@@ -239,11 +240,7 @@ export default function InvoiceTemplatesScreen() {
       {loading ? (
         <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       ) : templates.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="file-document-outline" size={48} color={theme.colors.outline} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No templates yet</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create invoice templates to customize printed receipts and invoices.</Text>
-        </View>
+        <EmptyState icon="file-document-outline" title="No templates yet" description="Create invoice templates to customize printed receipts and invoices." />
       ) : (
         <FlatList data={templates} keyExtractor={(item) => item.id} renderItem={renderTemplate}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

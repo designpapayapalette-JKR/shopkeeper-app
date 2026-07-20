@@ -9,6 +9,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import ToggleSwitch from "../src/components/ToggleSwitch";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
+import EmptyState from "../src/components/EmptyState";
 
 interface Program {
   id: string;
@@ -114,11 +115,7 @@ export default function ReferralProgramScreen() {
 
       {loading ? <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       : programs.length === 0 ? (
-        <View className="flex-1 items-center justify-center pb-20 px-6">
-          <MaterialCommunityIcons name="gift-outline" size={48} color={theme.colors.onSurfaceVariant} />
-          <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">No referral programs yet</Text>
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">Create a program to reward customers who refer others.</Text>
-        </View>
+        <EmptyState icon="gift-outline" title="No referral programs yet" description="Create a program to reward customers who refer others." />
       ) : (
         <FlatList data={programs} keyExtractor={(item) => item.id} renderItem={renderItem}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: bottomInset + 24 }} showsVerticalScrollIndicator={false} />

@@ -7,6 +7,7 @@ import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { useConfirm } from "../src/components/ConfirmDialog";
+import EmptyState from "../src/components/EmptyState";
 
 type Holiday = {
   id: string;
@@ -131,11 +132,11 @@ export default function HolidaysScreen() {
         </View>
 
         {holidays.length === 0 ? (
-          <View className="items-center py-10">
-            <MaterialCommunityIcons name="calendar-blank" size={40} color={theme.colors.onSurfaceVariant} />
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-2">No holidays set</Text>
-            {canEdit && <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-1">Tap "Add" to create one</Text>}
-          </View>
+          <EmptyState
+            icon="calendar-blank"
+            title="No holidays set"
+            description={canEdit ? 'Tap "Add" above to create one.' : undefined}
+          />
         ) : (
           holidays.map((h) => {
             const typeOpt = TYPE_OPTIONS.find((t) => t.value === h.type);

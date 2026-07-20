@@ -23,6 +23,7 @@ import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { shareDataAsPdf } from "../src/lib/pdfExport";
 import { useTheme } from "react-native-paper";
+import EmptyState from "../src/components/EmptyState";
 
 interface Product {
   id: string;
@@ -434,17 +435,15 @@ export default function SalesOrdersScreen() {
               <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
           ) : filteredOrders.length === 0 ? (
-            <View className="flex-1 items-center justify-center pb-20 px-6">
-              <MaterialCommunityIcons name="file-document-outline" size={48} color={theme.colors.outline} />
-              <Text className="text-base font-bold text-on-surface-variant dark:text-text-secondary-dark mt-4">
-                {orders.length === 0 ? "No sales orders yet" : "No orders match your search"}
-              </Text>
-              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1 text-center">
-                {orders.length === 0
+            <EmptyState
+              icon="file-document-outline"
+              title={orders.length === 0 ? "No sales orders yet" : "No orders match your search"}
+              description={
+                orders.length === 0
                   ? "Create your first sales order to track commitments before billing."
-                  : "Try a different search term or clear the filters."}
-              </Text>
-            </View>
+                  : "Try a different search term or clear the filters."
+              }
+            />
           ) : (
             <FlatList
               data={filteredOrders}

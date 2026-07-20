@@ -19,6 +19,15 @@ import { api } from "../../src/lib/api";
 import { useAuth } from "../../src/lib/auth-context";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useTopInset, useBottomInset } from "../../src/lib/useTopInset";
+import EmptyState from "../../src/components/EmptyState";
+
+// Indian lakh/crore grouping — shopkeeper-mobile-design-system.md §3.1.
+// decimals=2 preserves exact paise on amounts actually owed (cart totals);
+// 0 is used for catalogue/unit prices, matching prior toFixed(0) usage.
+function formatRupee(n: number, decimals: 0 | 2 = 0): string {
+  const val = Number.isFinite(n) ? n : 0;
+  return `₹${val.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+}
 
 interface Product {
   id: string;
@@ -242,10 +251,10 @@ export default function B2bScreen() {
         <View className="flex-row items-center justify-between mt-1">
           <View>
             <Text className="text-lg font-black text-primary dark:text-primary-dark">
-              ₹{parseFloat(item.price).toFixed(0)}
+              {formatRupee(parseFloat(item.price))}
             </Text>
             {item.mrp && parseFloat(item.mrp) > parseFloat(item.price) && (
-              <Text className="text-xs text-on-surface-variant line-through">₹{parseFloat(item.mrp).toFixed(0)}</Text>
+              <Text className="text-xs text-on-surface-variant line-through">{formatRupee(parseFloat(item.mrp))}</Text>
             )}
           </View>
           <View className="flex-row items-center gap-1">
@@ -343,10 +352,11 @@ export default function B2bScreen() {
         contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View className="flex-1 justify-center items-center py-20">
-            <MaterialCommunityIcons name="package-variant-closed" size={48} color={theme.colors.outline} />
-            <Text className="text-on-surface-variant font-bold text-base mt-3">No products found</Text>
-          </View>
+          <EmptyState
+            icon="package-variant-closed"
+            title="No products found"
+            description="Try a different search, or add this product from Inventory first."
+          />
         }
       />
 
@@ -357,7 +367,7 @@ export default function B2bScreen() {
             <Text className="text-white/70 text-xs font-semibold uppercase tracking-wider">
               {cart.reduce((s, c) => s + c.quantity, 0)} item{cart.reduce((s, c) => s + c.quantity, 0) !== 1 ? "s" : ""}
             </Text>
-            <Text className="text-white font-black text-lg">₹{grandTotal.toFixed(0)}</Text>
+            <Text className="text-white font-black text-lg">{formatRupee(grandTotal)}</Text>
           </View>
           <View className="flex-row items-center gap-2">
             <Pressable
@@ -444,9 +454,13 @@ export default function B2bScreen() {
               </Pressable>
             )}
             ListEmptyComponent={
-              <View className="flex-1 justify-center items-center py-20">
-                <Text className="text-on-surface-variant font-bold text-base">No B2B customers found</Text>
-              </View>
+              <EmptyState
+                icon="account-group"
+                title="No customers found"
+                description="Try a different search, or add a new B2B customer below."
+                actionLabel="Add Customer"
+                onAction={() => setAddPartyModal(true)}
+              />
             }
           />
         </View>
@@ -537,7 +551,7 @@ export default function B2bScreen() {
                 <View className="flex-row items-center">
                   <View className="flex-1 mr-2">
                     <Text numberOfLines={1} className="font-bold text-sm text-on-surface dark:text-text-primary-dark">{c.product.name}</Text>
-                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">₹{parseFloat(c.product.price).toFixed(2)} × {c.quantity}</Text>
+                    <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{formatRupee(parseFloat(c.product.price), 2)} × {c.quantity}</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
                     <Pressable onPress={() => updateQuantity(c.product.id, -1)} className="w-7 h-7 rounded-full bg-surface-container items-center justify-center">
@@ -549,7 +563,7 @@ export default function B2bScreen() {
                     </Pressable>
                   </View>
                   <Text className="font-black text-base text-primary dark:text-primary-dark min-w-[60px] text-right ml-2">
-                    ₹{(parseFloat(c.product.price) * c.quantity).toFixed(0)}
+                    {formatRupee((parseFloat(c.product.price) * c.quantity))}
                   </Text>
                 </View>
               </View>
@@ -560,23 +574,23 @@ export default function B2bScreen() {
           <View className="pt-4 border-t border-outline-variant dark:border-outline">
             <View className="flex-row justify-between mb-1">
               <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">Subtotal</Text>
-              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{subtotal.toFixed(2)}</Text>
+              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{formatRupee(subtotal, 2)}</Text>
             </View>
             {discountTotal > 0 && (
               <View className="flex-row justify-between mb-1">
                 <Text className="text-sm text-error">Discount</Text>
-                <Text className="text-sm font-bold text-error">−₹{discountTotal.toFixed(2)}</Text>
+                <Text className="text-sm font-bold text-error">−{formatRupee(discountTotal, 2)}</Text>
               </View>
             )}
             {taxTotal > 0 && (
               <View className="flex-row justify-between mb-1">
                 <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">GST</Text>
-                <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">₹{taxTotal.toFixed(2)}</Text>
+                <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{formatRupee(taxTotal, 2)}</Text>
               </View>
             )}
             <View className="flex-row justify-between pt-2 border-t border-outline-variant dark:border-outline">
               <Text className="text-lg font-black text-on-surface dark:text-text-primary-dark">Total</Text>
-              <Text className="text-lg font-black text-primary dark:text-primary-dark">₹{grandTotal.toFixed(2)}</Text>
+              <Text className="text-lg font-black text-primary dark:text-primary-dark">{formatRupee(grandTotal, 2)}</Text>
             </View>
             <Pressable
               onPress={handleCheckout}
@@ -586,7 +600,7 @@ export default function B2bScreen() {
               {checkoutLoading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-black text-lg">Confirm B2B Sale · ₹{grandTotal.toFixed(0)}</Text>
+                <Text className="text-white font-black text-lg">Confirm B2B Sale · {formatRupee(grandTotal)}</Text>
               )}
             </Pressable>
           </View>

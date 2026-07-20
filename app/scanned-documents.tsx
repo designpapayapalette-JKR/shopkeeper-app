@@ -5,6 +5,7 @@ import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { listScans, deleteScan, ScanRecord, ScanCategory } from "../src/lib/scanCapture";
+import EmptyState from "../src/components/EmptyState";
 
 const TABS: { key: ScanCategory | "all"; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { key: "all", label: "All", icon: "image-multiple-outline" },
@@ -106,12 +107,11 @@ export default function ScannedDocumentsScreen() {
         refreshing={loading}
         onRefresh={load}
         ListEmptyComponent={
-          <View className="items-center py-20">
-            <MaterialCommunityIcons name="camera-outline" size={40} color={theme.colors.onSurfaceVariant} style={{ marginBottom: 12 }} />
-            <Text className="text-on-surface-variant dark:text-text-secondary-dark font-semibold text-sm text-center">
-              Nothing scanned yet. Use the Scan option on the Dashboard to photograph a purchase bill, product, or expense receipt.
-            </Text>
-          </View>
+          <EmptyState
+            icon="camera-outline"
+            title="Nothing scanned yet"
+            description="Use the Scan option on the Dashboard to photograph a purchase bill, product, or expense receipt."
+          />
         }
         renderItem={({ item }) => (
           <Pressable

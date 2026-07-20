@@ -4,6 +4,7 @@ import { useTheme } from "react-native-paper";
 import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import EmptyState from "../src/components/EmptyState";
 
 interface Suggestion {
   product_id: string;
@@ -126,10 +127,7 @@ export default function ReorderSuggestionsScreen() {
         {loading ? (
           <View className="py-12 items-center"><ActivityIndicator color={theme.colors.primary} /></View>
         ) : suggestions.length === 0 ? (
-          <View className="py-12 items-center">
-            <MaterialCommunityIcons name="check-circle-outline" size={40} color={theme.colors.primary} />
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-2">All products are above reorder level.</Text>
-          </View>
+          <EmptyState icon="check-circle-outline" title="All stocked up" description="All products are above their reorder level." />
         ) : (
           <>
             <View className="flex-row gap-2 mb-4">

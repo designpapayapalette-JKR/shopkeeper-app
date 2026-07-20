@@ -7,6 +7,7 @@ import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth-context";
 import { useOutlet } from "../src/lib/outlet-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 const STATUS_OPTIONS = [
   { value: "present", label: "Present", icon: "check-circle", color: "#2E9E5B" },
@@ -330,15 +331,9 @@ export default function AttendanceScreen() {
             )}
 
             {!selectedOutletId ? (
-              <View className="items-center py-10 px-4">
-                <MaterialCommunityIcons name="store-off" size={40} color={theme.colors.outline} />
-                <Text className="text-sm text-on-surface-variant mt-2 text-center">Select an outlet to mark attendance</Text>
-              </View>
+              <EmptyState icon="store-off" title="Select an outlet" description="Choose an outlet above to mark attendance." />
             ) : roster.length === 0 ? (
-              <View className="items-center py-10">
-                <MaterialCommunityIcons name="account-multiple-remove" size={40} color={theme.colors.outline} />
-                <Text className="text-sm text-on-surface-variant mt-2">No staff assigned to this outlet</Text>
-              </View>
+              <EmptyState icon="account-multiple-remove" title="No staff assigned" description="No team members are assigned to this outlet yet." />
             ) : (
               <>
                 {/* Mark All Present Quick Action */}
@@ -426,10 +421,7 @@ export default function AttendanceScreen() {
         {activeTab === "history" && (
           <>
             {history.length === 0 ? (
-              <View className="items-center py-10">
-                <MaterialCommunityIcons name="calendar-blank" size={40} color={theme.colors.outline} />
-                <Text className="text-sm text-on-surface-variant mt-2">No attendance records</Text>
-              </View>
+              <EmptyState icon="calendar-blank" title="No attendance records" />
             ) : (
               history.map((rec) => {
                 const statusOpt = STATUS_OPTIONS.find((s) => s.value === rec.status);

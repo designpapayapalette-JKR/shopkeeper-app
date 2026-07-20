@@ -28,6 +28,7 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
 import BulkUploadCard from "../../src/components/BulkUploadCard";
+import EmptyState from "../../src/components/EmptyState";
 import { GstRatePicker } from "../../src/components/GstRatePicker";
 import { useTerminology } from "../../src/lib/terminology-context";
 import {
@@ -37,6 +38,11 @@ import {
   saveProductCustomFieldValues,
   CustomFieldValue,
 } from "../../src/components/ProductCustomFields";
+
+// Indian lakh/crore grouping — shopkeeper-mobile-design-system.md §3.1.
+function formatRupee(n: number): string {
+  return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
 
 interface Product {
   id: string;
@@ -952,14 +958,13 @@ export default function InventoryScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : products.length === 0 ? (
-        <View className="flex-1 justify-center items-center py-20">
-          <Text className="text-on-surface-variant dark:text-text-secondary-dark text-base font-semibold text-center">
-            No products found
-          </Text>
-          <Text className="text-on-surface-variant dark:text-text-secondary-dark text-sm text-center mt-1">
-            Try adjusting your search query or add a new product.
-          </Text>
-        </View>
+        <EmptyState
+          icon="package-variant-closed"
+          title="No products yet"
+          description="Add your first product to start tracking stock and billing it at the counter."
+          actionLabel="Add Product"
+          onAction={() => setIsAdding(true)}
+        />
       ) : (
         <FlatList
           data={groupedProducts}
@@ -1024,16 +1029,16 @@ export default function InventoryScreen() {
                     <View className="flex-row items-center" style={{ gap: 4 }}>
                       {item.mrp && parseFloat(item.mrp) > 0 && (
                         <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark line-through">
-                          ₹{parseFloat(item.mrp).toFixed(0)}
+                          {formatRupee(parseFloat(item.mrp))}
                         </Text>
                       )}
                       <Text className="text-base font-bold text-primary dark:text-primary-dark">
-                        ₹{parseFloat(item.price).toFixed(0)}
+                        {formatRupee(parseFloat(item.price))}
                       </Text>
                     </View>
                     {item.mrp && parseFloat(item.mrp) > parseFloat(item.price) && (
                       <Text className="text-xs text-green-600 dark:text-green-400 font-semibold">
-                        Save ₹{(parseFloat(item.mrp) - parseFloat(item.price)).toFixed(0)}
+                        Save {formatRupee(parseFloat(item.mrp) - parseFloat(item.price))}
                       </Text>
                     )}
                     <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
@@ -1041,13 +1046,14 @@ export default function InventoryScreen() {
                     </Text>
                     {isTablet && (
                       <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark mt-0.5">
-                        Cost: ₹{parseFloat(item.cost || "0").toFixed(0)}
+                        Cost: {formatRupee(parseFloat(item.cost || "0"))}
                       </Text>
                     )}
                   </View>
                   <Pressable
                     onPress={() => handleDeleteProduct(item)}
                     disabled={deletingId === item.id}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     className="w-8 h-8 rounded-full bg-error/10 items-center justify-center"
                   >
                     {deletingId === item.id ? (

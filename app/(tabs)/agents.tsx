@@ -16,6 +16,7 @@ import AgentMapView from "../../src/components/AgentMapView";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { useTheme } from "react-native-paper";
+import EmptyState from "../../src/components/EmptyState";
 
 interface AgentPing {
   id: string;
@@ -266,17 +267,15 @@ export default function AgentsScreen() {
       {viewMode === "map" && (
         <View className="flex-1">
           {agentsOnMap.length === 0 ? (
-            <View className="flex-1 justify-center items-center px-8">
-              <MaterialCommunityIcons name="map-marker-off-outline" size={40} color={theme.colors.outline} style={{ marginBottom: 16 }} />
-              <Text className="text-on-surface dark:text-text-primary-dark font-bold text-center text-base">
-                {agents.length === 0 ? "No field agents added yet" : "No agents have checked in yet"}
-              </Text>
-              <Text className="text-on-surface-variant text-sm text-center mt-1">
-                {agents.length === 0
-                  ? "Add a field agent from More → Staff to start tracking their location."
-                  : "Locations will appear here once your field agents open the MMC Agent app and share their location."}
-              </Text>
-            </View>
+            <EmptyState
+              icon="map-marker-off-outline"
+              title={agents.length === 0 ? "No field agents added yet" : "No agents have checked in yet"}
+              description={
+                agents.length === 0
+                  ? "Add a field agent from Home → Staff & HR to start tracking their location."
+                  : "Locations will appear here once your field agents open the MMC Agent app and share their location."
+              }
+            />
           ) : (
             <AgentMapView
               mapRef={mapRef}
@@ -354,16 +353,11 @@ export default function AgentsScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={
-            <View className="flex-1 py-24 items-center">
-              <MaterialCommunityIcons name="account-group-outline" size={40} color={theme.colors.outline} style={{ marginBottom: 12 }} />
-              <Text className="text-on-surface dark:text-text-primary-dark font-bold text-base text-center">
-                No field agents tracked yet
-              </Text>
-              <Text className="text-on-surface-variant text-sm text-center mt-1 px-8">
-                Agent locations will appear here once the MMC Agent app starts
-                pinging.
-              </Text>
-            </View>
+            <EmptyState
+              icon="account-group-outline"
+              title="No field agents tracked yet"
+              description="Agent locations will appear here once the MMC Agent app starts pinging."
+            />
           }
           renderItem={({ item }) => {
             const sc = statusColor(item.minutesAgo);
