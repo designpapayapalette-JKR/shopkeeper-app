@@ -8,22 +8,22 @@ import { getIsConnected, subscribeToConnectivity } from "../lib/connectivity";
 // not alarming — for this audience, patchy network is normal and expected,
 // not an error. See shopkeeper-mobile-design-system.md §6.13 / §7.7.
 export default function OfflineBanner() {
-  const [connected, setConnected] = useState(getIsConnected());
-  const insets = useSafeAreaInsets();
+ const [connected, setConnected] = useState(getIsConnected());
+ const insets = useSafeAreaInsets();
 
-  useEffect(() => subscribeToConnectivity(setConnected), []);
+ useEffect(() => subscribeToConnectivity(setConnected), []);
 
-  if (connected) return null;
+ if (connected) return null;
 
-  return (
-    <View
-      className="flex-row items-center justify-center bg-surface-container-high"
-      style={{ paddingTop: insets.top + 8, paddingBottom: 8, paddingHorizontal: 12, gap: 8 }}
-    >
-      <MaterialCommunityIcons name="wifi-off" size={16} color="#3e4944" />
-      <Text className="font-body-md text-on-surface-variant text-center" style={{ fontSize: 13 }}>
-        No internet. Your work is saved on this phone.
-      </Text>
-    </View>
-  );
+ return (
+ <View
+ className="flex-row items-center justify-center bg-surface-container-high"
+ style={{ paddingTop: insets.top + 8, paddingBottom: 8, paddingHorizontal: 12, gap: 8 }}
+ >
+ <MaterialCommunityIcons name="wifi-off" size={16} color="#3e4944" />
+ <Text className="font-body-md text-on-surface-variant text-center" style={{ fontSize: 13 }}>
+ No internet. Your work is saved on this phone.
+ </Text>
+ </View>
+ );
 }

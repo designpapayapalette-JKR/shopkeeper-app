@@ -1,179 +1,176 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, Modal, Pressable } from "react-native";
-import { Card, Button, List, Divider, Avatar, useTheme } from "react-native-paper";
+import { View, ScrollView, Text, Modal, Pressable, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { useAuth } from "../src/lib/auth-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import RoleBadge from "../src/components/RoleBadge";
 import { roleColor } from "../src/lib/roles";
 import { useTerminology, type TerminologyLang } from "../src/lib/terminology-context";
+import { useOutlet } from "../src/lib/outlet-context";
 
 const LANGUAGES: { key: TerminologyLang; label: string }[] = [
-  { key: "en", label: "English" },
-  { key: "hi", label: "हिंदी" },
-  { key: "ta", label: "தமிழ்" },
-  { key: "ml", label: "മലയാളം" },
-  { key: "kn", label: "ಕನ್ನಡ" },
-  { key: "te", label: "తెలుగు" },
-  { key: "mr", label: "मराठी" },
-  { key: "gu", label: "ગુજરાતી" },
+  { key: "en", label: "English" }, { key: "hi", label: "हिंदी" }, { key: "ta", label: "தமிழ்" },
+  { key: "ml", label: "മലയാളം" }, { key: "kn", label: "ಕನ್ನಡ" }, { key: "te", label: "తెలుగు" },
+  { key: "mr", label: "मराठी" }, { key: "gu", label: "ગુજરાતી" },
 ];
+
+function MenuRow({ icon, title, description, onPress, showChevron = true, titleBold = true }: any) {
+  const theme = useTheme();
+  return (
+    <Pressable onPress={onPress} className="flex-row items-center px-5 py-4" style={{ minHeight: 52 }}>
+      <MaterialCommunityIcons name={icon} size={22} color={theme.colors.onSurfaceVariant} style={{ width: 28 }} />
+      <View className="flex-1 ml-3">
+        <Text className={`text-sm ${titleBold ? "font-bold" : "font-medium"} text-on-surface`}>{title}</Text>
+        {description && <Text className="text-xs text-on-surface-variant mt-0.5">{description}</Text>}
+      </View>
+      {showChevron && <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />}
+    </Pressable>
+  );
+}
 
 export default function ProfileScreen() {
   const theme = useTheme();
-  const { user, userRole, activeCompany, activeBrand, logout } = useAuth();
+  const { user, userRole, activeCompany, logout } = useAuth();
   const router = useRouter();
   const topInset = useTopInset();
   const bottomInset = useBottomInset(0);
   const confirm = useConfirm();
   const { lang, setLang } = useTerminology();
   const insets = useSafeAreaInsets();
-  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+  const { outlets, selectedOutlet, selectedOutletId, setSelectedOutletId, loading: outletsLoading } = useOutlet();
+  const [showLang, setShowLang] = useState(false);
+  const [showOutlet, setShowOutlet] = useState(false);
 
   const initials = [user?.firstName, user?.lastName].filter(Boolean).map((s: string) => s[0]).join("").toUpperCase() || "U";
   const badgeColor = roleColor(userRole);
   const outletName = user?.outlet?.name || activeCompany?.name || "Main Store";
   const isOwner = userRole === "owner";
+  const isManager = userRole === "manager";
 
   const handleLogout = async () => {
-    const ok = await confirm({
-      title: "Logout karein?",
-      message: `You'll be signed out of ${outletName}. Any bill saved on this phone but not yet synced will stay safe and upload automatically next time you log in.`,
-      confirmLabel: "Logout",
-      cancelLabel: "Cancel",
-      destructive: true,
-    });
+    const ok = await confirm({ title: "Logout karein?", message: `You'll be signed out of ${outletName}.`, confirmLabel: "Logout", cancelLabel: "Cancel", destructive: true });
     if (ok) logout();
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background dark:bg-bg-dark"
-      contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: bottomInset + 24 }}
-    >
+    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: bottomInset + 24 }}>
       {/* Avatar + Name */}
-      <View className="items-center px-4 mb-6">
-        <Avatar.Text
-          size={72}
-          label={initials}
-          color="#FFFFFF"
-          style={{ backgroundColor: badgeColor, marginBottom: 12 }}
-        />
-        <Text className="font-headline-md text-on-surface dark:text-text-primary-dark text-center" style={{ fontSize: 22, fontWeight: "700" }}>
+      <View className="items-center px-5 mb-6">
+        <View className="w-[72px] h-[72px] rounded-full items-center justify-center mb-3" style={{ backgroundColor: badgeColor }}>
+          <Text className="text-white font-bold" style={{ fontSize: 26 }}>{initials}</Text>
+        </View>
+        <Text className="font-headline-md text-on-surface text-center" style={{ fontSize: 22, fontWeight: "700" }}>
           {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || "User"}
         </Text>
         <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
           <MaterialCommunityIcons name="store" size={14} color={theme.colors.onSurfaceVariant} />
-          <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{outletName}</Text>
+          <Text className="text-sm text-on-surface-variant">{outletName}</Text>
         </View>
-        <View className="mt-2">
-          <RoleBadge role={userRole} />
-        </View>
+        <View className="mt-2"><RoleBadge role={userRole} /></View>
       </View>
 
-      {/* Preferences — every row is icon + plain label + chevron; toggle rows
-          reserve the trailing slot for a Switch, never both (design system §6.9) */}
-      <Card mode="elevated" className="mx-4 mb-4">
-        <List.Item
-          title="Outlet / Brand"
-          description={activeBrand?.name || "All Brands"}
-          left={(props) => <List.Icon {...props} icon="store" />}
-          titleStyle={{ fontSize: 16, fontWeight: "600" }}
-        />
-        <Divider />
-        <List.Item
-          title="Printer Settings"
-          left={(props) => <List.Icon {...props} icon="printer" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          titleStyle={{ fontSize: 16, fontWeight: "600" }}
-          onPress={() => router.push("/printer-settings" as any)}
-        />
-        <Divider />
-        <List.Item
-          title="Bhasha (Language)"
-          description={LANGUAGES.find((l) => l.key === lang)?.label}
-          left={(props) => <List.Icon {...props} icon="translate" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          titleStyle={{ fontSize: 16, fontWeight: "600" }}
-          onPress={() => setShowLanguagePicker(true)}
-        />
-        <Divider />
-        <List.Item
-          title="Madad (Help)"
-          left={(props) => <List.Icon {...props} icon="help-circle" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          titleStyle={{ fontSize: 16, fontWeight: "600" }}
-          onPress={() => router.push("/support-tickets" as any)}
-        />
-      </Card>
-
-      {/* Account — only Owner/Manager get security settings surfaced here;
-          Cashier/Godown Manager keep this tab short (design system §8.2) */}
-      {isOwner && (
-        <Card mode="elevated" className="mx-4 mb-4">
-          <List.Item
-            title="Account Security"
-            left={(props) => <List.Icon {...props} icon="shield-lock" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            titleStyle={{ fontSize: 16, fontWeight: "600" }}
-            onPress={() => router.push("/account-security" as any)}
-          />
-        </Card>
-      )}
+      {/* Preferences */}
+      <View className="mx-5 mb-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+        {(isOwner || (isManager && outlets.length > 1)) && (
+          <MenuRow icon="store" title="Outlet" description={selectedOutlet?.name || activeCompany?.name || "All Outlets"}
+            onPress={() => setShowOutlet(true)} />
+        )}
+        {isManager && outlets.length <= 1 && (
+          <MenuRow icon="store" title={outletName} showChevron={false} />
+        )}
+        <View className="h-px bg-outline-variant mx-5" />
+        <MenuRow icon="printer" title="Printer Settings" onPress={() => router.push("/printer-settings" as any)} />
+        <View className="h-px bg-outline-variant mx-5" />
+        <MenuRow icon="translate" title="Bhasha (Language)" description={LANGUAGES.find((l) => l.key === lang)?.label}
+          onPress={() => setShowLang(true)} />
+        <View className="h-px bg-outline-variant mx-5" />
+        <MenuRow icon="cash-multiple" title="My Payslip" onPress={() => router.push("/payroll" as any)} />
+        {!isOwner && (
+          <>
+            <View className="h-px bg-outline-variant mx-5" />
+            <MenuRow icon="calendar-check" title="My Attendance" onPress={() => router.push("/attendance" as any)} />
+          </>
+        )}
+        {isOwner && (
+          <>
+            <View className="h-px bg-outline-variant mx-5" />
+            <MenuRow icon="open-in-new" title="Open Full Admin (Web)" onPress={() => Linking.openURL("https://manage.mycounter.com")} />
+          </>
+        )}
+        <View className="h-px bg-outline-variant mx-5" />
+        <MenuRow icon="help-circle" title="Need help?" description="Call or WhatsApp support"
+          onPress={() => { const phone = activeCompany?.support_phone || "+918080000000"; Linking.openURL(`tel:${phone}`); }} />
+      </View>
 
       {/* Logout */}
-      <View className="px-4 mt-2">
-        <Button
-          mode="contained"
-          buttonColor={theme.colors.error}
-          textColor="#FFFFFF"
-          icon="logout"
-          onPress={handleLogout}
-          className="mb-3"
-          contentStyle={{ minHeight: 52 }}
-          labelStyle={{ fontSize: 16, fontWeight: "700" }}
-        >
-          Logout
-        </Button>
-        <Text className="text-xs text-center text-on-surface-variant dark:text-text-secondary-dark">MMC User v1.0</Text>
+      <View className="px-5 mt-2">
+        <Pressable onPress={handleLogout}
+          className="bg-error py-4 rounded-2xl flex-row items-center justify-center" style={{ gap: 8, minHeight: 52 }}>
+          <MaterialCommunityIcons name="logout" size={18} color="white" />
+          <Text className="text-white font-bold text-base">Logout</Text>
+        </Pressable>
+        <Text className="text-xs text-center text-on-surface-variant mt-3">MMC User v2.0</Text>
       </View>
 
-      {/* Language picker — bottom sheet, thumb-reachable one-handed
-          (shopkeeper-mobile-design-system.md §6.8/§7.1: language selection
-          is one tap from the Me tab always). */}
-      <Modal visible={showLanguagePicker} transparent animationType="slide" onRequestClose={() => setShowLanguagePicker(false)}>
-        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setShowLanguagePicker(false)}>
-          <Pressable
-            onPress={() => {}}
-            className="bg-surface-container-lowest dark:bg-surface-dark rounded-t-2xl px-lg pt-lg"
-            style={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
-          >
-            <View className="self-center rounded-full bg-outline-variant mb-lg" style={{ width: 40, height: 4 }} />
-            <Text className="font-headline-sm text-on-surface dark:text-text-primary-dark mb-lg" style={{ fontSize: 18, fontWeight: "700" }}>
-              Bhasha Chunein (Choose Language)
-            </Text>
+      {/* Language picker */}
+      <Modal visible={showLang} transparent animationType="slide" onRequestClose={() => setShowLang(false)}>
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setShowLang(false)}>
+          <Pressable onPress={() => {}}
+            className="bg-surface-container-lowest rounded-t-2xl px-5 pt-5"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}>
+            <View className="self-center rounded-full bg-outline-variant mb-4" style={{ width: 40, height: 4 }} />
+            <Text className="font-headline-md text-on-surface mb-4" style={{ fontSize: 18, fontWeight: "700" }}>Bhasha Chunein (Choose Language)</Text>
             {LANGUAGES.map((l) => (
-              <Pressable
-                key={l.key}
-                onPress={() => {
-                  setLang(l.key);
-                  setShowLanguagePicker(false);
-                }}
-                className="flex-row items-center justify-between border-b border-outline-variant dark:border-outline"
-                style={{ minHeight: 52, paddingVertical: 4 }}
-              >
-                <Text
-                  className="text-on-surface dark:text-text-primary-dark"
-                  style={{ fontSize: 17, fontWeight: lang === l.key ? "700" : "400" }}
-                >
-                  {l.label}
-                </Text>
+              <Pressable key={l.key} onPress={() => { setLang(l.key); setShowLang(false); }}
+                className="flex-row items-center justify-between border-b border-outline-variant" style={{ minHeight: 52, paddingVertical: 4 }}>
+                <Text className="text-on-surface" style={{ fontSize: 17, fontWeight: lang === l.key ? "700" : "400" }}>{l.label}</Text>
                 {lang === l.key && <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />}
               </Pressable>
             ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Outlet picker */}
+      <Modal visible={showOutlet} transparent animationType="slide" onRequestClose={() => setShowOutlet(false)}>
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setShowOutlet(false)}>
+          <Pressable onPress={() => {}}
+            className="bg-surface-container-lowest rounded-t-2xl px-5 pt-5"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) + 16, maxHeight: "70%" }}>
+            <View className="self-center rounded-full bg-outline-variant mb-4" style={{ width: 40, height: 4 }} />
+            <Text className="font-headline-md text-on-surface mb-4" style={{ fontSize: 18, fontWeight: "700" }}>Select Outlet</Text>
+            {outletsLoading ? (
+              <View className="py-8 items-center"><Text className="text-sm text-on-surface-variant">Loading outlets...</Text></View>
+            ) : (
+              <ScrollView>
+                {outlets.map((o: any) => {
+                  const isActive = o.id === selectedOutletId;
+                  return (
+                    <Pressable key={o.id} onPress={() => { setSelectedOutletId(o.id); setShowOutlet(false); }}
+                      className="flex-row items-center py-4 px-2 border-b border-outline-variant">
+                      <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: isActive ? theme.colors.primary : theme.colors.outlineVariant }}>
+                        <MaterialCommunityIcons name={isActive ? "store-check" : "store-outline"} size={20} color={isActive ? "#fff" : "#6B7280"} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className={`text-base font-bold ${isActive ? "text-primary" : "text-on-surface"}`}>{o.name}</Text>
+                        <Text className="text-xs text-on-surface-variant mt-0.5 capitalize">{o.type?.replace("_", " ")}</Text>
+                      </View>
+                      {isActive && <MaterialCommunityIcons name="check-circle" size={22} color={theme.colors.primary} />}
+                    </Pressable>
+                  );
+                })}
+                {isOwner && (
+                  <Pressable onPress={() => { setSelectedOutletId(null); setShowOutlet(false); }}
+                    className="mt-4 py-3 rounded-xl items-center border border-outline-variant">
+                    <Text className="text-sm font-bold text-on-surface-variant">All Outlets (Owner View)</Text>
+                  </Pressable>
+                )}
+              </ScrollView>
+            )}
           </Pressable>
         </Pressable>
       </Modal>

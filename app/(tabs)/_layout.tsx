@@ -9,56 +9,57 @@ import GlobalSearchScreen from "../global-search";
 import ProfileScreen from "../profile";
 
 export default function TabsLayout() {
-  const theme = useTheme();
-  const { userRole } = useAuth();
-  const { isModuleEnabled } = useModuleVisibility(userRole);
-  const insets = useSafeAreaInsets();
+ const theme = useTheme();
+ const { userRole } = useAuth();
+ const { isModuleEnabled } = useModuleVisibility(userRole);
+ const insets = useSafeAreaInsets();
 
-  const showPos = isModuleEnabled("pos") && userRole !== "warehouse_manager";
+ const showPos = isModuleEnabled("pos");
 
-  const routes = useMemo(() => {
-    const items: { key: string; title: string; focusedIcon: string; unfocusedIcon: string }[] = [
-      { key: "home", title: "Home", focusedIcon: "view-dashboard", unfocusedIcon: "view-dashboard-outline" },
-    ];
-    if (showPos) {
-      items.push({ key: "pos", title: "POS", focusedIcon: "point-of-sale", unfocusedIcon: "point-of-sale" });
-    }
-    items.push(
-      { key: "search", title: "Search", focusedIcon: "magnify", unfocusedIcon: "magnify" },
-      { key: "profile", title: "Me", focusedIcon: "account", unfocusedIcon: "account-outline" }
-    );
-    return items;
-  }, [showPos]);
+ const routes = useMemo(() => {
+ const items: { key: string; title: string; focusedIcon: string; unfocusedIcon: string }[] = [
+ { key: "home", title: "Home", focusedIcon: "view-dashboard", unfocusedIcon: "view-dashboard-outline" },
+ ];
+ if (showPos) {
+ items.push({ key: "pos", title: "POS", focusedIcon: "point-of-sale", unfocusedIcon: "point-of-sale" });
+ }
+ items.push(
+ { key: "search", title: "Search", focusedIcon: "magnify", unfocusedIcon: "magnify" },
+ { key: "profile", title: "Me", focusedIcon: "account", unfocusedIcon: "account-outline" }
+ );
+ return items;
+ }, [showPos]);
 
-  const [index, setIndex] = useState(0);
+ const [index, setIndex] = useState(0);
 
-  const renderScene = BottomNavigation.SceneMap({
-    home: HomeScreen,
-    pos: PosScreen,
-    search: GlobalSearchScreen,
-    profile: ProfileScreen,
-  });
+ const renderScene = BottomNavigation.SceneMap({
+ home: HomeScreen,
+ pos: PosScreen,
+ search: GlobalSearchScreen,
+ profile: ProfileScreen,
+ });
 
-  return (
-    <BottomNavigation
-      navigationState={{ index, routes }}
-      onIndexChange={setIndex}
-      renderScene={renderScene}
-      activeColor={theme.colors.primary}
-      inactiveColor={theme.colors.onSurfaceVariant}
-      barStyle={{
-        backgroundColor: theme.colors.surface,
-        height: 62 + insets.bottom,
-        paddingBottom: 8 + insets.bottom,
-        paddingTop: 4,
-        borderTopWidth: 0,
-        elevation: 12,
-        shadowColor: "#000",
-        shadowOpacity: 0.06,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: -2 },
-      }}
-      labeled
-    />
-  );
+ return (
+ <BottomNavigation
+ navigationState={{ index, routes }}
+ onIndexChange={setIndex}
+ renderScene={renderScene}
+ activeColor={theme.colors.primary}
+ inactiveColor={theme.colors.onSurfaceVariant}
+  barStyle={{
+  backgroundColor: theme.colors.surface,
+  height: 64 + insets.bottom,
+  paddingBottom: 12 + Math.max(insets.bottom, 8),
+  paddingTop: 6,
+  borderTopWidth: 0,
+  elevation: 16,
+  shadowColor: "#000",
+  shadowOpacity: 0.08,
+  shadowRadius: 16,
+  shadowOffset: { width: 0, height: -3 },
+  }}
+
+ labeled
+ />
+ );
 }

@@ -9,10 +9,9 @@ import {
   RefreshControl,
   Modal,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  TextInput,
+  Switch,
 } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
@@ -20,17 +19,7 @@ import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import EmptyState from "../src/components/EmptyState";
-import {
-  Card,
-  useTheme,
-  Button,
-  Snackbar,
-  Chip,
-  TextInput,
-  Dialog,
-  Portal,
-  Switch,
-} from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 interface Outlet {
   id: string;
@@ -76,10 +65,7 @@ export default function OutletsScreen() {
   const [form, setForm] = useState<OutletForm>({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
 
-  const [snackbar, setSnackbar] = useState({ visible: false, message: "" });
   const [loadTrigger, setLoadTrigger] = useState(0);
-
-  const showSuccess = (message: string) => setSnackbar({ visible: true, message });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -144,10 +130,10 @@ export default function OutletsScreen() {
       };
       if (editing) {
         await api.patch(`/outlets/${editing.id}`, payload);
-        showSuccess("Outlet updated.");
+        Alert.alert("Success", "Outlet updated.");
       } else {
         await api.post("/outlets", payload);
-        showSuccess("Outlet created.");
+        Alert.alert("Success", "Outlet created.");
       }
       closeForm();
       setLoadTrigger((n) => n + 1);
@@ -169,58 +155,50 @@ export default function OutletsScreen() {
     try {
       await api.delete(`/outlets/${item.id}`);
       setLoadTrigger((n) => n + 1);
-      showSuccess("Outlet deleted.");
+      Alert.alert("Success", "Outlet deleted.");
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to delete outlet.");
     }
   };
 
   const renderItem = ({ item }: { item: Outlet }) => (
-    <Card
-      className="mb-3 rounded-2xl bg-surface-container-lowest dark:bg-surface-dark"
-      style={{ elevation: 0 }}
-      onPress={() => openEdit(item)}
-      onLongPress={() => handleDelete(item)}
-    >
-      <View className="p-4">
+    <Pressable onPress={() => openEdit(item)} onLongPress={() => handleDelete(item)}>
+      <View className="mb-3 bg-surface-container-lowest border border-outline-variant rounded-2xl p-4">
         <View className="flex-row items-start justify-between">
           <View className="flex-1 mr-3">
-            <Text className="text-base font-bold text-on-surface dark:text-text-primary-dark">
+            <Text className="text-base font-bold text-on-surface">
               {item.name}
             </Text>
             {item.address ? (
-              <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mt-1" numberOfLines={1}>
+              <Text className="text-sm text-on-surface-variant mt-1" numberOfLines={1}>
                 {item.address}
               </Text>
             ) : null}
             {item.phone ? (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
                 <MaterialCommunityIcons name="phone-outline" size={12} color={theme.colors.onSurfaceVariant} />
-                <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark">{item.phone}</Text>
+                <Text className="text-sm text-on-surface-variant">{item.phone}</Text>
               </View>
             ) : null}
           </View>
-          <Chip
-            mode="flat"
-            compact
-            className={item.is_active ? "bg-green-100" : "bg-surface-container dark:bg-zinc-800"}
-          >
-            {item.is_active ? "Active" : "Inactive"}
-          </Chip>
+          <View className="rounded-full px-3 py-1 bg-primary/10">
+            <Text className="text-xs font-bold text-primary">
+              {item.is_active ? "Active" : "Inactive"}
+            </Text>
+          </View>
         </View>
       </View>
-    </Card>
+    </Pressable>
   );
 
   return (
-    <View className="flex-1 bg-background dark:bg-bg-dark" style={{ paddingTop: topInset }}>
-      {/* Header */}
+    <View className="flex-1 bg-background" style={{ paddingTop: topInset }}>
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center active:opacity-70">
             <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.primary} />
           </Pressable>
-          <Text className="text-xl font-bold text-on-surface dark:text-text-primary-dark">
+          <Text className="text-xl font-bold text-on-surface">
             Outlets
           </Text>
         </View>
@@ -255,80 +233,85 @@ export default function OutletsScreen() {
         />
       )}
 
-      {/* Create/Edit Dialog */}
-      <Portal>
-        <Dialog visible={showForm} onDismiss={closeForm}>
-          <Dialog.Title>{editing ? "Edit Outlet" : "New Outlet"}</Dialog.Title>
-          <Dialog.Content>
-            <View style={{ gap: 12 }}>
-              <TextInput
-                label="Name *"
-                value={form.name}
-                onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
-                mode="outlined"
-              />
-              <TextInput
-                label="Address"
-                value={form.address}
-                onChangeText={(v) => setForm((f) => ({ ...f, address: v }))}
-                mode="outlined"
-                multiline
-                numberOfLines={2}
-              />
-              <TextInput
-                label="Phone"
-                value={form.phone}
-                onChangeText={(v) => setForm((f) => ({ ...f, phone: v }))}
-                mode="outlined"
-                keyboardType="phone-pad"
-              />
-              <TextInput
-                label="Email"
-                value={form.email}
-                onChangeText={(v) => setForm((f) => ({ ...f, email: v }))}
-                mode="outlined"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <TextInput
-                label="GSTIN"
-                value={form.gstin}
-                onChangeText={(v) => setForm((f) => ({ ...f, gstin: v }))}
-                mode="outlined"
-                autoCapitalize="characters"
-              />
-              <View className="flex-row items-center justify-between mt-2">
-                <Text className="text-sm font-semibold text-on-surface-variant dark:text-text-secondary-dark">
-                  Active
-                </Text>
-                <Switch
-                  value={form.is_active}
-                  onValueChange={(v) => setForm((f) => ({ ...f, is_active: v }))}
+      <Modal visible={showForm} transparent animationType="slide" onRequestClose={closeForm}>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="bg-surface-container-lowest rounded-t-2xl pb-10">
+            <ScrollView className="px-6 pt-6">
+              <Text className="text-lg font-bold text-on-surface mb-4">
+                {editing ? "Edit Outlet" : "New Outlet"}
+              </Text>
+              <View style={{ gap: 12 }}>
+                <TextInput
+                  placeholder="Name *"
+                  value={form.name}
+                  onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
+                  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
+                  placeholderTextColor="#9CA3AF"
                 />
+                <TextInput
+                  placeholder="Address"
+                  value={form.address}
+                  onChangeText={(v) => setForm((f) => ({ ...f, address: v }))}
+                  multiline
+                  numberOfLines={2}
+                  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
+                  placeholderTextColor="#9CA3AF"
+                />
+                <TextInput
+                  placeholder="Phone"
+                  value={form.phone}
+                  onChangeText={(v) => setForm((f) => ({ ...f, phone: v }))}
+                  keyboardType="phone-pad"
+                  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
+                  placeholderTextColor="#9CA3AF"
+                />
+                <TextInput
+                  placeholder="Email"
+                  value={form.email}
+                  onChangeText={(v) => setForm((f) => ({ ...f, email: v }))}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
+                  placeholderTextColor="#9CA3AF"
+                />
+                <TextInput
+                  placeholder="GSTIN"
+                  value={form.gstin}
+                  onChangeText={(v) => setForm((f) => ({ ...f, gstin: v }))}
+                  autoCapitalize="characters"
+                  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
+                  placeholderTextColor="#9CA3AF"
+                />
+                <View className="flex-row items-center justify-between mt-2">
+                  <Text className="text-sm font-semibold text-on-surface-variant">
+                    Active
+                  </Text>
+                  <Switch
+                    value={form.is_active}
+                    onValueChange={(v) => setForm((f) => ({ ...f, is_active: v }))}
+                    trackColor={{ true: theme.colors.primary, false: "#ccc" }}
+                    thumbColor="#f4f3f4"
+                  />
+                </View>
               </View>
-            </View>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={closeForm}>Cancel</Button>
-            <Button onPress={handleSave} loading={saving} disabled={saving}>
-              {editing ? "Update" : "Create"}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      {/* Snackbar */}
-      <Snackbar
-        visible={snackbar.visible}
-        onDismiss={() => setSnackbar({ visible: false, message: "" })}
-        duration={3000}
-        action={{
-          label: "OK",
-          onPress: () => setSnackbar({ visible: false, message: "" }),
-        }}
-      >
-        {snackbar.message}
-      </Snackbar>
+              <View className="flex-row justify-end pt-6 pb-2 gap-3">
+                <Pressable className="py-3 px-6 rounded-xl active:opacity-70" onPress={closeForm}>
+                  <Text className="text-primary font-bold text-base">Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleSave}
+                  disabled={saving}
+                  className="bg-primary py-3 px-6 rounded-xl items-center active:opacity-80"
+                >
+                  <Text className="text-white font-bold text-base">
+                    {saving ? "Saving..." : editing ? "Update" : "Create"}
+                  </Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

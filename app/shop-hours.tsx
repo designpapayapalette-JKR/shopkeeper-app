@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert } from "react-native";
-import { Card, useTheme, Button, TextInput, Dialog, Portal, Chip, Switch } from "react-native-paper";
+import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert, Switch, Modal, TextInput } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
@@ -121,8 +121,8 @@ export default function ShopHoursScreen() {
 
         {weekdays.map((day) => (
           <Pressable key={day.dayIdx} onPress={() => canEdit && openEdit(day.dayIdx)}>
-            <Card mode="elevated" className="mx-4 mb-2">
-              <Card.Content className="flex-row items-center justify-between">
+            <View className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-2">
+              <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center" style={{ gap: 12 }}>
                   <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: day.data?.is_active ? `${theme.colors.primary}15` : "#F5F5F5" }}>
                     <Text className="text-xs font-bold" style={{ color: day.data?.is_active ? theme.colors.primary : "#9E9E9E" }}>
@@ -138,14 +138,14 @@ export default function ShopHoursScreen() {
                             <Text className="text-sm text-primary font-bold">{day.data.open_time}</Text>
                             <MaterialCommunityIcons name="minus" size={14} color="#6B7280" />
                             <Text className="text-sm text-primary font-bold">{day.data.close_time}</Text>
-                            <Chip mode="flat" compact textStyle={{ fontSize: 9, color: "#2E9E5B" }} style={{ backgroundColor: "#2E9E5B15", height: 22 }}>
-                              Active
-                            </Chip>
+                            <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#2E9E5B15", height: 22 }}>
+                              <Text className="text-xs font-bold" style={{ color: "#2E9E5B", fontSize: 9 }}>Active</Text>
+                            </View>
                           </>
                         ) : (
-                          <Chip mode="flat" compact textStyle={{ fontSize: 9, color: "#9E9E9E" }} style={{ backgroundColor: "#F0EDED", height: 22 }}>
-                            Inactive
-                          </Chip>
+                          <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#F0EDED", height: 22 }}>
+                            <Text className="text-xs font-bold" style={{ color: "#9E9E9E", fontSize: 9 }}>Inactive</Text>
+                          </View>
                         )}
                       </View>
                     ) : (
@@ -158,44 +158,45 @@ export default function ShopHoursScreen() {
                     <MaterialCommunityIcons name="delete-outline" size={20} color="#D64545" />
                   </Pressable>
                 )}
-              </Card.Content>
-            </Card>
+              </View>
+            </View>
           </Pressable>
         ))}
       </ScrollView>
 
       {/* Edit Dialog */}
-      <Portal>
-        <Dialog visible={dialog} onDismiss={() => setDialog(false)}>
-          <Dialog.Title>{editDay >= 0 ? DAY_NAMES[editDay] : ""}</Dialog.Title>
-          <Dialog.Content>
+      <Modal visible={dialog} transparent animationType="slide" onRequestClose={() => setDialog(false)}>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-2xl p-6">
+            <Text className="text-lg font-bold text-on-surface mb-4">{editDay >= 0 ? DAY_NAMES[editDay] : ""}</Text>
             <TextInput
-              mode="outlined"
-              label="Open Time (HH:MM)"
+              className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-4"
               value={editOpen}
               onChangeText={setEditOpen}
-              placeholder="09:00"
-              className="mb-3"
+              placeholder="Open Time (HH:MM)"
             />
             <TextInput
-              mode="outlined"
-              label="Close Time (HH:MM)"
+              className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-4"
               value={editClose}
               onChangeText={setEditClose}
-              placeholder="18:00"
-              className="mb-3"
+              placeholder="Close Time (HH:MM)"
             />
-            <View className="flex-row items-center justify-between py-2">
+            <View className="flex-row items-center justify-between py-2 mb-4">
               <Text className="text-sm text-on-surface">Active</Text>
-              <Switch value={editActive} onValueChange={setEditActive} color={theme.colors.primary} />
+              <Switch value={editActive} onValueChange={setEditActive} trackColor={{ false: '#D1D5DB', true: theme.colors.primary }} thumbColor={editActive ? theme.colors.primary : '#f4f3f4'} />
             </View>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setDialog(false)}>Cancel</Button>
-            <Button onPress={handleSave} loading={saving} disabled={saving || !editOpen || !editClose}>Save</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+            <View className="flex-row justify-end" style={{ gap: 8 }}>
+              <Pressable onPress={() => setDialog(false)} className="py-3 px-6 rounded-xl border border-outline-variant">
+                <Text className="text-on-surface font-bold">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={handleSave} disabled={saving || !editOpen || !editClose} className="bg-primary py-3 px-6 rounded-xl items-center flex-row" style={{ gap: 6, opacity: (saving || !editOpen || !editClose) ? 0.5 : 1 }}>
+                {saving && <ActivityIndicator size="small" color="#FFFFFF" />}
+                <Text className="text-white font-bold">Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

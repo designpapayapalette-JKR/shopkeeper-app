@@ -5,7 +5,7 @@
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
 export function isValidGstin(value: string): boolean {
-  const trimmed = value.trim().toUpperCase();
-  if (!trimmed) return true;
-  return GSTIN_REGEX.test(trimmed);
+ const trimmed = value.trim().toUpperCase();
+ if (!trimmed) return true;
+ return GSTIN_REGEX.test(trimmed);
 }

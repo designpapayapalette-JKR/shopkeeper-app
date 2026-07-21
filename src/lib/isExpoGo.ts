@@ -8,8 +8,8 @@ import Constants, { ExecutionEnvironment } from "expo-constants";
 // every native-module require() using it should ALSO be wrapped in
 // try/catch as a safety net (see safeRequireReactNativeMaps below).
 export const isExpoGo: boolean =
-  Constants.appOwnership === "expo" ||
-  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+ Constants.appOwnership === "expo" ||
+ Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 // Metro's bundler statically analyzes require() calls and requires a
 // string literal argument — a generic `require(moduleName: string)` helper
@@ -18,11 +18,11 @@ export const isExpoGo: boolean =
 // with the literal string inline.
 
 export function safeRequireReactNativeMaps(): typeof import("react-native-maps") | null {
-  if (isExpoGo) return null;
-  try {
-    return require("react-native-maps");
-  } catch (e) {
-    console.warn('[isExpoGo] Native module "react-native-maps" unavailable:', e);
-    return null;
-  }
+ if (isExpoGo) return null;
+ try {
+ return require("react-native-maps");
+ } catch (e) {
+ console.warn('[isExpoGo] Native module "react-native-maps" unavailable:', e);
+ return null;
+ }
 }

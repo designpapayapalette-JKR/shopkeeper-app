@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert } from "react-native";
-import { Card, useTheme, Button, TextInput, Dialog, Portal, Chip } from "react-native-paper";
+import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert, Modal, TextInput } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
@@ -199,36 +199,36 @@ export default function PayrollScreen() {
               settings.map((setting) => {
                 const name = `${setting.user.first_name || ""} ${setting.user.last_name || ""}`.trim();
                 return (
-                  <Card key={setting.id} mode="elevated" className="mx-4 mb-2">
-                    <Card.Content>
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center" style={{ gap: 10 }}>
-                          <View className="w-10 h-10 rounded-full items-center justify-center bg-primary/10">
-                            <Text className="text-sm font-bold text-primary">
-                              {name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                            </Text>
-                          </View>
-                          <View>
-                            <Text className="text-sm font-bold text-on-surface">{name}</Text>
-                            <Text className="text-[10px] text-on-surface-variant capitalize">{setting.user.role.replace("_", " ")}</Text>
-                            <View className="flex-row items-center mt-1" style={{ gap: 8 }}>
-                              <Chip mode="flat" compact textStyle={{ fontSize: 9 }}>
-                                ₹{setting.pay_per_day}/day
-                              </Chip>
-                              {setting.base_pay ? (
-                                <Chip mode="flat" compact textStyle={{ fontSize: 9 }}>
-                                  ₹{setting.base_pay} base
-                                </Chip>
-                              ) : null}
+                  <View key={setting.id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-2">
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center" style={{ gap: 10 }}>
+                        <View className="w-10 h-10 rounded-full items-center justify-center bg-primary/10">
+                          <Text className="text-sm font-bold text-primary">
+                            {name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                          </Text>
+                        </View>
+                        <View>
+                          <Text className="text-sm font-bold text-on-surface">{name}</Text>
+                          <Text className="text-[10px] text-on-surface-variant capitalize">{setting.user.role.replace("_", " ")}</Text>
+                          <View className="flex-row items-center mt-1" style={{ gap: 8 }}>
+                            <View className="rounded-full px-3 py-1 bg-primary/10">
+                              <Text className="text-xs font-bold text-primary">₹{setting.pay_per_day}/day</Text>
                             </View>
+                            {setting.base_pay ? (
+                              <View className="rounded-full px-3 py-1 bg-primary/10">
+                                <Text className="text-xs font-bold text-primary">₹{setting.base_pay} base</Text>
+                              </View>
+                            ) : null}
                           </View>
                         </View>
-                        {canEdit && (
-                          <Button compact mode="text" onPress={() => openEdit(setting)}>Edit</Button>
-                        )}
                       </View>
-                    </Card.Content>
-                  </Card>
+                      {canEdit && (
+                        <Pressable onPress={() => openEdit(setting)} className="py-2 px-3">
+                          <Text className="text-primary font-bold text-xs">Edit</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  </View>
                 );
               })
             )}
@@ -240,84 +240,83 @@ export default function PayrollScreen() {
             {/* Month Selector */}
             <View className="flex-row items-center px-4 mb-4" style={{ gap: 8 }}>
               <TextInput
-                mode="outlined"
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
                 value={calcMonth}
                 onChangeText={setCalcMonth}
-                label="Month (YYYY-MM)"
-                dense
-                style={{ flex: 1, height: 40 }}
+                placeholder="Month (YYYY-MM)"
+                style={{ flex: 1 }}
               />
-              <Button
-                mode="contained"
-                loading={calcLoading}
+              <Pressable
                 disabled={calcLoading}
                 onPress={handleCalculate}
-                icon="calculator"
+                className="bg-primary py-3 rounded-xl items-center flex-row px-4"
+                style={{ gap: 6, opacity: calcLoading ? 0.5 : 1 }}
               >
-                Calculate
-              </Button>
+                {calcLoading && <ActivityIndicator size="small" color="#FFFFFF" />}
+                <MaterialCommunityIcons name="calculator" size={18} color="#FFFFFF" />
+                <Text className="text-white font-bold">Calculate</Text>
+              </Pressable>
             </View>
 
             {calcResults.length > 0 && (
               <>
                 {/* Total Card */}
-                <Card mode="elevated" className="mx-4 mb-4">
-                  <Card.Content className="items-center py-3">
+                <View className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-4">
+                  <View className="items-center py-3">
                     <Text className="text-xs text-on-surface-variant mb-1">Total Payroll for {calcMonth}</Text>
                     <Text className="text-3xl font-black text-primary">
                       ₹{totalPay.toLocaleString("en-IN")}
                     </Text>
-                  </Card.Content>
-                </Card>
+                  </View>
+                </View>
 
                 {/* Results */}
                 {calcResults.map((entry) => {
                   const name = `${entry.employee.first_name} ${entry.employee.last_name}`.trim();
                   return (
-                    <Card key={entry.user_id} mode="elevated" className="mx-4 mb-2">
-                      <Card.Content>
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="text-sm font-bold text-on-surface">{name}</Text>
-                          <Text className="text-base font-black text-primary">
-                            ₹{entry.total.toLocaleString("en-IN")}
-                          </Text>
+                    <View key={entry.user_id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-2">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="text-sm font-bold text-on-surface">{name}</Text>
+                        <Text className="text-base font-black text-primary">
+                          ₹{entry.total.toLocaleString("en-IN")}
+                        </Text>
+                      </View>
+                      <View className="flex-row" style={{ gap: 12 }}>
+                        <View className="flex-1">
+                          <Text className="text-[10px] text-on-surface-variant">Present</Text>
+                          <Text className="text-sm font-bold text-on-surface">{entry.days_present} days</Text>
                         </View>
-                        <View className="flex-row" style={{ gap: 12 }}>
-                          <View className="flex-1">
-                            <Text className="text-[10px] text-on-surface-variant">Present</Text>
-                            <Text className="text-sm font-bold text-on-surface">{entry.days_present} days</Text>
-                          </View>
-                          <View className="flex-1">
-                            <Text className="text-[10px] text-on-surface-variant">Absent</Text>
-                            <Text className="text-sm font-bold text-on-surface">{entry.days_absent} days</Text>
-                          </View>
-                          <View className="flex-1">
-                            <Text className="text-[10px] text-on-surface-variant">Days Pay</Text>
-                            <Text className="text-sm font-bold text-on-surface">₹{entry.days_pay.toLocaleString("en-IN")}</Text>
-                          </View>
-                          {entry.base_pay > 0 && (
-                            <View className="flex-1">
-                              <Text className="text-[10px] text-on-surface-variant">Base</Text>
-                              <Text className="text-sm font-bold text-on-surface">₹{entry.base_pay.toLocaleString("en-IN")}</Text>
-                            </View>
-                          )}
+                        <View className="flex-1">
+                          <Text className="text-[10px] text-on-surface-variant">Absent</Text>
+                          <Text className="text-sm font-bold text-on-surface">{entry.days_absent} days</Text>
                         </View>
-                      </Card.Content>
-                    </Card>
+                        <View className="flex-1">
+                          <Text className="text-[10px] text-on-surface-variant">Days Pay</Text>
+                          <Text className="text-sm font-bold text-on-surface">₹{entry.days_pay.toLocaleString("en-IN")}</Text>
+                        </View>
+                        {entry.base_pay > 0 && (
+                          <View className="flex-1">
+                            <Text className="text-[10px] text-on-surface-variant">Base</Text>
+                            <Text className="text-sm font-bold text-on-surface">₹{entry.base_pay.toLocaleString("en-IN")}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
                   );
                 })}
 
                 {canEdit && (
                   <View className="px-4 mt-3 mb-6">
-                    <Button
-                      mode="contained"
-                      loading={processing}
+                    <Pressable
                       disabled={processing}
                       onPress={handleProcess}
-                      icon="cash-check"
+                      className="bg-primary py-3 rounded-xl items-center flex-row justify-center"
+                      style={{ gap: 6, opacity: processing ? 0.5 : 1 }}
                     >
-                      Process All Payments
-                    </Button>
+                      {processing && <ActivityIndicator size="small" color="#FFFFFF" />}
+                      <MaterialCommunityIcons name="cash-check" size={18} color="#FFFFFF" />
+                      <Text className="text-white font-bold">Process All Payments</Text>
+                    </Pressable>
                   </View>
                 )}
               </>
@@ -333,34 +332,37 @@ export default function PayrollScreen() {
         )}
 
         {/* Edit Dialog */}
-        <Portal>
-          <Dialog visible={editDialog} onDismiss={() => setEditDialog(false)}>
-            <Dialog.Title>
-              {editUser ? `${editUser.user.first_name} ${editUser.user.last_name}`.trim() : ""}
-            </Dialog.Title>
-            <Dialog.Content>
+        <Modal visible={editDialog} transparent animationType="slide" onRequestClose={() => setEditDialog(false)}>
+          <View className="flex-1 justify-end bg-black/50">
+            <View className="bg-white rounded-t-2xl p-6">
+              <Text className="text-lg font-bold text-on-surface mb-4">
+                {editUser ? `${editUser.user.first_name} ${editUser.user.last_name}`.trim() : ""}
+              </Text>
               <TextInput
-                mode="outlined"
-                label="Pay Per Day (₹)"
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-4"
                 value={editPayPerDay}
                 onChangeText={setEditPayPerDay}
+                placeholder="Pay Per Day (₹)"
                 keyboardType="numeric"
-                className="mb-3"
               />
               <TextInput
-                mode="outlined"
-                label="Base Pay (₹) — optional"
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
                 value={editBasePay}
                 onChangeText={setEditBasePay}
+                placeholder="Base Pay (₹) — optional"
                 keyboardType="numeric"
               />
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setEditDialog(false)}>Cancel</Button>
-              <Button onPress={handleSaveSetting}>Save</Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
+              <View className="flex-row justify-end mt-6" style={{ gap: 8 }}>
+                <Pressable onPress={() => setEditDialog(false)} className="py-3 px-6 rounded-xl border border-outline-variant">
+                  <Text className="text-on-surface font-bold">Cancel</Text>
+                </Pressable>
+                <Pressable onPress={handleSaveSetting} className="bg-primary py-3 px-6 rounded-xl items-center">
+                  <Text className="text-white font-bold">Save</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </View>
   );

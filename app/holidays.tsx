@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert } from "react-native";
-import { Card, useTheme, Button, TextInput, Dialog, Portal, Chip, Snackbar } from "react-native-paper";
+import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert, Modal, TextInput } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
@@ -44,7 +44,6 @@ export default function HolidaysScreen() {
   const [formDesc, setFormDesc] = useState("");
   const [formIsOpen, setFormIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [snackbar, setSnackbar] = useState({ visible: false, message: "" });
 
   const fetchData = useCallback(async () => {
     try {
@@ -88,7 +87,7 @@ export default function HolidaysScreen() {
       }
       setDialog(false);
       await fetchData();
-    } catch { setSnackbar({ visible: true, message: "Failed to save holiday." }); }
+    } catch { Alert.alert("Error", "Failed to save holiday."); }
     finally { setSaving(false); }
   };
 
@@ -103,31 +102,35 @@ export default function HolidaysScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background dark:bg-bg-dark">
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background dark:bg-bg-dark">
+    <View className="flex-1 bg-background">
       <ScrollView
         contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: bottomInset + 24 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />}
       >
-        {/* Header */}
         <View className="flex-row items-center justify-between px-4 mb-4">
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <Pressable onPress={() => router.back()}>
               <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.primary} />
             </Pressable>
             <MaterialCommunityIcons name="calendar-star" size={24} color={theme.colors.primary} />
-            <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Holidays</Text>
+            <Text className="text-2xl font-bold text-on-surface">Holidays</Text>
           </View>
           {canEdit && (
-            <Button mode="contained" compact onPress={openCreate} icon="plus">
-              Add
-            </Button>
+            <Pressable
+              onPress={openCreate}
+              className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80"
+              style={{ gap: 4 }}
+            >
+              <MaterialCommunityIcons name="plus" size={16} color="white" />
+              <Text className="text-white font-bold text-sm">Add</Text>
+            </Pressable>
           )}
         </View>
 
@@ -145,30 +148,30 @@ export default function HolidaysScreen() {
             const dateStr = d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
             return (
               <Pressable key={h.id} onPress={() => canEdit && openEdit(h)}>
-                <Card mode="elevated" className="mx-4 mb-2">
-                  <Card.Content className="flex-row items-center" style={{ gap: 12 }}>
+                <View className="mx-4 mb-2 bg-surface-container-lowest border border-outline-variant rounded-2xl p-4">
+                  <View className="flex-row items-center" style={{ gap: 12 }}>
                     <View className="items-center w-12">
-                      <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{dayName}</Text>
-                      <Text className="text-xl font-black text-on-surface dark:text-text-primary-dark">{d.getDate()}</Text>
-                      <Text className="text-[10px] text-on-surface-variant dark:text-text-secondary-dark">{d.toLocaleDateString("en-IN", { month: "short" })}</Text>
+                      <Text className="text-xs text-on-surface-variant">{dayName}</Text>
+                      <Text className="text-xl font-black text-on-surface">{d.getDate()}</Text>
+                      <Text className="text-[10px] text-on-surface-variant">{d.toLocaleDateString("en-IN", { month: "short" })}</Text>
                     </View>
                     <View className="flex-1">
-                      <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{h.name}</Text>
-                      {h.description && <Text className="text-xs text-on-surface-variant dark:text-text-secondary-dark">{h.description}</Text>}
+                      <Text className="text-sm font-bold text-on-surface">{h.name}</Text>
+                      {h.description && <Text className="text-xs text-on-surface-variant">{h.description}</Text>}
                       <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
                         {typeOpt && (
-                          <Chip mode="flat" compact textStyle={{ fontSize: 9, color: typeOpt.color }} style={{ backgroundColor: `${typeOpt.color}15` }}>
-                            {typeOpt.label}
-                          </Chip>
+                          <View className="rounded-full px-3 py-1" style={{ backgroundColor: `${typeOpt.color}15` }}>
+                            <Text className="text-xs font-bold" style={{ color: typeOpt.color, fontSize: 9 }}>{typeOpt.label}</Text>
+                          </View>
                         )}
                         {h.is_open ? (
-                          <Chip mode="flat" compact textStyle={{ fontSize: 9, color: "#2E9E5B" }} style={{ backgroundColor: "#2E9E5B15" }}>
-                            Shop Open
-                          </Chip>
+                          <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#2E9E5B15" }}>
+                            <Text className="text-xs font-bold" style={{ color: "#2E9E5B", fontSize: 9 }}>Shop Open</Text>
+                          </View>
                         ) : (
-                          <Chip mode="flat" compact textStyle={{ fontSize: 9, color: "#D64545" }} style={{ backgroundColor: "#D6454515" }}>
-                            Shop Closed
-                          </Chip>
+                          <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#D6454515" }}>
+                            <Text className="text-xs font-bold" style={{ color: "#D64545", fontSize: 9 }}>Shop Closed</Text>
+                          </View>
                         )}
                       </View>
                     </View>
@@ -177,60 +180,87 @@ export default function HolidaysScreen() {
                         <MaterialCommunityIcons name="delete-outline" size={20} color={theme.colors.error} />
                       </Pressable>
                     )}
-                  </Card.Content>
-                </Card>
+                  </View>
+                </View>
               </Pressable>
             );
           })
         )}
       </ScrollView>
 
-      {/* Create/Edit Dialog */}
-      <Portal>
-        <Dialog visible={dialog} onDismiss={() => setDialog(false)}>
-          <Dialog.Title>{editing ? "Edit Holiday" : "Add Holiday"}</Dialog.Title>
-          <Dialog.Content>
-            <TextInput mode="outlined" label="Holiday Name" value={formName} onChangeText={setFormName} className="mb-3" />
-            <TextInput mode="outlined" label="Date (YYYY-MM-DD)" value={formDate} onChangeText={setFormDate} placeholder="2025-01-26" className="mb-3" />
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-2">Type</Text>
-            <View className="flex-row flex-wrap mb-3" style={{ gap: 8 }}>
-              {TYPE_OPTIONS.map((opt) => (
+      <Modal visible={dialog} transparent animationType="slide" onRequestClose={() => setDialog(false)}>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="bg-surface-container-lowest rounded-t-2xl pb-10">
+            <ScrollView className="px-6 pt-6">
+              <Text className="text-lg font-bold text-on-surface mb-4">
+                {editing ? "Edit Holiday" : "Add Holiday"}
+              </Text>
+              <TextInput
+                placeholder="Holiday Name"
+                value={formName}
+                onChangeText={setFormName}
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-3"
+                placeholderTextColor="#9CA3AF"
+              />
+              <TextInput
+                placeholder="Date (YYYY-MM-DD)"
+                value={formDate}
+                onChangeText={setFormDate}
+                placeholderTextColor="#9CA3AF"
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-3"
+              />
+              <Text className="text-sm text-on-surface-variant mb-2">Type</Text>
+              <View className="flex-row flex-wrap mb-3" style={{ gap: 8 }}>
+                {TYPE_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => setFormType(opt.value as any)}
+                    className={`px-3 py-1.5 rounded-full border ${formType === opt.value ? "border-0" : "border-outline-variant"}`}
+                    style={{ backgroundColor: formType === opt.value ? opt.color : "transparent" }}
+                  >
+                    <Text className={`text-xs font-bold ${formType === opt.value ? "text-white" : ""}`} style={formType === opt.value ? {} : { color: opt.color }}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <TextInput
+                placeholder="Description (optional)"
+                value={formDesc}
+                onChangeText={setFormDesc}
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-3"
+                placeholderTextColor="#9CA3AF"
+              />
+              <Pressable
+                onPress={() => setFormIsOpen(!formIsOpen)}
+                className="flex-row items-center py-2"
+                style={{ gap: 8 }}
+              >
+                <MaterialCommunityIcons
+                  name={formIsOpen ? "checkbox-marked" : "checkbox-blank-outline"}
+                  size={20}
+                  color={formIsOpen ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                />
+                <Text className="text-sm text-on-surface">Shop remains open on this day</Text>
+              </Pressable>
+              <View className="flex-row justify-end pt-6 pb-2 gap-3">
+                <Pressable className="py-3 px-6 rounded-xl active:opacity-70" onPress={() => setDialog(false)}>
+                  <Text className="text-primary font-bold text-base">Cancel</Text>
+                </Pressable>
                 <Pressable
-                  key={opt.value}
-                  onPress={() => setFormType(opt.value as any)}
-                  className={`px-3 py-1.5 rounded-full border ${formType === opt.value ? "border-0" : "border-outline-variant"}`}
-                  style={{ backgroundColor: formType === opt.value ? opt.color : "transparent" }}
+                  onPress={handleSave}
+                  disabled={saving || !formName || !formDate}
+                  className="bg-primary py-3 px-6 rounded-xl items-center active:opacity-80"
                 >
-                  <Text className={`text-xs font-bold ${formType === opt.value ? "text-white" : ""}`} style={formType === opt.value ? {} : { color: opt.color }}>
-                    {opt.label}
+                  <Text className="text-white font-bold text-base">
+                    {saving ? "Saving..." : "Save"}
                   </Text>
                 </Pressable>
-              ))}
-            </View>
-            <TextInput mode="outlined" label="Description (optional)" value={formDesc} onChangeText={setFormDesc} className="mb-3" />
-            <Pressable
-              onPress={() => setFormIsOpen(!formIsOpen)}
-              className="flex-row items-center py-2"
-              style={{ gap: 8 }}
-            >
-              <MaterialCommunityIcons
-                name={formIsOpen ? "checkbox-marked" : "checkbox-blank-outline"}
-                size={20}
-                color={formIsOpen ? theme.colors.primary : theme.colors.onSurfaceVariant}
-              />
-              <Text className="text-sm text-on-surface dark:text-text-primary-dark">Shop remains open on this day</Text>
-            </Pressable>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setDialog(false)}>Cancel</Button>
-            <Button onPress={handleSave} loading={saving} disabled={saving || !formName || !formDate}>Save</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      <Snackbar visible={snackbar.visible} onDismiss={() => setSnackbar({ visible: false, message: "" })} duration={2000}>
-        {snackbar.message}
-      </Snackbar>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

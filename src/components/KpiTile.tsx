@@ -1,50 +1,42 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { useTheme } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface KpiTileProps {
-  /** Pre-formatted value, e.g. "₹42,000" or "34" — this component never formats numbers itself. */
   value: string;
   label: string;
-  /** Optional trend chip, e.g. "+8.2%" — tinted success/error, never color alone (also shown as an arrow icon). */
   delta?: { text: string; direction: "up" | "down" };
   color?: string;
+  compact?: boolean;
 }
 
-// The single biggest, boldest number on a dashboard screen — money/count
-// KPIs are the reason this app exists (design system §2 Principle #3:
-// "Numbers are the hero"). display-md, not a smaller "safe" size.
-export default function KpiTile({ value, label, delta, color }: KpiTileProps) {
+export default function KpiTile({ value, label, delta, color, compact }: KpiTileProps) {
   const theme = useTheme();
-  const valueColor = color ?? theme.colors.onSurface;
+  const accentColor = color ?? theme.colors.primary;
   const deltaColor = delta?.direction === "down" ? theme.colors.error : "#2E9E5B";
 
   return (
     <View
-      className="flex-1 items-center justify-center rounded-xl bg-surface-container-lowest"
-      style={{ paddingVertical: 14, paddingHorizontal: 8, minWidth: 84 }}
+      className="bg-surface-container-lowest rounded-2xl overflow-hidden"
+      style={{
+        flex: 1,
+        minWidth: compact ? 72 : 84,
+        borderLeftWidth: 3,
+        borderLeftColor: accentColor,
+        padding: compact ? 8 : 12,
+        gap: 2,
+      }}
     >
-      <Text
-        className="font-display-md"
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        style={{ fontSize: 24, lineHeight: 28, fontWeight: "700", color: valueColor }}
-      >
-        {value}
-      </Text>
-      <Text className="font-body-md text-on-surface-variant mt-1" style={{ fontSize: 12 }} numberOfLines={1}>
+      <Text className="text-on-surface-variant" style={{ fontSize: 11, fontWeight: "600", letterSpacing: 0.3, textTransform: "uppercase" }}>
         {label}
       </Text>
+      <Text style={{ fontSize: compact ? 18 : 22, fontWeight: "700", color: accentColor, lineHeight: compact ? 22 : 26 }} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
       {delta && (
-        <View className="flex-row items-center mt-1" style={{ gap: 2 }}>
-          <MaterialCommunityIcons
-            name={delta.direction === "down" ? "arrow-down" : "arrow-up"}
-            size={12}
-            color={deltaColor}
-          />
-          <Text style={{ fontSize: 11, fontWeight: "700", color: deltaColor }}>{delta.text}</Text>
-        </View>
+        <Text style={{ fontSize: 11, fontWeight: "700", color: deltaColor }}>
+          {delta.direction === "down" ? "↓" : "↑"} {delta.text}
+        </Text>
       )}
     </View>
   );

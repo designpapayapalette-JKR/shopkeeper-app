@@ -7,6 +7,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // visual weight relative to each device's actual safe area instead of a
 // constant.
 export function useBottomInset(extra: number = 16): number {
-  const insets = useSafeAreaInsets();
-  return Math.max(insets.bottom, 0) + extra;
+ const insets = useSafeAreaInsets();
+ return Math.max(insets.bottom, 0) + extra;
 }

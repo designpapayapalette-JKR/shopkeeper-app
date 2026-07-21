@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, RefreshControl } from "react-native";
-import { Card, useTheme, Button, TextInput, Dialog, Portal, Snackbar } from "react-native-paper";
+import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, RefreshControl, Modal, TextInput } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
@@ -31,8 +31,6 @@ export default function BrandsScreen() {
   const [editing, setEditing] = useState<Brand | null>(null);
   const [formName, setFormName] = useState("");
   const [saving, setSaving] = useState(false);
-
-  const [snackbar, setSnackbar] = useState({ visible: false, message: "" });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,10 +73,10 @@ export default function BrandsScreen() {
     try {
       if (editing) {
         await api.patch(`/brands/${editing.id}`, { name: formName.trim() });
-        setSnackbar({ visible: true, message: "Brand updated" });
+        Alert.alert("Success", "Brand updated");
       } else {
         await api.post("/brands", { name: formName.trim() });
-        setSnackbar({ visible: true, message: "Brand created" });
+        Alert.alert("Success", "Brand created");
       }
       setDialogVisible(false);
       setEditing(null);
@@ -101,46 +99,44 @@ export default function BrandsScreen() {
     try {
       await api.delete(`/brands/${item.id}`);
       setLoadTrigger((n) => n + 1);
-      setSnackbar({ visible: true, message: "Brand deleted" });
+      Alert.alert("Success", "Brand deleted");
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to delete brand.");
     }
   };
 
   const renderItem = ({ item }: { item: Brand }) => (
-    <Card mode="elevated" className="mb-3">
+    <View className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mb-3">
       <Pressable onPress={() => openEdit(item)} onLongPress={() => handleDelete(item)}>
-        <Card.Content>
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 mr-3">
-              <Text className="text-base font-bold text-on-surface">{item.name}</Text>
-              {item._count?.products !== undefined && (
-                <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                  <MaterialCommunityIcons name="package-variant-closed" size={14} color="#6B7280" />
-                  <Text className="text-sm text-on-surface-variant">
-                    {item._count.products} product{item._count.products !== 1 ? "s" : ""}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <View className="flex-row" style={{ gap: 4 }}>
-              <Pressable
-                onPress={() => openEdit(item)}
-                className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 items-center justify-center active:opacity-70"
-              >
-                <MaterialCommunityIcons name="pencil" size={16} color="#6B7280" />
-              </Pressable>
-              <Pressable
-                onPress={() => handleDelete(item)}
-                className="w-9 h-9 rounded-lg bg-red-50 items-center justify-center active:opacity-70"
-              >
-                <MaterialCommunityIcons name="delete-outline" size={16} color="#D64545" />
-              </Pressable>
-            </View>
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 mr-3">
+            <Text className="text-base font-bold text-on-surface">{item.name}</Text>
+            {item._count?.products !== undefined && (
+              <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
+                <MaterialCommunityIcons name="package-variant-closed" size={14} color="#6B7280" />
+                <Text className="text-sm text-on-surface-variant">
+                  {item._count.products} product{item._count.products !== 1 ? "s" : ""}
+                </Text>
+              </View>
+            )}
           </View>
-        </Card.Content>
+          <View className="flex-row" style={{ gap: 4 }}>
+            <Pressable
+              onPress={() => openEdit(item)}
+              className="w-9 h-9 rounded-lg bg-gray-100 items-center justify-center active:opacity-70"
+            >
+              <MaterialCommunityIcons name="pencil" size={16} color="#6B7280" />
+            </Pressable>
+            <Pressable
+              onPress={() => handleDelete(item)}
+              className="w-9 h-9 rounded-lg bg-red-50 items-center justify-center active:opacity-70"
+            >
+              <MaterialCommunityIcons name="delete-outline" size={16} color="#D64545" />
+            </Pressable>
+          </View>
+        </View>
       </Pressable>
-    </Card>
+    </View>
   );
 
   if (loading) {
@@ -160,9 +156,10 @@ export default function BrandsScreen() {
           </Pressable>
           <Text className="text-xl font-bold text-on-surface">Brands</Text>
         </View>
-        <Button mode="contained" compact icon="plus" onPress={openAdd}>
-          Add
-        </Button>
+        <Pressable onPress={openAdd} className="bg-primary flex-row items-center py-3 rounded-xl px-4" style={{ gap: 6 }}>
+          <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
+          <Text className="text-white font-bold text-sm">Add</Text>
+        </Pressable>
       </View>
 
       {items.length === 0 ? (
@@ -184,35 +181,29 @@ export default function BrandsScreen() {
         />
       )}
 
-      <Portal>
-        <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
-          <Dialog.Title>{editing ? "Edit Brand" : "Add Brand"}</Dialog.Title>
-          <Dialog.Content>
+      <Modal visible={dialogVisible} transparent animationType="slide" onRequestClose={() => setDialogVisible(false)}>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-2xl p-6">
+            <Text className="text-lg font-bold text-on-surface mb-4">{editing ? "Edit Brand" : "Add Brand"}</Text>
             <TextInput
-              mode="outlined"
-              label="Name *"
+              className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
               value={formName}
               onChangeText={setFormName}
               placeholder="e.g. Tata, ITC"
               autoFocus
             />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
-            <Button onPress={handleSave} loading={saving} disabled={saving}>
-              {editing ? "Update" : "Create"}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      <Snackbar
-        visible={snackbar.visible}
-        onDismiss={() => setSnackbar({ visible: false, message: "" })}
-        duration={2000}
-      >
-        {snackbar.message}
-      </Snackbar>
+            <View className="flex-row justify-end mt-6" style={{ gap: 8 }}>
+              <Pressable onPress={() => setDialogVisible(false)} className="py-3 px-6 rounded-xl border border-outline-variant">
+                <Text className="text-on-surface font-bold">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={handleSave} disabled={saving} className="bg-primary py-3 px-6 rounded-xl items-center flex-row" style={{ gap: 6 }}>
+                {saving && <ActivityIndicator size="small" color="#FFFFFF" />}
+                <Text className="text-white font-bold">{editing ? "Update" : "Create"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

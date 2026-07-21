@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, RefreshControl } from "react-native";
-import { Card, useTheme, Button, Snackbar, TextInput, Dialog, Portal, Switch, Chip } from "react-native-paper";
+import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, RefreshControl, Modal, ScrollView, TextInput, Switch } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
@@ -40,7 +40,6 @@ export default function TaxRatesScreen() {
   const [formType, setFormType] = useState("GST");
   const [formActive, setFormActive] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [snackbar, setSnackbar] = useState({ visible: false, message: "" });
   const [loadTrigger, setLoadTrigger] = useState(0);
 
   const load = useCallback(async () => {
@@ -93,7 +92,7 @@ export default function TaxRatesScreen() {
         await api.post("/tax-rates", body);
       }
       setDialog(false);
-      setSnackbar({ visible: true, message: editing ? "Tax rate updated." : "Tax rate created." });
+      Alert.alert("Success", editing ? "Tax rate updated." : "Tax rate created.");
       setLoadTrigger((n) => n + 1);
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to save tax rate.");
@@ -112,7 +111,7 @@ export default function TaxRatesScreen() {
     if (!ok) return;
     try {
       await api.delete(`/tax-rates/${item.id}`);
-      setSnackbar({ visible: true, message: "Tax rate deleted." });
+      Alert.alert("Success", "Tax rate deleted.");
       setLoadTrigger((n) => n + 1);
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to delete tax rate.");
@@ -125,48 +124,52 @@ export default function TaxRatesScreen() {
     const tc = typeConfig(item.type);
     return (
       <Pressable onPress={() => openEdit(item)} onLongPress={() => handleDelete(item)}>
-        <Card mode="elevated" className="mx-4 mb-3">
-          <Card.Content className="flex-row items-center" style={{ gap: 12 }}>
+        <View className="mx-4 mb-3 bg-surface-container-lowest border border-outline-variant rounded-2xl p-4">
+          <View className="flex-row items-center" style={{ gap: 12 }}>
             <View className="w-16 h-16 rounded-2xl items-center justify-center" style={{ backgroundColor: `${tc.color}15` }}>
               <Text className="text-xl font-black" style={{ color: tc.color }}>{item.rate}%</Text>
             </View>
             <View className="flex-1">
-              <Text className="text-sm font-bold text-on-surface dark:text-text-primary-dark">{item.name}</Text>
+              <Text className="text-sm font-bold text-on-surface">{item.name}</Text>
               <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
-                <Chip mode="flat" compact textStyle={{ fontSize: 9, color: tc.color }} style={{ backgroundColor: `${tc.color}15`, height: 22 }}>
-                  {tc.label}
-                </Chip>
+                <View className="rounded-full px-3 py-1" style={{ backgroundColor: `${tc.color}15` }}>
+                  <Text className="text-xs font-bold" style={{ color: tc.color, fontSize: 9 }}>{tc.label}</Text>
+                </View>
                 {item.is_active ? (
-                  <Chip mode="flat" compact textStyle={{ fontSize: 9, color: "#2E9E5B" }} style={{ backgroundColor: "#2E9E5B15", height: 22 }}>
-                    Active
-                  </Chip>
+                  <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#2E9E5B15" }}>
+                    <Text className="text-xs font-bold" style={{ color: "#2E9E5B", fontSize: 9 }}>Active</Text>
+                  </View>
                 ) : (
-                  <Chip mode="flat" compact textStyle={{ fontSize: 9, color: "#9E9E9E" }} style={{ backgroundColor: "#F0EDED", height: 22 }}>
-                    Inactive
-                  </Chip>
+                  <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#F0EDED" }}>
+                    <Text className="text-xs font-bold" style={{ color: "#9E9E9E", fontSize: 9 }}>Inactive</Text>
+                  </View>
                 )}
               </View>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
-          </Card.Content>
-        </Card>
+          </View>
+        </View>
       </Pressable>
     );
   };
 
   return (
-    <View className="flex-1 bg-background dark:bg-bg-dark">
-      {/* Header */}
+    <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-4" style={{ paddingTop: topInset + 16, paddingBottom: 8 }}>
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Pressable onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.primary} />
           </Pressable>
-          <Text className="text-2xl font-bold text-on-surface dark:text-text-primary-dark">Tax Rates</Text>
+          <Text className="text-2xl font-bold text-on-surface">Tax Rates</Text>
         </View>
-        <Button mode="contained" compact onPress={openCreate} icon="plus">
-          Add
-        </Button>
+        <Pressable
+          onPress={openCreate}
+          className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center active:opacity-80"
+          style={{ gap: 4 }}
+        >
+          <MaterialCommunityIcons name="plus" size={16} color="white" />
+          <Text className="text-white font-bold text-sm">Add</Text>
+        </Pressable>
       </View>
 
       {loading ? (
@@ -186,60 +189,73 @@ export default function TaxRatesScreen() {
         />
       )}
 
-      {/* Create/Edit Dialog */}
-      <Portal>
-        <Dialog visible={dialog} onDismiss={() => setDialog(false)}>
-          <Dialog.Title>{editing ? "Edit Tax Rate" : "Add Tax Rate"}</Dialog.Title>
-          <Dialog.Content>
-            <TextInput mode="outlined" label="Name" value={formName} onChangeText={setFormName} className="mb-3" />
-            <TextInput
-              mode="outlined"
-              label="Rate (%)"
-              value={formRate}
-              onChangeText={setFormRate}
-              keyboardType="numeric"
-              placeholder="18"
-              className="mb-3"
-            />
-            <Text className="text-sm text-on-surface-variant dark:text-text-secondary-dark mb-2">Type</Text>
-            <View className="flex-row flex-wrap mb-3" style={{ gap: 8 }}>
-              {TYPE_OPTIONS.map((opt) => (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => setFormType(opt.value)}
-                  className={`px-3 py-1.5 rounded-full border ${formType === opt.value ? "border-0" : "border-outline-variant"}`}
-                  style={{ backgroundColor: formType === opt.value ? opt.color : "transparent" }}
-                >
-                  <Text
-                    className={`text-xs font-bold ${formType === opt.value ? "text-white" : ""}`}
-                    style={formType === opt.value ? {} : { color: opt.color }}
+      <Modal visible={dialog} transparent animationType="slide" onRequestClose={() => setDialog(false)}>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="bg-surface-container-lowest rounded-t-2xl pb-10">
+            <ScrollView className="px-6 pt-6">
+              <Text className="text-lg font-bold text-on-surface mb-4">
+                {editing ? "Edit Tax Rate" : "Add Tax Rate"}
+              </Text>
+              <TextInput
+                placeholder="Name"
+                value={formName}
+                onChangeText={setFormName}
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-3"
+                placeholderTextColor="#9CA3AF"
+              />
+              <TextInput
+                placeholder="Rate (%)"
+                value={formRate}
+                onChangeText={setFormRate}
+                keyboardType="numeric"
+                placeholderTextColor="#9CA3AF"
+                className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-3"
+              />
+              <Text className="text-sm text-on-surface-variant mb-2">Type</Text>
+              <View className="flex-row flex-wrap mb-3" style={{ gap: 8 }}>
+                {TYPE_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => setFormType(opt.value)}
+                    className={`px-3 py-1.5 rounded-full border ${formType === opt.value ? "border-0" : "border-outline-variant"}`}
+                    style={{ backgroundColor: formType === opt.value ? opt.color : "transparent" }}
                   >
-                    {opt.label}
+                    <Text
+                      className={`text-xs font-bold ${formType === opt.value ? "text-white" : ""}`}
+                      style={formType === opt.value ? {} : { color: opt.color }}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View className="flex-row items-center justify-between py-2">
+                <Text className="text-sm text-on-surface">Active</Text>
+                <Switch
+                  value={formActive}
+                  onValueChange={setFormActive}
+                  trackColor={{ true: theme.colors.primary, false: "#ccc" }}
+                  thumbColor="#f4f3f4"
+                />
+              </View>
+              <View className="flex-row justify-end pt-4 pb-2 gap-3">
+                <Pressable className="py-3 px-6 rounded-xl active:opacity-70" onPress={() => setDialog(false)}>
+                  <Text className="text-primary font-bold text-base">Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleSave}
+                  disabled={saving || !formName.trim() || !formRate}
+                  className="bg-primary py-3 px-6 rounded-xl items-center active:opacity-80"
+                >
+                  <Text className="text-white font-bold text-base">
+                    {saving ? "Saving..." : editing ? "Update" : "Create"}
                   </Text>
                 </Pressable>
-              ))}
-            </View>
-            <View className="flex-row items-center justify-between py-2">
-              <Text className="text-sm text-on-surface dark:text-text-primary-dark">Active</Text>
-              <Switch value={formActive} onValueChange={setFormActive} color={theme.colors.primary} />
-            </View>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setDialog(false)}>Cancel</Button>
-            <Button onPress={handleSave} loading={saving} disabled={saving || !formName.trim() || !formRate}>
-              {editing ? "Update" : "Create"}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      <Snackbar
-        visible={snackbar.visible}
-        onDismiss={() => setSnackbar({ visible: false, message: "" })}
-        duration={3000}
-      >
-        {snackbar.message}
-      </Snackbar>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

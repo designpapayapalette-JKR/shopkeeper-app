@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert } from "react-native";
-import { Card, useTheme, Button, SegmentedButtons, TextInput, Chip } from "react-native-paper";
+import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, Alert, TextInput } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
@@ -237,38 +237,38 @@ export default function AttendanceScreen() {
         </View>
 
         {/* Self Check-in/Check-out — all roles */}
-        <Card mode="elevated" className="mx-4 mb-4">
-          <Card.Content className="flex-row items-center justify-between">
+        <View className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-4">
+          <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-sm font-bold text-on-surface">My Attendance</Text>
               <Text className="text-xs text-on-surface-variant mt-1">
                 {selfStatus.checkedIn && !selfStatus.checkedOut ? "Checked in" :
-                 selfStatus.checkedIn && selfStatus.checkedOut ? "Checked out for today" :
-                 "Not checked in yet"}
+                selfStatus.checkedIn && selfStatus.checkedOut ? "Checked out for today" :
+                "Not checked in yet"}
               </Text>
             </View>
             <View className="flex-row" style={{ gap: 8 }}>
-              <Button
-                mode="contained"
-                compact
+              <Pressable
                 disabled={selfStatus.checkedIn}
                 onPress={handleCheckIn}
-                icon="login"
+                className="bg-primary flex-row items-center py-2 rounded-xl px-3"
+                style={{ gap: 4, opacity: selfStatus.checkedIn ? 0.5 : 1 }}
               >
-                Check In
-              </Button>
-              <Button
-                mode="outlined"
-                compact
+                <MaterialCommunityIcons name="login" size={16} color="#FFFFFF" />
+                <Text className="text-white font-bold text-xs">Check In</Text>
+              </Pressable>
+              <Pressable
                 disabled={!selfStatus.checkedIn || selfStatus.checkedOut}
                 onPress={handleCheckOut}
-                icon="logout"
+                className="border border-outline-variant flex-row items-center py-2 rounded-xl px-3"
+                style={{ gap: 4, opacity: (!selfStatus.checkedIn || selfStatus.checkedOut) ? 0.5 : 1 }}
               >
-                Check Out
-              </Button>
+                <MaterialCommunityIcons name="logout" size={16} color={theme.colors.primary} />
+                <Text className="text-primary font-bold text-xs">Check Out</Text>
+              </Pressable>
             </View>
-          </Card.Content>
-        </Card>
+          </View>
+        </View>
 
         {/* Date Navigation */}
         <View className="flex-row items-center justify-between px-4 mb-4">
@@ -286,12 +286,19 @@ export default function AttendanceScreen() {
 
         {/* Date Presets */}
         <View className="px-4 mb-4">
-          <SegmentedButtons
-            value={preset}
-            onValueChange={(v) => { setPreset(v); setLoading(true); }}
-            buttons={DATE_PRESETS}
-            density="small"
-          />
+          <View className="flex-row rounded-lg bg-surface-container-high overflow-hidden">
+            {DATE_PRESETS.map((presetOpt) => (
+              <Pressable
+                key={presetOpt.value}
+                onPress={() => { setPreset(presetOpt.value); setLoading(true); }}
+                className={`flex-1 py-2 px-3 items-center ${preset === presetOpt.value ? 'bg-primary' : ''}`}
+              >
+                <Text className={`text-xs font-bold ${preset === presetOpt.value ? 'text-white' : 'text-on-surface-variant'}`}>
+                  {presetOpt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         {/* Tab Switcher */}
@@ -317,16 +324,16 @@ export default function AttendanceScreen() {
             {canManage && (
               <View className="flex-row items-center px-4 mb-3" style={{ gap: 8 }}>
                 <TextInput
-                  mode="outlined"
+                  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
                   value={monthYear}
                   onChangeText={setMonthYear}
-                  label="Month"
-                  dense
-                  style={{ width: 120, height: 40 }}
+                  placeholder="Month (YYYY-MM)"
+                  style={{ width: 120 }}
                 />
-                <Button mode="text" compact onPress={handleFillMissing} icon="auto-fix">
-                  Fill Absent
-                </Button>
+                <Pressable onPress={handleFillMissing} className="flex-row items-center py-2 rounded-xl px-3" style={{ gap: 4 }}>
+                  <MaterialCommunityIcons name="auto-fix" size={16} color={theme.colors.primary} />
+                  <Text className="text-primary font-bold text-xs">Fill Absent</Text>
+                </Pressable>
               </View>
             )}
 
@@ -338,18 +345,18 @@ export default function AttendanceScreen() {
               <>
                 {/* Mark All Present Quick Action */}
                 <View className="px-4 mb-3">
-                  <Button
-                    mode="text"
-                    compact
-                    icon="check-all"
+                  <Pressable
                     onPress={() => {
                       const allPresent: Record<string, { status: string }> = {};
                       roster.forEach((r) => { allPresent[r.user_id] = { status: "present" }; });
                       setMarks(allPresent);
                     }}
+                    className="flex-row items-center py-2 rounded-xl px-3"
+                    style={{ gap: 4 }}
                   >
-                    Mark All Present
-                  </Button>
+                    <MaterialCommunityIcons name="check-all" size={16} color={theme.colors.primary} />
+                    <Text className="text-primary font-bold text-xs">Mark All Present</Text>
+                  </Pressable>
                 </View>
 
                 {/* Staff Roster Cards */}
@@ -357,61 +364,60 @@ export default function AttendanceScreen() {
                   const current = marks[staff.user_id] || { status: "present" };
                   const statusOpt = STATUS_OPTIONS.find((s) => s.value === current.status);
                   return (
-                    <Card key={staff.user_id} mode="elevated" className="mx-4 mb-2">
-                      <Card.Content>
-                        <View className="flex-row items-center justify-between mb-2">
-                          <View className="flex-row items-center" style={{ gap: 8 }}>
-                            <View className="w-9 h-9 rounded-full items-center justify-center bg-primary/10">
-                              <Text className="text-sm font-bold text-primary">
-                                {staff.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                              </Text>
-                            </View>
-                            <View>
-                              <Text className="text-sm font-bold text-on-surface">{staff.name}</Text>
-                              <Text className="text-[10px] text-on-surface-variant capitalize">{staff.role.replace("_", " ")}</Text>
-                            </View>
+                    <View key={staff.user_id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-2">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <View className="flex-row items-center" style={{ gap: 8 }}>
+                          <View className="w-9 h-9 rounded-full items-center justify-center bg-primary/10">
+                            <Text className="text-sm font-bold text-primary">
+                              {staff.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                            </Text>
                           </View>
-                          {!staff.assigned_to_location && (
-                            <Chip mode="flat" compact textStyle={{ fontSize: 9 }} style={{ backgroundColor: "#F0AE4E20" }}>
-                              Unassigned
-                            </Chip>
-                          )}
+                          <View>
+                            <Text className="text-sm font-bold text-on-surface">{staff.name}</Text>
+                            <Text className="text-[10px] text-on-surface-variant capitalize">{staff.role.replace("_", " ")}</Text>
+                          </View>
                         </View>
+                        {!staff.assigned_to_location && (
+                          <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#F0AE4E20" }}>
+                            <Text className="text-xs font-bold" style={{ color: "#F0AE4E" }}>Unassigned</Text>
+                          </View>
+                        )}
+                      </View>
 
-                        {/* Status selector */}
-                        <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-                          {STATUS_OPTIONS.map((opt) => {
-                            const selected = current.status === opt.value;
-                            return (
-                              <Pressable
-                                key={opt.value}
-                                onPress={() => setMarks((prev) => ({ ...prev, [staff.user_id]: { ...prev[staff.user_id], status: opt.value } }))}
-                                className={`flex-row items-center px-3 py-1.5 rounded-full border ${selected ? "border-0" : "border-outline-variant"}`}
-                                style={{ backgroundColor: selected ? opt.color : "transparent", gap: 4 }}
-                              >
-                                <MaterialCommunityIcons name={opt.icon as any} size={14} color={selected ? "#FFFFFF" : opt.color} />
-                                <Text className={`text-xs font-bold ${selected ? "text-white" : ""}`} style={selected ? {} : { color: opt.color }}>
-                                  {opt.label}
-                                </Text>
-                              </Pressable>
-                            );
-                          })}
-                        </View>
-                      </Card.Content>
-                    </Card>
+                      {/* Status selector */}
+                      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                        {STATUS_OPTIONS.map((opt) => {
+                          const selected = current.status === opt.value;
+                          return (
+                            <Pressable
+                              key={opt.value}
+                              onPress={() => setMarks((prev) => ({ ...prev, [staff.user_id]: { ...prev[staff.user_id], status: opt.value } }))}
+                              className={`flex-row items-center px-3 py-1.5 rounded-full border ${selected ? "border-0" : "border-outline-variant"}`}
+                              style={{ backgroundColor: selected ? opt.color : "transparent", gap: 4 }}
+                            >
+                              <MaterialCommunityIcons name={opt.icon as any} size={14} color={selected ? "#FFFFFF" : opt.color} />
+                              <Text className={`text-xs font-bold ${selected ? "text-white" : ""}`} style={selected ? {} : { color: opt.color }}>
+                                {opt.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </View>
                   );
                 })}
 
                 <View className="px-4 mt-3 mb-6">
-                  <Button
-                    mode="contained"
-                    loading={saving}
+                  <Pressable
                     disabled={saving}
                     onPress={handleSaveRoster}
-                    icon="content-save"
+                    className="bg-primary py-3 rounded-xl items-center flex-row justify-center"
+                    style={{ gap: 6, opacity: saving ? 0.5 : 1 }}
                   >
-                    Save Attendance
-                  </Button>
+                    {saving && <ActivityIndicator size="small" color="#FFFFFF" />}
+                    <MaterialCommunityIcons name="content-save" size={18} color="#FFFFFF" />
+                    <Text className="text-white font-bold">Save Attendance</Text>
+                  </Pressable>
                 </View>
               </>
             )}
@@ -427,8 +433,8 @@ export default function AttendanceScreen() {
                 const statusOpt = STATUS_OPTIONS.find((s) => s.value === rec.status);
                 const name = rec.user ? `${rec.user.first_name || ""} ${rec.user.last_name || ""}`.trim() : "—";
                 return (
-                  <Card key={rec.id} mode="elevated" className="mx-4 mb-2">
-                    <Card.Content className="flex-row items-center justify-between">
+                  <View key={rec.id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-2">
+                    <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center" style={{ gap: 10 }}>
                         {statusOpt && (
                           <MaterialCommunityIcons name={statusOpt.icon as any} size={22} color={statusOpt.color} />
@@ -450,33 +456,33 @@ export default function AttendanceScreen() {
                         )}
                         {rec.notes && <Text className="text-[10px] text-on-surface-variant mt-0.5">{rec.notes}</Text>}
                       </View>
-                    </Card.Content>
-                  </Card>
+                    </View>
+                  </View>
                 );
               })
             )}
 
             {historyMeta && historyMeta.totalPages > 1 && (
               <View className="flex-row justify-center items-center px-4 mt-3 mb-6" style={{ gap: 12 }}>
-                <Button
-                  mode="outlined"
-                  compact
+                <Pressable
                   disabled={historyPage <= 1}
                   onPress={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                  className="border border-outline-variant py-2 px-4 rounded-xl"
+                  style={{ opacity: historyPage <= 1 ? 0.5 : 1 }}
                 >
-                  Previous
-                </Button>
+                  <Text className="text-on-surface font-bold text-xs">Previous</Text>
+                </Pressable>
                 <Text className="text-sm text-on-surface-variant">
                   Page {historyMeta.page} of {historyMeta.totalPages}
                 </Text>
-                <Button
-                  mode="outlined"
-                  compact
+                <Pressable
                   disabled={historyPage >= historyMeta.totalPages}
                   onPress={() => setHistoryPage((p) => p + 1)}
+                  className="border border-outline-variant py-2 px-4 rounded-xl"
+                  style={{ opacity: historyPage >= historyMeta.totalPages ? 0.5 : 1 }}
                 >
-                  Next
-                </Button>
+                  <Text className="text-on-surface font-bold text-xs">Next</Text>
+                </Pressable>
               </View>
             )}
           </>

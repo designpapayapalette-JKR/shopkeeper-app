@@ -6,11 +6,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // status bars, devices with no notch at all). This computes the same visual
 // weight relative to each device's actual safe area instead of a constant.
 export function useTopInset(extra: number = 16): number {
-  const insets = useSafeAreaInsets();
-  return insets.top + extra;
+ const insets = useSafeAreaInsets();
+ return insets.top + extra;
 }
 
 export function useBottomInset(extra: number = 24): number {
-  const insets = useSafeAreaInsets();
-  return insets.bottom + extra;
+ const insets = useSafeAreaInsets();
+ return insets.bottom + extra;
 }
