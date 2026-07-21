@@ -26,7 +26,7 @@
     "expo-constants": "~56.0.20",
     "expo-dev-client": "~56.0.22",
     "expo-device": "~56.0.4",
-    "expo-document-picker": "~56.0.4",
+    "expo-document-picker": "~57.0.1",
     "expo-file-system": "~56.0.8",
     "expo-font": "~56.0.7",
     "expo-keep-awake": "~56.0.3",
