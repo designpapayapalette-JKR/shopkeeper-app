@@ -11,7 +11,8 @@ import { useTheme } from "react-native-paper";
 
 const STAFF_ROLES = [
  { id: "manager", name: "Manager" },
- { id: "staff", name: "Staff" },
+ { id: "staff", name: "Cashier / Biller" },
+ { id: "warehouse_manager", name: "Warehouse Manager" },
  { id: "field_agent", name: "Field Agent" },
 ];
 

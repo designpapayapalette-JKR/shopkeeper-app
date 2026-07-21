@@ -42,7 +42,8 @@ function randomTempPassword(): string {
 // directus_roles collection — Owner can't be created via this screen.
 const STAFF_ROLES = [
  { id: "manager", name: "Manager" },
- { id: "staff", name: "Staff" },
+ { id: "staff", name: "Cashier / Biller" },
+ { id: "warehouse_manager", name: "Warehouse Manager" },
  { id: "field_agent", name: "Field Agent" },
 ];
 
