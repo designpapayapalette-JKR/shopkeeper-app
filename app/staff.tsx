@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useTheme } from "react-native-paper";
+import { useTheme, Switch } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
@@ -32,9 +32,19 @@ const APP_DOWNLOAD_URL =
 
 const STAFF_ROLES = [
  { id: "manager", name: "Manager" },
- { id: "staff", name: "Staff" },
+ { id: "staff", name: "Cashier / Biller" },
+ { id: "warehouse_manager", name: "Warehouse Manager" },
  { id: "field_agent", name: "Field Agent" },
 ];
+
+// Employees added without email/password get a placeholder email ending in
+// this domain server-side (see generatePlaceholderEmail() in
+// shopkeeper-api/src/routes/staff.ts) — never a real address, just used
+// here to detect and label "no login access" instead of showing garbage.
+const NO_LOGIN_EMAIL_DOMAIN = "@noapp.internal";
+function hasLoginAccess(email: string) {
+ return !email.toLowerCase().endsWith(NO_LOGIN_EMAIL_DOMAIN);
+}
 
 interface StaffMember {
  id: string;
@@ -57,7 +67,7 @@ function randomTempPassword(): string {
 
 function roleLabel(role: string) {
  return (
- { owner: "Owner", manager: "Manager", staff: "Staff", field_agent: "Field Agent" }[role] ?? role
+ { owner: "Owner", manager: "Manager", staff: "Cashier / Biller", field_agent: "Field Agent", warehouse_manager: "Warehouse Manager" }[role] ?? role
  );
 }
 
@@ -80,6 +90,9 @@ export default function StaffScreen() {
  const [addEmail, setAddEmail] = useState("");
  const [addPhone, setAddPhone] = useState("");
  const [addPassword, setAddPassword] = useState("");
+ // Many employees (warehouse loaders, helpers, delivery staff) never log
+ // into any app — this shop just needs their attendance/salary tracked.
+ const [addNeedsLogin, setAddNeedsLogin] = useState(true);
  const [addRole, setAddRole] = useState(activeCompany?.default_staff_role || "staff");
  const [addSubmitting, setAddSubmitting] = useState(false);
 
@@ -127,6 +140,7 @@ export default function StaffScreen() {
  setAddEmail("");
  setAddPhone("");
  setAddPassword("");
+ setAddNeedsLogin(true);
  setAddRole(activeCompany?.default_staff_role || "staff");
  };
 
@@ -151,8 +165,12 @@ export default function StaffScreen() {
  };
 
  const handleAdd = async () => {
- if (!addFirstName.trim() || !addEmail.trim() || !addPassword.trim()) {
- Alert.alert("Required Fields", "First name, email, and password are required.");
+ if (!addFirstName.trim()) {
+ Alert.alert("Required Fields", "First name is required.");
+ return;
+ }
+ if (addNeedsLogin && (!addEmail.trim() || !addPassword.trim())) {
+ Alert.alert("Required Fields", "Email and password are required to give this employee login access — or turn that off if they don't need it.");
  return;
  }
  setAddSubmitting(true);
@@ -160,9 +178,9 @@ export default function StaffScreen() {
  await api.post("/staff", {
  first_name: addFirstName.trim(),
  last_name: addLastName.trim() || undefined,
- email: addEmail.trim(),
+ email: addNeedsLogin ? addEmail.trim() : undefined,
  phone: addPhone.trim() || undefined,
- password: addPassword,
+ password: addNeedsLogin ? addPassword : undefined,
  role: addRole,
  });
  const createdPhone = addPhone.trim();
@@ -170,18 +188,19 @@ export default function StaffScreen() {
  const createdEmail = addEmail.trim();
  const createdPassword = addPassword;
  const createdRole = addRole;
+ const createdNeedsLogin = addNeedsLogin;
  setIsAdding(false);
  resetAddForm();
  load();
 
- if (createdPhone) {
+ if (createdNeedsLogin && createdPhone) {
  const ok = await confirm({
  title: "Employee Created",
  message: `Send ${createdName}'s login to them over WhatsApp now?`,
  confirmLabel: "Send via WhatsApp",
  });
  if (ok) {
- const isFieldRole = createdRole === "staff" || createdRole === "field_agent";
+ const isFieldRole = createdRole === "field_agent";
  const appName = isFieldRole ? "MMC Agent" : "MMC Shop";
  const downloadUrl = isFieldRole ? AGENT_APP_DOWNLOAD_URL : APP_DOWNLOAD_URL;
  const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the ${appName}.\n\n1. Download the app: ${downloadUrl}\n2. Log in with:\nEmail: ${createdEmail}\nPassword: ${createdPassword}\n\nPlease change your password after logging in.`;
@@ -204,7 +223,7 @@ export default function StaffScreen() {
  setEditingStaff(member);
  setEditFirstName(member.first_name || "");
  setEditLastName(member.last_name || "");
- setEditEmail(member.email);
+ setEditEmail(hasLoginAccess(member.email) ? member.email : "");
  setEditPhone(member.phone || "");
  setEditRole(member.role === "owner" ? "staff" : member.role);
  };
@@ -213,7 +232,7 @@ export default function StaffScreen() {
  const hasChanges =
  editFirstName !== (editingStaff?.first_name ?? "") ||
  editLastName !== (editingStaff?.last_name ?? "") ||
- editEmail !== editingStaff?.email ||
+ editEmail !== (editingStaff && hasLoginAccess(editingStaff.email) ? editingStaff.email : "") ||
  editPhone !== (editingStaff?.phone ?? "") ||
  editRole !== (editingStaff?.role === "owner" ? "staff" : editingStaff?.role);
  if (hasChanges) {
@@ -235,7 +254,10 @@ export default function StaffScreen() {
  await api.patch(`/staff/${editingStaff.id}`, {
  firstName: editFirstName.trim(),
  lastName: editLastName.trim() || undefined,
- email: editEmail.trim(),
+ // Blank means "no change" — can only set a real email here, never clear
+ // one back to no-login (that would also need a password reset, which
+ // doesn't exist yet).
+ email: editEmail.trim() || undefined,
  phone: editPhone.trim() || undefined,
  role: editRole,
  });
@@ -272,7 +294,9 @@ export default function StaffScreen() {
  <Text className="text-base font-bold text-on-surface ">
  {staffDisplayName(item)}
  </Text>
- <Text className="text-sm text-on-surface-variant mt-0.5">{item.email}</Text>
+ <Text className="text-sm text-on-surface-variant mt-0.5">
+ {hasLoginAccess(item.email) ? item.email : "No login access"}
+ </Text>
  <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
  <View className="bg-primary/10 px-2.5 py-1 rounded-full">
  <Text className="text-xs font-bold text-primary ">{roleLabel(item.role)}</Text>
@@ -392,6 +416,45 @@ export default function StaffScreen() {
  </View>
  <View>
  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
+ Role
+ </Text>
+ <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+ {STAFF_ROLES.map((r) => (
+ <Pressable
+ key={r.id}
+ onPress={() => setAddRole(r.id)}
+ className={`px-4 py-3 rounded-xl border ${
+ addRole === r.id
+ ? "bg-primary border-primary "
+ : "bg-surface-container-lowest border-outline-variant "
+ }`}
+ >
+ <Text
+ className={`text-sm font-bold ${addRole === r.id ? "text-white" : "text-on-surface-variant "}`}
+ >
+ {r.name}
+ </Text>
+ </Pressable>
+ ))}
+ </View>
+ </View>
+
+ <View className="flex-row items-center justify-between py-1">
+ <Text className="text-sm font-semibold text-on-surface flex-1 pr-3">
+ Give this employee login access (mobile/web app)
+ </Text>
+ <Switch value={addNeedsLogin} onValueChange={setAddNeedsLogin} />
+ </View>
+ {!addNeedsLogin && (
+ <Text className="text-xs text-on-surface-variant -mt-2">
+ No email or password needed — they&apos;ll still show up for attendance and salary, they just won&apos;t be able to log in anywhere.
+ </Text>
+ )}
+
+ {addNeedsLogin && (
+ <>
+ <View>
+ <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
  Email *
  </Text>
  <TextInput
@@ -418,30 +481,6 @@ export default function StaffScreen() {
  />
  </View>
  <View>
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
- Role
- </Text>
- <View className="flex-row flex-wrap" style={{ gap: 8 }}>
- {STAFF_ROLES.map((r) => (
- <Pressable
- key={r.id}
- onPress={() => setAddRole(r.id)}
- className={`px-4 py-3 rounded-xl border ${
- addRole === r.id
- ? "bg-primary border-primary "
- : "bg-surface-container-lowest border-outline-variant "
- }`}
- >
- <Text
- className={`text-sm font-bold ${addRole === r.id ? "text-white" : "text-on-surface-variant "}`}
- >
- {r.name}
- </Text>
- </Pressable>
- ))}
- </View>
- </View>
- <View>
  <View className="flex-row items-center justify-between mb-2">
  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">
  Temporary Password *
@@ -458,6 +497,8 @@ export default function StaffScreen() {
  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3.5 font-mono"
  />
  </View>
+ </>
+ )}
  </View>
 
  <View className="flex-row justify-between mt-10" style={{ marginBottom: bottomInset }}>
@@ -531,12 +572,12 @@ export default function StaffScreen() {
  </View>
  <View>
  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
- Email *
+ {editingStaff && hasLoginAccess(editingStaff.email) ? "Email *" : "Email (no login yet)"}
  </Text>
  <TextInput
  value={editEmail}
  onChangeText={setEditEmail}
- placeholder="Email"
+ placeholder={editingStaff && hasLoginAccess(editingStaff.email) ? "Email" : "Leave blank to keep no login access"}
  placeholderTextColor="#A0A0A0"
  keyboardType="email-address"
  autoCapitalize="none"
