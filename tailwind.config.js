@@ -39,6 +39,10 @@ module.exports = {
         surface: "#fcf9f8",
         "surface-container-low": "#f6f3f2",
         "on-primary-fixed-variant": "#000D3A",
+        // Brand Identity Guide navy — header/chrome backgrounds, dark-mode
+        // surfaces. Added for the MMC rebrand pass (was previously only
+        // reachable indirectly via on-primary-fixed/on-tertiary-fixed).
+        navy: "#000D3A",
         "surface-variant": "#e5e2e1",
         "on-surface": "#1c1b1b",
         "on-secondary": "#ffffff",

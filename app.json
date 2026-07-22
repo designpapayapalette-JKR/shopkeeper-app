@@ -7,7 +7,7 @@
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "backgroundColor": "#FAF9F6",
+    "backgroundColor": "#fcf9f8",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.papayapalette.shopkeeper",
@@ -57,13 +57,13 @@
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FAF9F6"
+      "backgroundColor": "#fcf9f8"
     },
     "android": {
       "package": "com.papayapalette.shopkeeper",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FAF9F6"
+        "backgroundColor": "#fcf9f8"
       },
       "usesCleartextTraffic": true,
       "permissions": [
