@@ -312,6 +312,46 @@ export default function DashboardScreen() {
         </View>
       )}
 
+      {/* Owner Executive Quick Action Stacks */}
+      {isOwner && (
+        <View className="mx-5 mb-4" style={{ gap: 16 }}>
+          {/* Executive Reports Hub */}
+          <View>
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Executive Reports</Text>
+              <Pressable onPress={() => router.push("/analytics" as any)}>
+                <Text className="text-xs font-bold text-primary">All Reports</Text>
+              </Pressable>
+            </View>
+            <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4">
+              <View className="flex-row flex-wrap" style={{ gap: 12, rowGap: 14 }}>
+                <IconGridItem label="P&L Statement" icon="chart-line" onPress={() => router.push("/pnl-report" as any)} />
+                <IconGridItem label="Balance Sheet" icon="scale-balance" onPress={() => router.push("/balance-sheet" as any)} />
+                <IconGridItem label="GST Returns" icon="file-document-outline" onPress={() => router.push("/gst-reports" as any)} />
+                <IconGridItem label="Daybook" icon="book-open-outline" onPress={() => router.push("/daybook" as any)} />
+                <IconGridItem label="Aging Report" icon="clock-alert-outline" onPress={() => router.push("/aging-report" as any)} />
+                <IconGridItem label="Analytics" icon="chart-bar" onPress={() => router.push("/analytics" as any)} />
+              </View>
+            </View>
+          </View>
+
+          {/* Operations & Approvals */}
+          <View>
+            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Operations & Approvals</Text>
+            <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4">
+              <View className="flex-row flex-wrap" style={{ gap: 12, rowGap: 14 }}>
+                <IconGridItem label="Approvals" icon="clipboard-check-outline" onPress={() => router.push("/approval-queue" as any)} />
+                <IconGridItem label="Outlets" icon="storefront-outline" onPress={() => router.push("/outlets" as any)} />
+                <IconGridItem label="Counters" icon="cash-register" onPress={() => router.push("/counters" as any)} />
+                <IconGridItem label="Staff Roster" icon="account-group-outline" onPress={() => router.push("/staff" as any)} />
+                <IconGridItem label="Field Tracking" icon="map-marker-path" onPress={() => router.push("/(tabs)/agents" as any)} />
+                <IconGridItem label="Audit Log" icon="history" onPress={() => router.push("/activity-log" as any)} />
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* Owner — web admin card */}
       {isOwner && (
         <View className="mx-5">
@@ -321,8 +361,8 @@ export default function DashboardScreen() {
               <MaterialCommunityIcons name="open-in-new" size={20} color={theme.colors.primary} />
             </View>
             <View className="flex-1">
-              <Text className="text-sm text-on-surface" style={{ fontWeight: "600" }}>Full Admin (Web)</Text>
-              <Text className="text-xs text-on-surface-variant mt-0.5">Settings, reports, staff & more</Text>
+              <Text className="text-sm text-on-surface" style={{ fontWeight: "600" }}>Full Admin Web Portal</Text>
+              <Text className="text-xs text-on-surface-variant mt-0.5">Manage subscription, advanced settings & exports</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={18} color="#9CA3AF" />
           </Pressable>
@@ -331,3 +371,4 @@ export default function DashboardScreen() {
     </ScrollView>
   );
 }
+
