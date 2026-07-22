@@ -105,18 +105,18 @@ export default function LoginScreen() {
  keyboardDismissMode="on-drag"
  >
  <View className="px-6 py-12 justify-center flex-1 max-w-md mx-auto w-full">
- {/* Logo / Header */}
- <View className="items-center mb-10">
- <View className="w-16 h-16 rounded-2xl items-center justify-center shadow-lg mb-4 overflow-hidden">
- <Image source={require("../../assets/icon.png")} className="w-16 h-16" resizeMode="contain" />
- </View>
- <Text className="text-3xl font-extrabold text-text-primary text-center tracking-tight">
- MMC Shop
- </Text>
- <Text className="text-text-secondary text-center mt-2 font-medium">
- Manage your business with ease
- </Text>
- </View>
+        {/* Logo / Header */}
+        <View className="items-center mb-8">
+          <Image
+            source={require("../../assets/logo-rectangle.png")}
+            style={{ width: 220, height: 60 }}
+            resizeMode="contain"
+            className="mb-2"
+          />
+          <Text className="text-text-secondary text-center font-medium text-sm">
+            Admin & Retail Management Portal
+          </Text>
+        </View>
 
  {/* 2FA Code Entry — replaces the normal card while a login is pending verification */}
  {pendingToken ? (
