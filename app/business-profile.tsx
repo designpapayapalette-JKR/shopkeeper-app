@@ -17,6 +17,7 @@ import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { StatePicker } from "../src/components/StatePicker";
 import Button from "../src/components/Button";
+import { useRoleGate } from "../src/lib/useRoleGate";
 
 // Mirrors shopkeeper-web/src/app/dashboard/settings/page.tsx's "Business"
 // tab — company identity + bank/UPI details, the fields an Owner most
@@ -68,6 +69,7 @@ export default function BusinessProfileScreen() {
   const router = useRouter();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
+  const allowed = useRoleGate(["owner", "manager"], "Only owners and managers can view or edit the business profile.");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -142,6 +144,15 @@ export default function BusinessProfileScreen() {
       setSaving(false);
     }
   };
+
+  if (!allowed) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-8" style={{ paddingTop: topInset }}>
+        <MaterialCommunityIcons name="lock-outline" size={40} color="#9CA3AF" />
+        <Text className="text-on-surface-variant text-center mt-3">Only owners and managers can view this screen.</Text>
+      </View>
+    );
+  }
 
   if (loading) {
     return (

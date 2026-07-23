@@ -24,6 +24,7 @@ import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
 import { useAuth } from "../src/lib/auth-context";
 import EmptyState from "../src/components/EmptyState";
+import { useRoleGate } from "../src/lib/useRoleGate";
 
 const AGENT_APP_DOWNLOAD_URL =
  "https://github.com/designpapayapalette-JKR/agent-app/releases/download/beta-latest/agent-app-latest.apk";
@@ -78,6 +79,7 @@ export default function StaffScreen() {
  const confirm = useConfirm();
  const router = useRouter();
  const { activeCompany } = useAuth();
+ const allowed = useRoleGate(["owner", "manager"], "Only owners and managers can manage staff.");
 
  const [staff, setStaff] = useState<StaffMember[]>([]);
  const [loading, setLoading] = useState(true);
@@ -322,6 +324,15 @@ export default function StaffScreen() {
  </View>
  </View>
  );
+
+ if (!allowed) {
+ return (
+ <View className="flex-1 items-center justify-center bg-background px-8" style={{ paddingTop: topInset }}>
+ <MaterialCommunityIcons name="lock-outline" size={40} color="#9CA3AF" />
+ <Text className="text-on-surface-variant text-center mt-3">Only owners and managers can view this screen.</Text>
+ </View>
+ );
+ }
 
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset }}>

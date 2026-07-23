@@ -4,7 +4,6 @@ import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
-import { useAuth } from "../src/lib/auth-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 
 type DaybookData = {
@@ -49,7 +48,6 @@ function getDateRange(preset: string): { from: string; to: string } {
 }
 
 export default function DaybookScreen() {
- const { userRole } = useAuth();
  const router = useRouter();
  const theme = useTheme();
  const topInset = useTopInset();

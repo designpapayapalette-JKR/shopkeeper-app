@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BarChart, PieChart, LineChart } from "react-native-chart-kit";
 import { api } from "../src/lib/api";
-import { useAuth } from "../src/lib/auth-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 
 const MONTH_OPTIONS = [
@@ -18,7 +17,6 @@ const MONTH_OPTIONS = [
 const CHART_COLORS = ["#0368FE", "#835400", "#2E9E5B", "#873D34", "#F0AE4E", "#D64545", "#03A8FE", "#9E9E9E"];
 
 export default function AnalyticsScreen() {
- const { userRole } = useAuth();
  const router = useRouter();
  const theme = useTheme();
  const topInset = useTopInset();
