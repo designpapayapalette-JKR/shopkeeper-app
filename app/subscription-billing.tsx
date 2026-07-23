@@ -18,7 +18,8 @@ interface Plan {
   name: string;
   code: string;
   description?: string;
-  price: number;
+  // Prisma Decimal serializes to a numeric string over JSON, not a number.
+  price: string | number;
   interval: string;
   currency: string;
   max_staff: number;
@@ -37,8 +38,9 @@ interface CompanyData {
 }
 
 function formatPrice(plan: Plan): string {
-  if (plan.price === 0) return "Free";
-  return `₹${plan.price.toLocaleString("en-IN")}/${plan.interval}`;
+  const price = Number(plan.price);
+  if (price === 0) return "Free";
+  return `₹${price.toLocaleString("en-IN")}/${plan.interval}`;
 }
 
 function UsageBar({ label, used, max }: { label: string; used: number; max: number }) {
@@ -75,12 +77,12 @@ export default function SubscriptionBillingScreen() {
     setError(null);
     try {
       const [plansRes, meRes, staffRes, warehousesRes] = await Promise.all([
-        api.get<{ data: Plan[] }>("/plans"),
+        api.get<Plan[]>("/plans"),
         api.get<{ data: CompanyData }>("/companies/me"),
         api.get<{ data: any[] }>("/staff").catch(() => ({ data: [] })),
         api.get<{ data: any[] }>("/warehouses").catch(() => ({ data: [] })),
       ]);
-      setPlans(plansRes.data ?? []);
+      setPlans(plansRes ?? []);
       setCompany(meRes.data ?? {});
       setUsage({ staff: (staffRes.data ?? []).length, warehouses: (warehousesRes.data ?? []).length });
     } catch (e) {
@@ -227,7 +229,7 @@ export default function SubscriptionBillingScreen() {
                 <ActivityIndicator size="small" color={current ? theme.colors.onSurfaceVariant : "#FFFFFF"} />
               ) : (
                 <Text style={{ color: current ? theme.colors.onSurfaceVariant : "#FFFFFF", fontWeight: "700", fontSize: 14 }}>
-                  {current ? "Current Plan" : plan.price === 0 ? "Get Started" : `Switch to ${plan.name}`}
+                  {current ? "Current Plan" : Number(plan.price) === 0 ? "Get Started" : `Switch to ${plan.name}`}
                 </Text>
               )}
             </Pressable>
