@@ -764,14 +764,14 @@ export default function InventoryScreen() {
  )}
  </View>
 
- {/* Toolbar */}
- <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3" contentContainerStyle={{ gap: 6 }}>
- <ToolbarChip icon="sort" label={SORT_OPTIONS.find((o) => o.key === sortKey)?.label || "Sort"} colorActive="#6B7280" onPress={() => setIsSortMenuOpen(true)} />
- <ToolbarChip icon="alert-circle-outline" label="Low Stock" active={lowStockOnly} colorActive="#D64545" onPress={() => setLowStockOnly((v) => !v)} />
- <ToolbarChip icon="cart-outline" label="Reorder" onPress={() => router.push("/reorder-suggestions" as any)} />
- <ToolbarChip icon="tag-outline" label="GST" colorActive="#B45309" onPress={() => router.push("/gst-rate-tools" as any)} />
- <ToolbarChip icon="currency-inr" label="Price" colorActive="#7C3AED" onPress={() => router.push("/bulk-price-update" as any)} />
- </ScrollView>
+  {/* Toolbar */}
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-1.5" contentContainerStyle={{ gap: 5 }}>
+  <ToolbarChip icon="sort" label={SORT_OPTIONS.find((o) => o.key === sortKey)?.label || "Sort"} colorActive="#6B7280" onPress={() => setIsSortMenuOpen(true)} />
+  <ToolbarChip icon="alert-circle-outline" label="Low Stock" active={lowStockOnly} colorActive="#D64545" onPress={() => setLowStockOnly((v) => !v)} />
+  <ToolbarChip icon="cart-outline" label="Reorder" onPress={() => router.push("/reorder-suggestions" as any)} />
+  <ToolbarChip icon="tag-outline" label="GST" colorActive="#B45309" onPress={() => router.push("/gst-rate-tools" as any)} />
+  <ToolbarChip icon="currency-inr" label="Price" colorActive="#7C3AED" onPress={() => router.push("/bulk-price-update" as any)} />
+  </ScrollView>
 
  {/* Sort Menu */}
  <Modal visible={isSortMenuOpen} animationType="fade" transparent onRequestClose={() => setIsSortMenuOpen(false)}>
@@ -800,8 +800,8 @@ export default function InventoryScreen() {
  </Modal>
 
  {/* Warehouse Selector */}
- {warehouses.length > 0 && (
- <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3" contentContainerStyle={{ gap: 6 }}>
+  {warehouses.length > 0 && (
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-1.5" contentContainerStyle={{ gap: 5 }}>
  <WarehouseChip label="All Warehouses" active={activeWarehouseId === null} onPress={() => setActiveWarehouseId(null)} />
  {warehouses.map((w) => (
  <WarehouseChip key={w.id} label={w.name} active={activeWarehouseId === w.id} onPress={() => setActiveWarehouseId(w.id)} />
@@ -1656,22 +1656,22 @@ function ToolbarChip({ icon, label, active, colorActive, onPress }: {
 }) {
  if (active) {
  return (
- <Pressable onPress={onPress} className="flex-row items-center rounded-xl px-3 py-2.5" style={[{ gap: 4 }, { backgroundColor: colorActive || "#D64545" }]}>
- <MaterialCommunityIcons name={icon} size={14} color="#fff" />
- <Text className="text-xs font-bold text-white">{label}</Text>
- </Pressable>
- );
- }
- if (colorActive) {
- return (
- <Pressable onPress={onPress} className="flex-row items-center rounded-xl px-3 py-2.5 bg-surface-container" style={{ gap: 4 }}>
- <MaterialCommunityIcons name={icon} size={14} color={colorActive} />
- <Text className="text-xs font-bold" style={{ color: colorActive }}>{label}</Text>
- </Pressable>
- );
- }
- return (
- <Pressable onPress={onPress} className="flex-row items-center rounded-xl px-3 py-2.5 bg-primary" style={{ gap: 4 }}>
+  <Pressable onPress={onPress} className="flex-row items-center rounded-xl px-2.5 py-1.5" style={[{ gap: 3 }, { backgroundColor: colorActive || "#D64545" }]}>
+  <MaterialCommunityIcons name={icon} size={13} color="#fff" />
+  <Text className="text-xs font-bold text-white">{label}</Text>
+  </Pressable>
+  );
+  }
+  if (colorActive) {
+  return (
+  <Pressable onPress={onPress} className="flex-row items-center rounded-xl px-2.5 py-1.5 bg-surface-container" style={{ gap: 3 }}>
+  <MaterialCommunityIcons name={icon} size={13} color={colorActive} />
+  <Text className="text-xs font-bold" style={{ color: colorActive }}>{label}</Text>
+  </Pressable>
+  );
+  }
+  return (
+  <Pressable onPress={onPress} className="flex-row items-center rounded-xl px-2.5 py-1.5 bg-primary" style={{ gap: 3 }}>
  <MaterialCommunityIcons name={icon} size={14} color="#fff" />
  <Text className="text-xs font-bold text-white">{label}</Text>
  </Pressable>
@@ -1687,9 +1687,9 @@ function WarehouseChip({ label, active, dashed, icon, onPress }: {
 }) {
  if (icon) return <IconButton icon={icon} color="#6B7280" onPress={onPress} />;
  return (
- <Pressable
- onPress={onPress}
- className="flex-row items-center rounded-xl px-3.5 py-2.5"
+  <Pressable
+  onPress={onPress}
+  className="flex-row items-center rounded-xl px-3 py-1.5"
  style={[{
  gap: 5,
  backgroundColor: active ? "#1E8E85" : "#F3F4F6",
