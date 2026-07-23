@@ -413,9 +413,9 @@ export default function SalesOrdersScreen() {
  <ScrollView
  horizontal
  showsHorizontalScrollIndicator={false}
- className="px-6 mb-3"
+ className="mb-3"
+ contentContainerStyle={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 24, gap: 6 }}
  >
- <View className="flex-row" style={{ gap: 6 }}>
  {[null, "draft", "confirmed", "partially_delivered", "delivered", "cancelled"].map((s) => {
  const active = statusFilter === s;
  const cfg = s
@@ -437,7 +437,6 @@ export default function SalesOrdersScreen() {
  </Pressable>
  );
  })}
- </View>
  </ScrollView>
  {loading ? (
  <View className="flex-1 items-center justify-center pb-20">

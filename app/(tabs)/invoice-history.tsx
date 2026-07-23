@@ -352,7 +352,7 @@ export default function InvoiceHistoryScreen() {
  </View>
 
  {/* Tabs */}
- <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 py-3" contentContainerStyle={{ gap: 8 }}>
+ <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-3" contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
  {TABS.map((tab) => {
  const isActive = activeTab === tab.key;
  return (
@@ -365,7 +365,7 @@ export default function InvoiceHistoryScreen() {
  style={{ gap: 6 }}
  >
  <MaterialCommunityIcons name={tab.icon} size={16} color={isActive ? "#FFFFFF" : theme.colors.onSurfaceVariant} />
- <Text className="font-label-md font-bold" style={{ color: isActive ? "#FFFFFF" : theme.colors.onSurfaceVariant }}>
+ <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 14, color: isActive ? "#FFFFFF" : theme.colors.onSurfaceVariant }}>
  {tab.label}
  </Text>
  </Pressable>
@@ -390,7 +390,7 @@ export default function InvoiceHistoryScreen() {
  </Pressable>
  )}
  </View>
- <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+ <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16, gap: 6 }}>
  {statuses.map((s) => (
  <Pressable
  key={s}
