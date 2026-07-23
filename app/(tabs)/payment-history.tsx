@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, TextInput } from "react-native";
 import { useTheme } from "react-native-paper";
-import { api } from "../src/lib/api";
-import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import { api } from "../../src/lib/api";
+import { useTopInset, useBottomInset } from "../../src/lib/useTopInset";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import EmptyState from "../src/components/EmptyState";
+import EmptyState from "../../src/components/EmptyState";
 
 interface PaymentRow {
  id: string;

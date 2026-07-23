@@ -24,11 +24,31 @@ export default function ModuleGridSection({ id, label, icon, items }: ModuleGrid
 
   return (
     <View className="mx-5 mb-4">
-      <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
-        <MaterialCommunityIcons name={icon as any} size={13} color={categoryColor} />
-        <Text className="text-xs font-bold uppercase tracking-wider" style={{ color: categoryColor }}>{label}</Text>
+      <View className="flex-row items-center mb-2.5" style={{ gap: 8 }}>
+        <View
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 7,
+            backgroundColor: `${categoryColor}1F`,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <MaterialCommunityIcons name={icon as any} size={13} color={categoryColor} />
+        </View>
+        <Text className="text-sm font-extrabold uppercase tracking-wider" style={{ color: categoryColor }}>{label}</Text>
       </View>
-      <View className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4">
+      <View
+        className="bg-surface-container-lowest rounded-3xl p-4"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
+          elevation: 2,
+        }}
+      >
         <View className="flex-row flex-wrap" style={{ gap: 12, rowGap: 14 }} key={id}>
           {items.map((child) => (
             <IconGridItem

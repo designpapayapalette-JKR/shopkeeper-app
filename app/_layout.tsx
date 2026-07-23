@@ -11,6 +11,8 @@ import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
 import OfflineBanner from "../src/components/OfflineBanner";
 import { syncQueuedSales } from "../src/lib/offlineQueue";
 import { startConnectivityMonitoring } from "../src/lib/connectivity";
+import * as Notifications from "expo-notifications";
+import { handleNotificationDeepLink } from "../src/lib/notificationDeepLinks";
 
 import { TerminologyProvider } from "../src/lib/terminology-context";
 import { OutletProvider } from "../src/lib/outlet-context";
@@ -27,6 +29,23 @@ function NavigationGuard() {
  const segments = useSegments();
  const router = useRouter();
  const appState = useRef(AppState.currentState);
+
+ // Handle notification taps — navigate based on data.type field.
+ // Runs on mount for cold-start notifications, subs for future taps.
+ useEffect(() => {
+  if (!isAuthenticated) return;
+  const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+   const data = response.notification.request.content.data as Record<string, unknown>;
+   if (data?.type) handleNotificationDeepLink(data);
+  });
+  Notifications.getLastNotificationResponseAsync().then((response) => {
+   if (response) {
+    const data = response.notification.request.content.data as Record<string, unknown>;
+    if (data?.type) handleNotificationDeepLink(data);
+   }
+  });
+  return () => sub.remove();
+ }, [isAuthenticated]);
 
  // A sale made while offline sits in local storage until this fires — on
  // launch, and again every time the app comes back to the foreground

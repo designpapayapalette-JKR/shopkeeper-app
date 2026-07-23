@@ -17,13 +17,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useAuth } from "../../src/lib/auth-context";
-import { api, ApiError } from "../../src/lib/api";
-import { useConfirm } from "../../src/components/ConfirmDialog";
-import { useTopInset } from "../../src/lib/useTopInset";
-import { useBottomInset } from "../../src/lib/useBottomInset";
-import { getAvatarColor, getInitial } from "../../src/lib/avatarColor";
-import BulkUploadCard from "../../src/components/BulkUploadCard";
+import { useAuth } from "../src/lib/auth-context";
+import { api, ApiError } from "../src/lib/api";
+import { useConfirm } from "../src/components/ConfirmDialog";
+import { useTopInset } from "../src/lib/useTopInset";
+import { useBottomInset } from "../src/lib/useBottomInset";
+import { getAvatarColor, getInitial } from "../src/lib/avatarColor";
+import BulkUploadCard from "../src/components/BulkUploadCard";
 function IconBtn({ icon, color, loading, onPress }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"]; color: string; loading?: boolean; onPress: () => void }) {
  return (
  <Pressable onPress={onPress} disabled={loading} className="w-10 h-10 rounded-xl items-center justify-center bg-surface-container">
@@ -31,11 +31,11 @@ function IconBtn({ icon, color, loading, onPress }: { icon: React.ComponentProps
  </Pressable>
  );
 }
-import type { BankAccount } from "../bank-accounts";
-import { useTerminology } from "../../src/lib/terminology-context";
-import { StatePicker } from "../../src/components/StatePicker";
-import ListRow from "../../src/components/ListRow";
-import EmptyState from "../../src/components/EmptyState";
+import type { BankAccount } from "./bank-accounts";
+import { useTerminology } from "../src/lib/terminology-context";
+import { StatePicker } from "../src/components/StatePicker";
+import ListRow from "../src/components/ListRow";
+import EmptyState from "../src/components/EmptyState";
 
 // Indian lakh/crore grouping, not Western thousands grouping — a
 // shopkeeper reads "₹1,20,000" fluently and "₹1,20,000.00" as foreign.

@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import * as Print from "expo-print";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
@@ -1246,6 +1247,15 @@ due_date: dueDate,
  };
 
  const activeBillColor = BILL_TYPE_COLORS[invoiceType];
+ // Darkens activeBillColor for a gradient second stop on the checkout CTAs
+ // — real gradient, not a flat fill, per feedback_ui_visual_quality.md.
+ const activeBillColorDark = (() => {
+ const num = parseInt(activeBillColor.replace("#", ""), 16);
+ const r = Math.max(0, Math.floor(((num >> 16) & 0xff) * 0.62));
+ const g = Math.max(0, Math.floor(((num >> 8) & 0xff) * 0.62));
+ const b = Math.max(0, Math.floor((num & 0xff) * 0.62));
+ return `rgb(${r}, ${g}, ${b})`;
+ })();
 
  // ─────────────────────────────────────────────
  // Product Card
@@ -1906,11 +1916,21 @@ due_date: dueDate,
  )}
 
  {/* Checkout button */}
- <Pressable
- onPress={handleCheckout}
- disabled={checkoutLoading}
- className="rounded-2xl py-4 items-center shadow-sm active:opacity-90"
- style={{ backgroundColor: activeBillColor }}
+ <Pressable onPress={handleCheckout} disabled={checkoutLoading} className="active:opacity-90">
+ <LinearGradient
+ colors={[activeBillColor, activeBillColorDark]}
+ start={{ x: 0, y: 0 }}
+ end={{ x: 1, y: 0 }}
+ style={{
+ borderRadius: 18,
+ paddingVertical: 16,
+ alignItems: "center",
+ shadowColor: activeBillColor,
+ shadowOffset: { width: 0, height: 6 },
+ shadowOpacity: 0.3,
+ shadowRadius: 10,
+ elevation: 5,
+ }}
  >
  {checkoutLoading ? (
  <ActivityIndicator color="white" />
@@ -1919,6 +1939,7 @@ due_date: dueDate,
  {invoiceType === "estimate" ? "Save Estimate" : "Confirm Sale"} →
  </Text>
  )}
+ </LinearGradient>
  </Pressable>
  </>
  );
@@ -2139,10 +2160,24 @@ due_date: dueDate,
 
  {/* Floating cart bar */}
  {cart.length > 0 && (
- <Pressable
- onPress={() => setIsCheckoutOpen(true)}
- className="mx-5 rounded-2xl px-5 py-4 flex-row justify-between items-center active:opacity-90"
- style={{ backgroundColor: activeBillColor, marginBottom: bottomInset, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}
+ <Pressable onPress={() => setIsCheckoutOpen(true)} className="mx-5 active:opacity-90" style={{ marginBottom: bottomInset }}>
+ <LinearGradient
+ colors={[activeBillColor, activeBillColorDark]}
+ start={{ x: 0, y: 0 }}
+ end={{ x: 1, y: 0 }}
+ style={{
+ borderRadius: 18,
+ paddingHorizontal: 20,
+ paddingVertical: 16,
+ flexDirection: "row",
+ justifyContent: "space-between",
+ alignItems: "center",
+ shadowColor: activeBillColor,
+ shadowOffset: { width: 0, height: 4 },
+ shadowOpacity: 0.3,
+ shadowRadius: 12,
+ elevation: 8,
+ }}
  >
  <View className="flex-row items-center" style={{ gap: 10 }}>
  <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center">
@@ -2159,6 +2194,7 @@ due_date: dueDate,
  <Text className="text-white font-bold text-sm">View Cart</Text>
  <MaterialCommunityIcons name="arrow-right" size={16} color="white" />
  </View>
+ </LinearGradient>
  </Pressable>
  )}
  </View>

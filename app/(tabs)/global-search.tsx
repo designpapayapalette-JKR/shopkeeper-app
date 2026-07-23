@@ -3,11 +3,11 @@ import { View, FlatList, Pressable, Text, TextInput } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "../src/lib/auth-context";
-import { useModuleVisibility } from "../src/lib/useModuleVisibility";
-import { type ModuleItem } from "../src/lib/moduleCategories";
-import { useTopInset } from "../src/lib/useTopInset";
-import EmptyState from "../src/components/EmptyState";
+import { useAuth } from "../../src/lib/auth-context";
+import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
+import { type ModuleItem } from "../../src/lib/moduleCategories";
+import { useTopInset } from "../../src/lib/useTopInset";
+import EmptyState from "../../src/components/EmptyState";
 
 export default function GlobalSearchScreen() {
  const { userRole } = useAuth();

@@ -10,6 +10,7 @@ import {
  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth-context";
 
 // The app-first signup flow: download the app → redeem an invite code here
@@ -130,21 +131,35 @@ function Field(props: {
  autoCapitalize?: "none" | "characters" | "words" | "sentences";
  keyboardType?: "default" | "email-address";
 }) {
+ const [reveal, setReveal] = useState(false);
  return (
  <View className="mt-4">
  <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
  {props.label}
  </Text>
+ <View className="relative justify-center">
  <TextInput
  value={props.value}
  onChangeText={props.onChangeText}
  placeholder={props.placeholder}
  placeholderTextColor="#A0A0A0"
- secureTextEntry={props.secureTextEntry}
+ secureTextEntry={props.secureTextEntry && !reveal}
  autoCapitalize={props.autoCapitalize ?? "words"}
  keyboardType={props.keyboardType ?? "default"}
- className="bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark"
+ className={`bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark ${props.secureTextEntry ? "pr-12" : ""}`}
  />
+ {props.secureTextEntry && (
+ <Pressable
+ onPress={() => setReveal((v) => !v)}
+ hitSlop={8}
+ style={{ position: "absolute", right: 14 }}
+ accessibilityRole="button"
+ accessibilityLabel={reveal ? "Hide password" : "Show password"}
+ >
+ <MaterialCommunityIcons name={reveal ? "eye-off-outline" : "eye-outline"} size={22} color="#6B7280" />
+ </Pressable>
+ )}
+ </View>
  </View>
  );
 }

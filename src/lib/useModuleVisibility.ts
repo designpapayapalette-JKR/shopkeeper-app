@@ -53,29 +53,31 @@ export function useModuleVisibility(userRole: UserRole | null | undefined) {
  [effectiveRole, enabledModules]
  );
 
+ const isChildVisible = useCallback(
+ (child: ModuleItem, roleModules: string[]) =>
+ roleModules.includes(child.key) && (!child.gateKey || enabledModules.includes(child.gateKey)),
+ [enabledModules]
+ );
+
  const getVisibleCategories = useCallback((): ModuleCategory[] => {
  const roleModules = ROLE_MODULES[effectiveRole] || ALL_MODULES;
  return MODULE_CATEGORIES
  .filter((cat) => cat.roles.includes(effectiveRole))
  .map((cat) => ({
  ...cat,
- children: cat.children.filter(
- (child) => roleModules.includes(child.key) && enabledModules.includes(child.key)
- ),
+ children: cat.children.filter((child) => isChildVisible(child, roleModules)),
  }))
  .filter((cat) => cat.children.length > 0);
- }, [effectiveRole, enabledModules]);
+ }, [effectiveRole, isChildVisible]);
 
  const getVisibleChildren = useCallback(
  (categoryId: string): ModuleItem[] => {
  const roleModules = ROLE_MODULES[effectiveRole] || ALL_MODULES;
  const cat = MODULE_CATEGORIES.find((c) => c.id === categoryId);
  if (!cat) return [];
- return cat.children.filter(
- (child) => roleModules.includes(child.key) && enabledModules.includes(child.key)
- );
+ return cat.children.filter((child) => isChildVisible(child, roleModules));
  },
- [effectiveRole, enabledModules]
+ [effectiveRole, isChildVisible]
  );
 
  return {

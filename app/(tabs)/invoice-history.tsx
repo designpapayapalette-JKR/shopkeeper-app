@@ -3,11 +3,11 @@ import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, Modal, Scrol
 import { useLocalSearchParams, router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
-import { api, ApiError, apiUrl } from "../src/lib/api";
-import { useTopInset } from "../src/lib/useTopInset";
-import { useBottomInset } from "../src/lib/useBottomInset";
-import { shareDataAsPdf } from "../src/lib/pdfExport";
-import EmptyState from "../src/components/EmptyState";
+import { api, ApiError, apiUrl } from "../../src/lib/api";
+import { useTopInset } from "../../src/lib/useTopInset";
+import { useBottomInset } from "../../src/lib/useBottomInset";
+import { shareDataAsPdf } from "../../src/lib/pdfExport";
+import EmptyState from "../../src/components/EmptyState";
 
 function formatRupee(n: number): string {
  return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -353,26 +353,24 @@ export default function InvoiceHistoryScreen() {
 
  {/* Tabs */}
  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 py-3" contentContainerStyle={{ gap: 8 }}>
- {TABS.map((tab) => (
+ {TABS.map((tab) => {
+ const isActive = activeTab === tab.key;
+ return (
  <Pressable
  key={tab.key}
  onPress={() => { setActiveTab(tab.key); setSearchQuery(""); setStatusFilter("All"); }}
- className={`flex-row items-center rounded-xl px-4 py-2.5 ${activeTab === tab.key ? "bg-surface-container-high" : "bg-surface-container"}`}
+ className={`flex-row items-center rounded-xl px-4 py-2.5 ${
+ isActive ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"
+ }`}
  style={{ gap: 6 }}
  >
- <MaterialCommunityIcons
- name={tab.icon}
- size={16}
- color={activeTab === tab.key ? theme.colors.primary : theme.colors.onSurfaceVariant}
- />
- <Text
- className="font-label-md"
- style={{ color: activeTab === tab.key ? theme.colors.primary : theme.colors.onSurfaceVariant }}
- >
+ <MaterialCommunityIcons name={tab.icon} size={16} color={isActive ? "#FFFFFF" : theme.colors.onSurfaceVariant} />
+ <Text className="font-label-md font-bold" style={{ color: isActive ? "#FFFFFF" : theme.colors.onSurfaceVariant }}>
  {tab.label}
  </Text>
  </Pressable>
- ))}
+ );
+ })}
  </ScrollView>
 
  {/* Search + Filter */}

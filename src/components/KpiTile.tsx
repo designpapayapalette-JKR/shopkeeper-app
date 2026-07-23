@@ -10,6 +10,9 @@ interface KpiTileProps {
   compact?: boolean;
 }
 
+// Tinted-background treatment (not a flat white card + left border stripe)
+// — gives KPI tiles real color presence per user feedback that the earlier
+// flat/bordered look read as boring (see memory feedback_ui_visual_quality.md).
 export default function KpiTile({ value, label, delta, color, compact }: KpiTileProps) {
   const theme = useTheme();
   const accentColor = color ?? theme.colors.primary;
@@ -17,20 +20,21 @@ export default function KpiTile({ value, label, delta, color, compact }: KpiTile
 
   return (
     <View
-      className="bg-surface-container-lowest rounded-2xl overflow-hidden"
       style={{
         flex: 1,
         minWidth: compact ? 72 : 84,
-        borderLeftWidth: 3,
-        borderLeftColor: accentColor,
-        padding: compact ? 8 : 12,
-        gap: 2,
+        borderRadius: 20,
+        backgroundColor: `${accentColor}14`,
+        borderWidth: 1,
+        borderColor: `${accentColor}26`,
+        padding: compact ? 10 : 14,
+        gap: 3,
       }}
     >
-      <Text className="text-on-surface-variant" style={{ fontSize: 11, fontWeight: "600", letterSpacing: 0.3, textTransform: "uppercase" }}>
+      <Text style={{ fontSize: 11, fontWeight: "700", letterSpacing: 0.3, textTransform: "uppercase", color: accentColor }}>
         {label}
       </Text>
-      <Text style={{ fontSize: compact ? 18 : 22, fontWeight: "700", color: accentColor, lineHeight: compact ? 22 : 26 }} numberOfLines={1} adjustsFontSizeToFit>
+      <Text style={{ fontSize: compact ? 19 : 23, fontWeight: "800", color: "#1c1b1b", lineHeight: compact ? 23 : 27 }} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
       {delta && (

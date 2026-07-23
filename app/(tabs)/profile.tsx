@@ -4,13 +4,14 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
-import { useAuth } from "../src/lib/auth-context";
-import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
-import { useConfirm } from "../src/components/ConfirmDialog";
-import RoleBadge from "../src/components/RoleBadge";
-import { roleColor } from "../src/lib/roles";
-import { useTerminology, type TerminologyLang } from "../src/lib/terminology-context";
-import { useOutlet } from "../src/lib/outlet-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuth } from "../../src/lib/auth-context";
+import { useTopInset, useBottomInset } from "../../src/lib/useTopInset";
+import { useConfirm } from "../../src/components/ConfirmDialog";
+import { roleLabel } from "../../src/lib/roles";
+import { useTerminology, type TerminologyLang } from "../../src/lib/terminology-context";
+import { useOutlet } from "../../src/lib/outlet-context";
+import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 
 const LANGUAGES: { key: TerminologyLang; label: string }[] = [
   { key: "en", label: "English" }, { key: "hi", label: "हिंदी" }, { key: "ta", label: "தமிழ்" },
@@ -42,11 +43,18 @@ export default function ProfileScreen() {
   const { lang, setLang } = useTerminology();
   const insets = useSafeAreaInsets();
   const { outlets, selectedOutlet, selectedOutletId, setSelectedOutletId, loading: outletsLoading } = useOutlet();
+  const { getVisibleChildren } = useModuleVisibility(userRole);
   const [showLang, setShowLang] = useState(false);
   const [showOutlet, setShowOutlet] = useState(false);
 
+  // Mirrors shopkeeper-web's top-right account menu — Business Settings and
+  // Back Office live under the profile avatar there too, instead of being
+  // scattered across the sidebar. Same MODULE_CATEGORIES data the dashboard
+  // grid uses, just rendered as a settings list instead of icon tiles.
+  const settingsItems = getVisibleChildren("settings-hub");
+  const backOfficeItems = getVisibleChildren("back-office");
+
   const initials = [user?.firstName, user?.lastName].filter(Boolean).map((s: string) => s[0]).join("").toUpperCase() || "U";
-  const badgeColor = roleColor(userRole);
   const outletName = user?.outlet?.name || activeCompany?.name || "Main Store";
   const isOwner = userRole === "owner";
   const isManager = userRole === "manager";
@@ -57,21 +65,78 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: bottomInset + 24 }}>
-      {/* Avatar + Name */}
-      <View className="items-center px-5 mb-6">
-        <View className="w-[72px] h-[72px] rounded-full items-center justify-center mb-3" style={{ backgroundColor: badgeColor }}>
+    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
+      {/* Gradient hero — matches Login/Dashboard's visual language
+          (feedback_ui_visual_quality.md) instead of a flat avatar-on-white-bg. */}
+      <LinearGradient
+        colors={["#0368FE", "#000D3A"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingTop: topInset + 16,
+          paddingBottom: 32,
+          paddingHorizontal: 20,
+          borderBottomLeftRadius: 28,
+          borderBottomRightRadius: 28,
+          alignItems: "center",
+          overflow: "hidden",
+          marginBottom: 24,
+        }}
+      >
+        <View style={{ position: "absolute", top: -50, right: -30, width: 130, height: 130, borderRadius: 65, backgroundColor: "rgba(255,255,255,0.08)" }} />
+        <View style={{ position: "absolute", bottom: -40, left: -20, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(3,168,254,0.16)" }} />
+
+        <View
+          className="w-[72px] h-[72px] rounded-full items-center justify-center mb-3"
+          style={{ backgroundColor: "rgba(255,255,255,0.16)", borderWidth: 2, borderColor: "rgba(255,255,255,0.35)" }}
+        >
           <Text className="text-white font-bold" style={{ fontSize: 26 }}>{initials}</Text>
         </View>
-        <Text className="font-headline-md text-on-surface text-center" style={{ fontSize: 22, fontWeight: "700" }}>
+        <Text style={{ color: "#FFFFFF", fontSize: 22, fontWeight: "800", textAlign: "center" }}>
           {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || "User"}
         </Text>
         <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
-          <MaterialCommunityIcons name="store" size={14} color={theme.colors.onSurfaceVariant} />
-          <Text className="text-sm text-on-surface-variant">{outletName}</Text>
+          <MaterialCommunityIcons name="store" size={13} color="rgba(255,255,255,0.65)" />
+          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>{outletName}</Text>
         </View>
-        <View className="mt-2"><RoleBadge role={userRole} /></View>
-      </View>
+        <View style={{ marginTop: 10, backgroundColor: "rgba(255,255,255,0.18)", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 }}>
+          <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "700" }}>{roleLabel(userRole)}</Text>
+        </View>
+      </LinearGradient>
+
+      {/* Business Settings — moved here from the Dashboard grid to match
+          shopkeeper-web's top-right account menu. */}
+      {settingsItems.length > 0 && (
+        <>
+          <Text className="text-xs font-extrabold text-on-surface-variant uppercase tracking-wider mx-5 mb-2">
+            Business Settings
+          </Text>
+          <View className="mx-5 mb-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+            {settingsItems.map((item, idx) => (
+              <React.Fragment key={item.key}>
+                {idx > 0 && <View className="h-px bg-outline-variant mx-5" />}
+                <MenuRow icon={item.icon} title={item.label} description={item.desc} onPress={() => router.push(item.route as any)} />
+              </React.Fragment>
+            ))}
+          </View>
+        </>
+      )}
+
+      {backOfficeItems.length > 0 && (
+        <>
+          <Text className="text-xs font-extrabold text-on-surface-variant uppercase tracking-wider mx-5 mb-2">
+            Back Office
+          </Text>
+          <View className="mx-5 mb-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+            {backOfficeItems.map((item, idx) => (
+              <React.Fragment key={item.key}>
+                {idx > 0 && <View className="h-px bg-outline-variant mx-5" />}
+                <MenuRow icon={item.icon} title={item.label} description={item.desc} onPress={() => router.push(item.route as any)} />
+              </React.Fragment>
+            ))}
+          </View>
+        </>
+      )}
 
       {/* Preferences */}
       <View className="mx-5 mb-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">

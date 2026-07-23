@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, ScrollView, Pressable, ActivityIndicator, RefreshControl, Text, Linking } from "react-native";
 import { useTheme } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth-context";
 import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 import { api } from "../../src/lib/api";
 import { useTopInset } from "../../src/lib/useTopInset";
-import { roleColor } from "../../src/lib/roles";
-import RoleBadge from "../../src/components/RoleBadge";
-import KpiTile from "../../src/components/KpiTile";
+import { roleColor, roleLabel } from "../../src/lib/roles";
+import KpiCarousel from "../../src/components/KpiCarousel";
 import IconGridItem from "../../src/components/IconGridItem";
 import ModuleGridSection from "../../src/components/ModuleGridSection";
 
@@ -27,19 +27,27 @@ function formatRupee(n: number): string {
 }
 
 const STAFF_QUICK_ACTIONS = [
-  { key: "new-sale", label: "New Sale", icon: "point-of-sale", route: "/(tabs)/pos" },
+  { key: "new-sale", label: "New Sale", icon: "point-of-sale", route: "/pos" },
   { key: "recent", label: "Recent Bills", icon: "history", route: "/invoice-history" },
   { key: "held", label: "Held Bills", icon: "content-save", route: "/invoice-history" },
   { key: "returns", label: "Returns", icon: "backup-restore", route: "/invoice-history" },
   { key: "reprint", label: "Reprint", icon: "printer", route: "/invoice-history" },
-  { key: "customers", label: "Customers", icon: "account-group", route: "/(tabs)/ledger" },
+  { key: "customers", label: "Customers", icon: "account-group", route: "/ledger" },
+  // Was only reachable via Profile > My Attendance before — promoted to a
+  // one-tap home tile since check-in/out is a daily action. See docs/
+  // web-vs-mobile-role-access-gap-analysis.md R5.
+  { key: "attendance", label: "Attendance", icon: "calendar-check", route: "/attendance" },
 ];
 
 const WAREHOUSE_QUICK_ACTIONS = [
-  { key: "stock", label: "Stock", icon: "package-variant-closed", route: "/(tabs)/inventory" },
+  { key: "stock", label: "Stock", icon: "package-variant-closed", route: "/inventory" },
   { key: "transfers", label: "Transfers", icon: "transfer", route: "/stock-transfer-requests" },
   { key: "purchases", label: "Purchases", icon: "truck", route: "/purchase-entry" },
   { key: "challans", label: "Challans", icon: "clipboard-list", route: "/challans" },
+  // Web gives warehouse managers Attendance and Scanned Docs; mobile had
+  // neither. See docs/web-vs-mobile-role-access-gap-analysis.md R4.
+  { key: "attendance", label: "Attendance", icon: "calendar-check", route: "/attendance" },
+  { key: "scanned-docs", label: "Scanned Docs", icon: "file-image", route: "/scanned-documents" },
 ];
 
 export default function DashboardScreen() {
@@ -51,7 +59,6 @@ export default function DashboardScreen() {
 
   const [stats, setStats] = useState({ salesToday: 0, invoicesToday: 0, cashTotal: 0, upiTotal: 0 });
   const [recentBills, setRecentBills] = useState<any[]>([]);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [pendingTransferCount, setPendingTransferCount] = useState(0);
@@ -69,9 +76,11 @@ export default function DashboardScreen() {
 
   const fetchOwnerData = useCallback(async () => {
     try {
-      const [dashRes, activityRes, approvalRes] = await Promise.all([
+      // Live Activity intentionally not fetched/shown here — that feed
+      // stays web-only per product decision; mobile just shows the Owner's
+      // own KPIs/outlets/approvals.
+      const [dashRes, approvalRes] = await Promise.all([
         api.get<any>("/dashboard/owner").catch(() => ({ data: {} })),
-        api.get<any>("/activity-log", { params: { limit: 10 } }).catch(() => ({ data: [] })),
         api.get<any>("/approval-queue/pending").catch(() => ({ data: [] })),
       ]);
       setStats({
@@ -81,7 +90,6 @@ export default function DashboardScreen() {
         upiTotal: parseFloat(dashRes.data?.upiTotal ?? 0),
       });
       setOutletBreakdown(Array.isArray(dashRes.data?.outlets) ? dashRes.data.outlets : []);
-      setRecentActivity(Array.isArray(activityRes.data) ? activityRes.data.slice(0, 10) : []);
       setPendingApprovals(Array.isArray(approvalRes.data) ? approvalRes.data.length : 0);
     } catch {}
   }, []);
@@ -130,27 +138,82 @@ export default function DashboardScreen() {
   return (
     <ScrollView
       className="flex-1 bg-background"
-      contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: 32 }}
+      contentContainerStyle={{ paddingBottom: 32 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); isOwner ? fetchOwnerData() : fetchData(); }} />}
     >
-      {/* Greeting header */}
-      <View className="flex-row items-center justify-between px-5 mb-4">
-        <View className="flex-1 pr-3">
-          <Text className="text-on-surface" style={{ fontSize: 22, fontWeight: "700" }}>Namaste, {user?.firstName || "User"}</Text>
-          <View className="flex-row items-center flex-wrap mt-1" style={{ gap: 6 }}>
-            {outletName ? (
-              <View className="flex-row items-center" style={{ gap: 4 }}>
-                <MaterialCommunityIcons name="store" size={13} color="#9CA3AF" />
-                <Text className="text-xs text-on-surface-variant">{outletName}</Text>
+      {/* Gradient hero — matches the login screen's visual language
+          (feedback_ui_visual_quality.md): dark gradient band, decorative
+          depth circles, bold white type, instead of a flat white header. */}
+      <LinearGradient
+        colors={["#0368FE", "#000D3A"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingTop: topInset + 16,
+          paddingBottom: 36,
+          paddingHorizontal: 20,
+          borderBottomLeftRadius: 28,
+          borderBottomRightRadius: 28,
+          overflow: "hidden",
+        }}
+      >
+        <View style={{ position: "absolute", top: -50, right: -30, width: 130, height: 130, borderRadius: 65, backgroundColor: "rgba(255,255,255,0.08)" }} />
+        <View style={{ position: "absolute", bottom: -40, left: -20, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(3,168,254,0.16)" }} />
+
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 pr-3">
+            <Text style={{ color: "#FFFFFF", fontSize: 22, fontWeight: "800" }}>Namaste, {user?.firstName || "User"}</Text>
+            <View className="flex-row items-center flex-wrap mt-1.5" style={{ gap: 6 }}>
+              {outletName ? (
+                <View className="flex-row items-center" style={{ gap: 4 }}>
+                  <MaterialCommunityIcons name="store" size={12} color="rgba(255,255,255,0.65)" />
+                  <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>{outletName}</Text>
+                </View>
+              ) : null}
+              <View style={{ backgroundColor: "rgba(255,255,255,0.18)", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 }}>
+                <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>{roleLabel(userRole)}</Text>
               </View>
-            ) : null}
-            <RoleBadge role={userRole} size="sm" />
+            </View>
           </View>
+          <Pressable
+            onPress={() => router.push("/profile")}
+            className="w-[44px] h-[44px] rounded-full items-center justify-center"
+            style={{ backgroundColor: "rgba(255,255,255,0.16)", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.35)" }}
+          >
+            <Text className="text-white font-bold" style={{ fontSize: 17 }}>{initials}</Text>
+          </Pressable>
         </View>
-        <View className="w-[44px] h-[44px] rounded-full items-center justify-center" style={{ backgroundColor: roleColorValue }}>
-          <Text className="text-white font-bold" style={{ fontSize: 17 }}>{initials}</Text>
-        </View>
-      </View>
+      </LinearGradient>
+
+      {/* KPI Carousel — full-width swipeable stat cards + dot pagination,
+          floating up over the header's gradient bottom edge (same
+          "anchored card" language as Login/Profile) rather than sitting in
+          a dead gap below it. Replaces the earlier 4-cards-in-a-row layout
+          that wrapped labels awkwardly and left no room for large rupee
+          amounts to grow (feedback_ui_visual_quality.md). Pattern from the
+          PNB reference (data/Mobile App Ref/PNB.jpg). Placed directly under
+          the header (before the shift/approval chips) so its negative
+          top-margin overlaps the gradient, not unrelated content below it. */}
+      <KpiCarousel
+        items={[
+          { value: formatRupee(stats.salesToday), label: "Today's Sales", color: roleColorValue, icon: "cash" },
+          { value: String(stats.invoicesToday), label: "Bills", color: "#375DFB", icon: "receipt" },
+          ...(isStaff || isManager || isOwner
+            ? [
+                { value: formatRupee(stats.cashTotal), label: "Cash", color: "#2E9E5B", icon: "cash-multiple" },
+                { value: formatRupee(stats.upiTotal), label: "UPI", color: "#0368FE", icon: "qrcode" },
+              ]
+            : []),
+          ...(isWarehouse
+            ? [
+                { value: String(lowStockCount), label: "Low Stock", color: lowStockCount > 0 ? "#D64545" : "#6B7280", icon: "package-variant-closed" },
+                { value: String(pendingTransferCount), label: "Transfers", color: "#835400", icon: "transfer" },
+              ]
+            : []),
+        ]}
+      />
+
+      <View style={{ marginTop: 16 }}>
 
       {/* Shift chip — Cashier */}
       {isStaff && (
@@ -183,30 +246,6 @@ export default function DashboardScreen() {
         </Pressable>
       )}
 
-      {/* KPI Row */}
-      <View className="px-5 mb-4" style={{ gap: 8 }}>
-        <View className="flex-row" style={{ gap: 8 }}>
-          <KpiTile value={formatRupee(stats.salesToday)} label="Today's Sales" color={roleColorValue} />
-          <KpiTile value={String(stats.invoicesToday)} label="Bills" />
-          {isStaff ? (
-            <>
-              <KpiTile value={formatRupee(stats.cashTotal)} label="Cash" color="#2E9E5B" />
-              <KpiTile value={formatRupee(stats.upiTotal)} label="UPI" color="#0368FE" />
-            </>
-          ) : isWarehouse ? (
-            <>
-              <KpiTile value={String(lowStockCount)} label="Low Stock" color={lowStockCount > 0 ? "#D64545" : "#6B7280"} />
-              <KpiTile value={String(pendingTransferCount)} label="Transfers" color="#835400" />
-            </>
-          ) : (
-            <>
-              <KpiTile value={formatRupee(stats.cashTotal)} label="Cash" color="#2E9E5B" />
-              <KpiTile value={formatRupee(stats.upiTotal)} label="UPI" color="#0368FE" />
-            </>
-          )}
-        </View>
-      </View>
-
       {/* Per-outlet breakdown — Owner */}
       {isOwner && outletBreakdown.length > 0 && (
         <View className="mx-5 mb-4">
@@ -227,27 +266,6 @@ export default function DashboardScreen() {
                 </View>
                 <Text className="text-sm font-bold text-on-surface">{formatRupee(parseFloat(outlet.sales ?? 0))}</Text>
               </Pressable>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Live Activity — Owner */}
-      {isOwner && recentActivity.length > 0 && (
-        <View className="mx-5 mb-4">
-          <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Live Activity</Text>
-          <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden">
-            {recentActivity.slice(0, 4).map((item: any, idx: number) => (
-              <View key={item.id || idx} className="flex-row items-start px-4 py-3" style={{ gap: 10, borderBottomWidth: idx < Math.min(recentActivity.length, 4) - 1 ? 1 : 0, borderColor: "#E5E7EB" }}>
-                <View className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: roleColorValue }} />
-                <View className="flex-1">
-                  <Text className="text-sm text-on-surface">
-                    <Text className="font-bold">{item.user_name || "Someone"}</Text>
-                    {" "}{item.action || "did something"}
-                  </Text>
-                  <Text className="text-xs text-on-surface-variant mt-0.5">{timeAgo(item.created_at || item.createdAt)}</Text>
-                </View>
-              </View>
             ))}
           </View>
         </View>
@@ -281,10 +299,21 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Manager category grid */}
-      {isManager && visibleCategories.map((cat) => (
-        <ModuleGridSection key={cat.id} id={cat.id} label={cat.label} icon={cat.icon} items={cat.children} />
-      ))}
+      {/* Manager / Owner category grid — Owner's full MODULE_CATEGORIES set
+          (Billing, Inventory, Purchases, Accounting, Staff, Approvals & Ops,
+          Financial Reports, Back Office, Business Settings) replaces the
+          old hardcoded 12-item "Owner Snapshot" stacks below with the same
+          dynamic, data-driven grid Manager already uses — 100% web parity
+          per docs/Deep-Review-and-Dual-Mobile-Apps-Architectural-Plan.md §4. */}
+      {/* Business Settings, Back Office, and the standalone Printer entry
+          live under the profile avatar now (matches shopkeeper-web's
+          top-right account menu — General Settings, Back Office, etc. all
+          moved out of the sidebar into one place), not in this grid. */}
+      {(isManager || isOwner) && visibleCategories
+        .filter((cat) => !["settings-hub", "back-office", "settings"].includes(cat.id))
+        .map((cat) => (
+          <ModuleGridSection key={cat.id} id={cat.id} label={cat.label} icon={cat.icon} items={cat.children} />
+        ))}
 
       {/* Recent Bills */}
       {!isOwner && !isWarehouse && recentBills.length > 0 && (
@@ -312,46 +341,6 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Owner Executive Quick Action Stacks */}
-      {isOwner && (
-        <View className="mx-5 mb-4" style={{ gap: 16 }}>
-          {/* Executive Reports Hub */}
-          <View>
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Executive Reports</Text>
-              <Pressable onPress={() => router.push("/analytics" as any)}>
-                <Text className="text-xs font-bold text-primary">All Reports</Text>
-              </Pressable>
-            </View>
-            <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4">
-              <View className="flex-row flex-wrap" style={{ gap: 12, rowGap: 14 }}>
-                <IconGridItem label="P&L Statement" icon="chart-line" onPress={() => router.push("/pnl-report" as any)} />
-                <IconGridItem label="Balance Sheet" icon="scale-balance" onPress={() => router.push("/balance-sheet" as any)} />
-                <IconGridItem label="GST Returns" icon="file-document-outline" onPress={() => router.push("/gst-reports" as any)} />
-                <IconGridItem label="Daybook" icon="book-open-outline" onPress={() => router.push("/daybook" as any)} />
-                <IconGridItem label="Aging Report" icon="clock-alert-outline" onPress={() => router.push("/aging-report" as any)} />
-                <IconGridItem label="Analytics" icon="chart-bar" onPress={() => router.push("/analytics" as any)} />
-              </View>
-            </View>
-          </View>
-
-          {/* Operations & Approvals */}
-          <View>
-            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Operations & Approvals</Text>
-            <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4">
-              <View className="flex-row flex-wrap" style={{ gap: 12, rowGap: 14 }}>
-                <IconGridItem label="Approvals" icon="clipboard-check-outline" onPress={() => router.push("/approval-queue" as any)} />
-                <IconGridItem label="Outlets" icon="storefront-outline" onPress={() => router.push("/outlets" as any)} />
-                <IconGridItem label="Counters" icon="cash-register" onPress={() => router.push("/counters" as any)} />
-                <IconGridItem label="Staff Roster" icon="account-group-outline" onPress={() => router.push("/staff" as any)} />
-                <IconGridItem label="Field Tracking" icon="map-marker-path" onPress={() => router.push("/(tabs)/agents" as any)} />
-                <IconGridItem label="Audit Log" icon="history" onPress={() => router.push("/activity-log" as any)} />
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-
       {/* Owner — web admin card */}
       {isOwner && (
         <View className="mx-5">
@@ -368,6 +357,7 @@ export default function DashboardScreen() {
           </Pressable>
         </View>
       )}
+      </View>
     </ScrollView>
   );
 }

@@ -28,9 +28,10 @@ interface AuthContextType {
  logout: () => Promise<void>;
  refreshBrands: () => Promise<void>;
  refreshCompany: () => Promise<void>;
- pinLoginAvailable: boolean;
- setupQuickPin: (pin: string) => Promise<void>;
- unlockWithPin: (pin: string) => Promise<boolean>;
+  pinLoginAvailable: boolean;
+  setupQuickPin: (pin: string) => Promise<void>;
+  unlockWithPin: (pin: string) => Promise<boolean>;
+  refreshAllData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,14 +67,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  }
  };
 
- const refreshCompany = async () => {
- try {
- const company = await api.get<any>("/companies/me");
- setActiveCompany(company.data);
- } catch (error) {
- console.error("Failed to refresh company:", error);
- }
- };
+  const refreshCompany = async () => {
+    try {
+      const company = await api.get<any>("/companies/me");
+      setActiveCompany(company.data);
+    } catch (error) {
+      console.error("Failed to refresh company:", error);
+    }
+  };
+
+  const refreshAllData = async () => {
+    await Promise.all([
+      refreshBrands(),
+      refreshCompany(),
+    ]);
+  };
 
  useEffect(() => {
  async function checkAuth() {
@@ -265,13 +273,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  logout,
  refreshBrands,
  refreshCompany,
- pinLoginAvailable,
- setupQuickPin,
- unlockWithPin,
- }}
- >
- {children}
- </AuthContext.Provider>
+  pinLoginAvailable,
+  setupQuickPin,
+  unlockWithPin,
+  refreshAllData,
+  }}
+  >
+  {children}
+  </AuthContext.Provider>
  );
 }
 

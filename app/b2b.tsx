@@ -15,11 +15,11 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useTheme } from "react-native-paper";
-import { api } from "../../src/lib/api";
-import { useAuth } from "../../src/lib/auth-context";
+import { api } from "../src/lib/api";
+import { useAuth } from "../src/lib/auth-context";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useTopInset, useBottomInset } from "../../src/lib/useTopInset";
-import EmptyState from "../../src/components/EmptyState";
+import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
+import EmptyState from "../src/components/EmptyState";
 
 // Indian lakh/crore grouping — shopkeeper-mobile-design-system.md §3.1.
 // decimals=2 preserves exact paise on amounts actually owed (cart totals);

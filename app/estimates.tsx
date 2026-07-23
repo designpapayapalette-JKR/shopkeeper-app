@@ -15,9 +15,9 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useTheme } from "react-native-paper";
-import { api } from "../../src/lib/api";
-import { useAuth } from "../../src/lib/auth-context";
-import { useTopInset } from "../../src/lib/useTopInset";
+import { api } from "../src/lib/api";
+import { useAuth } from "../src/lib/auth-context";
+import { useTopInset } from "../src/lib/useTopInset";
 
 interface Product {
  id: string;

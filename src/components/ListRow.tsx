@@ -2,6 +2,16 @@ import React from "react";
 import { Pressable, View, Text } from "react-native";
 import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+
+function darken(hex: string, factor: number): string {
+ const clean = hex.replace("#", "");
+ const num = parseInt(clean, 16);
+ const r = Math.max(0, Math.floor(((num >> 16) & 0xff) * factor));
+ const g = Math.max(0, Math.floor(((num >> 8) & 0xff) * factor));
+ const b = Math.max(0, Math.floor((num & 0xff) * factor));
+ return `rgb(${r}, ${g}, ${b})`;
+}
 
 interface ListRowProps {
  title: string;
@@ -30,14 +40,17 @@ export default function ListRow({ title, subtitle, amount, status, avatarLabel, 
  style={{ minHeight: 64, paddingHorizontal: 14, paddingVertical: 10 }}
  >
  {avatarLabel && (
- <View
+ <LinearGradient
+ colors={[avatarColor ?? theme.colors.primary, darken(avatarColor ?? theme.colors.primary, 0.65)]}
+ start={{ x: 0, y: 0 }}
+ end={{ x: 1, y: 1 }}
  className="items-center justify-center rounded-full mr-3"
- style={{ width: 40, height: 40, backgroundColor: `${avatarColor ?? theme.colors.primary}20` }}
+ style={{ width: 40, height: 40 }}
  >
- <Text style={{ fontSize: 15, fontWeight: "700", color: avatarColor ?? theme.colors.primary }}>
+ <Text style={{ fontSize: 15, fontWeight: "700", color: "#FFFFFF" }}>
  {avatarLabel}
  </Text>
- </View>
+ </LinearGradient>
  )}
  <View className="flex-1 pr-2">
  <Text className="font-body-lg text-on-surface" style={{ fontSize: 16, fontWeight: "700" }} numberOfLines={2}>

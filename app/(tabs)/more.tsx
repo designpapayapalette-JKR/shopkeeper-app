@@ -18,18 +18,18 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
-import { useAuth } from "../src/lib/auth-context";
-import { api, ApiError, uploadDocument } from "../src/lib/api";
-import { SETTINGS_MODULE_CATEGORIES } from "../src/lib/moduleCategories";
-import { useModuleVisibility } from "../src/lib/useModuleVisibility";
-import { useConfirm } from "../src/components/ConfirmDialog";
-import { shareLedgerReminder, shareChallan } from "../src/lib/sharer";
-import { useTopInset } from "../src/lib/useTopInset";
-import { useBottomInset } from "../src/lib/useBottomInset";
-import { isValidGstin } from "../src/lib/gstin";
-import { useTerminology, TerminologyLang } from "../src/lib/terminology-context";
-import { useOutlet } from "../src/lib/outlet-context";
-import { StatePicker } from "../src/components/StatePicker";
+import { useAuth } from "../../src/lib/auth-context";
+import { api, ApiError, uploadDocument } from "../../src/lib/api";
+import { SETTINGS_MODULE_CATEGORIES } from "../../src/lib/moduleCategories";
+import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
+import { useConfirm } from "../../src/components/ConfirmDialog";
+import { shareLedgerReminder, shareChallan } from "../../src/lib/sharer";
+import { useTopInset } from "../../src/lib/useTopInset";
+import { useBottomInset } from "../../src/lib/useBottomInset";
+import { isValidGstin } from "../../src/lib/gstin";
+import { useTerminology, TerminologyLang } from "../../src/lib/terminology-context";
+import { useOutlet } from "../../src/lib/outlet-context";
+import { StatePicker } from "../../src/components/StatePicker";
 
 // Not meant to be memorable — it's shared with the new employee over
 // WhatsApp and they're expected to change it after first login.
