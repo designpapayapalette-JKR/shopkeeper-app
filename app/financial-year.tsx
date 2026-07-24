@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
@@ -13,8 +14,9 @@ interface Closure {
 }
 
 export default function FinancialYearScreen() {
- const theme = useTheme();
- const topInset = useTopInset();
+const router = useRouter();
+  const theme = useTheme();
+  const topInset = useTopInset();
  const confirm = useConfirm();
  const [currentFyLabel, setCurrentFyLabel] = useState("");
  const [closures, setClosures] = useState<Closure[]>([]);
@@ -71,8 +73,13 @@ export default function FinancialYearScreen() {
 
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset + 8 }}>
- <ScrollView className="flex-1 px-4">
- <Text className="text-xl font-black text-on-surface mb-1">Financial Year Closing</Text>
+<ScrollView className="flex-1 px-4">
+  <View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="text-xl font-black text-on-surface mb-1">Financial Year Closing</Text>
+  </View>
  <Text className="text-sm text-on-surface-variant mb-4">
  India&apos;s financial year runs April–March. Closing a past year blocks new backdated transactions — it never deletes or alters existing records.
  </Text>

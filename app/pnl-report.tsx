@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, TextInput } from "react-native";
+import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { api } from "../src/lib/api";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
@@ -29,8 +31,9 @@ function Row({ label, amount, positive = true, bold = false }: { label: string; 
 }
 
 export default function PnlReportScreen() {
- const theme = useTheme();
- const topInset = useTopInset();
+const router = useRouter();
+  const theme = useTheme();
+  const topInset = useTopInset();
  const bottomInset = useBottomInset();
  const today = () => new Date().toISOString().slice(0, 10);
  const monthStart = () => {
@@ -57,8 +60,13 @@ export default function PnlReportScreen() {
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset + 8 }}>
  <ScrollView contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
- <View className="px-4 py-3">
- <Text className="text-xl font-black text-on-surface mb-1">P&L Statement</Text>
+<View className="px-4 py-3">
+  <View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="text-xl font-black text-on-surface mb-1">P&L Statement</Text>
+  </View>
  <Text className="text-sm text-on-surface-variant mb-4">Profit & Loss for the selected period</Text>
 
  <View className="flex-row gap-2 mb-4">

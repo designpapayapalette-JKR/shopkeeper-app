@@ -286,12 +286,12 @@ export default function AttendanceScreen() {
 
         {/* Date Presets */}
         <View className="px-4 mb-4">
-          <View className="flex-row rounded-lg bg-surface-container-high overflow-hidden">
+          <View className="flex-row bg-surface-container-high rounded-xl p-1">
             {DATE_PRESETS.map((presetOpt) => (
               <Pressable
                 key={presetOpt.value}
                 onPress={() => { setPreset(presetOpt.value); setLoading(true); }}
-                className={`flex-1 py-2 px-3 items-center ${preset === presetOpt.value ? 'bg-primary' : ''}`}
+                className={`flex-1 py-2 px-3 rounded-lg items-center ${preset === presetOpt.value ? 'bg-primary' : ''}`}
               >
                 <Text className={`text-xs font-bold ${preset === presetOpt.value ? 'text-white' : 'text-on-surface-variant'}`}>
                   {presetOpt.label}

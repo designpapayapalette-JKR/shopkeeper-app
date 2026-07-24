@@ -103,27 +103,30 @@ export default function DaybookScreen() {
  >
  {/* Header */}
  <View className="flex-row items-center justify-between px-4 mb-4">
- <View className="flex-row items-center" style={{ gap: 8 }}>
- <MaterialCommunityIcons name="book-open-page-variant" size={24} color={theme.colors.primary} />
- <Text className="text-2xl font-bold text-on-surface">Daybook</Text>
+<View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <MaterialCommunityIcons name="book-open-page-variant" size={24} color={theme.colors.primary} />
+  <Text className="text-2xl font-bold text-on-surface">Daybook</Text>
  </View>
  </View>
 
  {/* Date Presets */}
  <View className="px-4 mb-4">
- <View className="flex-row bg-surface-container-high rounded-lg p-1">
- {DATE_PRESETS.map((btn) => (
- <Pressable
- key={btn.value}
- onPress={() => { setPreset(btn.value); setLoading(true); }}
- className={`flex-1 py-2 rounded-md items-center ${preset === btn.value ? 'bg-primary' : ''}`}
- >
- <Text className={`text-xs font-bold ${preset === btn.value ? 'text-white' : 'text-on-surface-variant'}`}>
- {btn.label}
- </Text>
- </Pressable>
- ))}
- </View>
+  <View className="flex-row bg-surface-container-high rounded-xl p-1">
+  {DATE_PRESETS.map((btn) => (
+  <Pressable
+  key={btn.value}
+  onPress={() => { setPreset(btn.value); setLoading(true); }}
+  className={`flex-1 py-2 rounded-lg items-center ${preset === btn.value ? 'bg-primary' : ''}`}
+  >
+  <Text className={`text-xs font-bold ${preset === btn.value ? 'text-white' : 'text-on-surface-variant'}`}>
+  {btn.label}
+  </Text>
+  </Pressable>
+  ))}
+  </View>
  </View>
 
  {/* Net Flow Card */}

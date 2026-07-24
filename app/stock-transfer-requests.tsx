@@ -197,9 +197,9 @@ export default function StockTransferRequestsScreen() {
  const s = STATUS_STYLE[item.status] || STATUS_STYLE.draft;
  return (
  <Pressable onPress={() => setShowDetail(item.id)}
- className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant mb-3">
- <View className="flex-row items-start">
- <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center mr-3">
+  className="bg-surface-container-lowest p-3 rounded-xl border border-outline-variant mb-2">
+  <View className="flex-row items-start">
+  <View className="w-9 h-9 rounded-xl bg-primary/10 items-center justify-center mr-2.5">
  <MaterialCommunityIcons name="swap-horizontal" size={18} color={theme.colors.primary} />
  </View>
  <View className="flex-1">
@@ -240,12 +240,12 @@ export default function StockTransferRequestsScreen() {
 
  {/* Filter chips */}
  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mb-3" contentContainerStyle={{ gap: 6 }}>
- {["all", ...STATUSES].map((s) => (
- <Pressable key={s} onPress={() => setFilterStatus(s)}
- className={`rounded-xl px-4 py-2.5 ${filterStatus === s ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
- <Text className={`text-xs font-bold capitalize ${filterStatus === s ? "text-white" : "text-on-surface"}`}>{s}</Text>
- </Pressable>
- ))}
+  {["all", ...STATUSES].map((s) => (
+  <Pressable key={s} onPress={() => setFilterStatus(s)}
+  className={`rounded-full px-3 py-1.5 ${filterStatus === s ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
+  <Text className={`text-xs font-bold capitalize ${filterStatus === s ? "text-white" : "text-on-surface"}`}>{s}</Text>
+  </Pressable>
+  ))}
  </ScrollView>
 
  {loading ? (
@@ -290,8 +290,8 @@ export default function StockTransferRequestsScreen() {
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {warehouses.filter((w) => w.id !== toWh).map((w) => (
  <Pressable key={w.id} onPress={() => setFromWh(w.id)}
- className={`rounded-xl px-4 py-2.5 ${fromWh === w.id ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
- <Text className={`text-xs font-bold ${fromWh === w.id ? "text-white" : "text-on-surface"}`}>{w.name}</Text>
+  className={`rounded-full px-3 py-2 ${fromWh === w.id ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
+  <Text className={`text-xs font-bold ${fromWh === w.id ? "text-white" : "text-on-surface"}`}>{w.name}</Text>
  </Pressable>
  ))}
  </View>
@@ -303,8 +303,8 @@ export default function StockTransferRequestsScreen() {
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {warehouses.filter((w) => w.id !== fromWh).map((w) => (
  <Pressable key={w.id} onPress={() => setToWh(w.id)}
- className={`rounded-xl px-4 py-2.5 ${toWh === w.id ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
- <Text className={`text-xs font-bold ${toWh === w.id ? "text-white" : "text-on-surface"}`}>{w.name}</Text>
+  className={`rounded-full px-3 py-2 ${toWh === w.id ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
+  <Text className={`text-xs font-bold ${toWh === w.id ? "text-white" : "text-on-surface"}`}>{w.name}</Text>
  </Pressable>
  ))}
  </View>

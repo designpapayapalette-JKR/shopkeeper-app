@@ -357,39 +357,35 @@ export default function SalesOrdersScreen() {
  const headers = ["Order #", "Customer", "Date", "Status", "Items"];
  const rows = orders.map((o) => [o.so_number, o.customer.name, new Date(o.date).toLocaleDateString("en-IN"), o.status, String(o.items.length)]);
  shareDataAsPdf("Sales Orders", headers, rows, "sales-orders.pdf");
- }} className="flex-row items-center gap-1 bg-primary px-3 py-2 rounded-lg">
- <MaterialCommunityIcons name="file-pdf-box" size={16} color="white" />
- <Text className="text-xs font-bold text-white">Export</Text>
+  }} className="flex-row items-center gap-1 bg-primary px-3 py-2 rounded-xl">
+  <MaterialCommunityIcons name="file-pdf-box" size={16} color="white" />
+  <Text className="text-xs font-bold text-white">Export</Text>
  </Pressable>
  </View>
 
- {/* Tab Switcher */}
- <View className="px-6 mb-4 flex-row" style={{ gap: 8 }}>
- <Pressable
- onPress={() => setTab("list")}
- className={`flex-1 py-2.5 rounded-xl items-center border ${
- tab === "list"
- ? "bg-primary border-primary"
- : "bg-surface-container-lowest border-outline-variant "
- }`}
- >
- <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "list" ? "text-white" : "text-on-surface-variant "}`}>
- Orders
- </Text>
- </Pressable>
- <Pressable
- onPress={openNewTab}
- className={`flex-1 py-2.5 rounded-xl items-center border ${
- tab === "new"
- ? "bg-primary border-primary"
- : "bg-surface-container-lowest border-outline-variant "
- }`}
- >
- <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "new" ? "text-white" : "text-on-surface-variant "}`}>
- New Order
- </Text>
- </Pressable>
- </View>
+  {/* Tab Switcher */}
+  <View className="px-6 mb-4 flex-row bg-surface-container-high rounded-xl p-1 mx-6" style={{ gap: 0 }}>
+  <Pressable
+  onPress={() => setTab("list")}
+  className={`flex-1 py-2 rounded-lg items-center ${
+  tab === "list" ? "bg-primary shadow-sm" : ""
+  }`}
+  >
+  <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "list" ? "text-white" : "text-on-surface-variant"}`}>
+  Orders
+  </Text>
+  </Pressable>
+  <Pressable
+  onPress={openNewTab}
+  className={`flex-1 py-2 rounded-lg items-center ${
+  tab === "new" ? "bg-primary shadow-sm" : ""
+  }`}
+  >
+  <Text className={`text-xs font-bold uppercase tracking-wider ${tab === "new" ? "text-white" : "text-on-surface-variant"}`}>
+  New Order
+  </Text>
+  </Pressable>
+  </View>
 
  {tab === "list" ? (
  <View className="flex-1">
@@ -478,8 +474,8 @@ export default function SalesOrdersScreen() {
  showsVerticalScrollIndicator={false}
  >
  {/* Customer Picker */}
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Customer *</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Customer *</Text>
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {customers.length === 0 ? (
  <Text className="text-sm text-on-surface-variant ">No customers found. Add one from Ledger.</Text>
@@ -488,17 +484,17 @@ export default function SalesOrdersScreen() {
  <Pressable
  key={c.id}
  onPress={() => setCustomerId(c.id)}
- className={`px-3.5 py-2.5 rounded-xl border ${
- customerId === c.id
- ? "bg-primary border-primary"
- : "bg-surface-container-lowest border-outline-variant "
- }`}
- >
- <Text
- className={`text-sm font-bold ${customerId === c.id ? "text-white" : "text-on-surface-variant "}`}
- >
- {c.name}
- </Text>
+  className={`px-3.5 py-2 rounded-full border ${
+  customerId === c.id
+  ? "bg-primary border-primary"
+  : "bg-surface-container-lowest border-outline-variant"
+  }`}
+  >
+  <Text
+  className={`text-xs font-bold ${customerId === c.id ? "text-white" : "text-on-surface-variant"}`}
+  >
+  {c.name}
+  </Text>
  </Pressable>
  ))
  )}
@@ -506,8 +502,8 @@ export default function SalesOrdersScreen() {
  </View>
 
  {/* Product Search */}
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Products</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Products</Text>
  <TextInput
  value={searchQuery}
  onChangeText={setSearchQuery}
@@ -520,9 +516,9 @@ export default function SalesOrdersScreen() {
  <Pressable
  key={p.id}
  onPress={() => addToCart(p)}
- className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest active:opacity-70"
- >
- <Text className="text-sm font-bold text-on-surface ">{p.name}</Text>
+  className="px-3.5 py-2 rounded-full border border-outline-variant bg-surface-container-lowest active:opacity-70"
+  >
+  <Text className="text-sm font-bold text-on-surface ">{p.name}</Text>
  <Text className="text-xs text-on-surface-variant ">{p.sku || "No SKU"}</Text>
  </Pressable>
  ))}
@@ -530,10 +526,10 @@ export default function SalesOrdersScreen() {
  </View>
 
  {/* Cart */}
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-lg font-bold text-on-surface mb-3">
- Cart ({cart.length})
- </Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-lg font-bold text-on-surface mb-2">
+  Cart ({cart.length})
+  </Text>
  {cart.length === 0 ? (
  <Text className="text-sm text-on-surface-variant ">No items added yet.</Text>
  ) : (
@@ -576,8 +572,8 @@ export default function SalesOrdersScreen() {
  </View>
 
  {/* Notes */}
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Notes</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Notes</Text>
  <TextInput
  value={notes}
  onChangeText={setNotes}
@@ -591,8 +587,8 @@ export default function SalesOrdersScreen() {
 
  <Pressable
  onPress={handleCreateSO}
- disabled={submitting || !customerId || cart.length === 0}
- className="bg-primary py-4 rounded-xl items-center mb-6 opacity-100 disabled:opacity-50"
+  disabled={submitting || !customerId || cart.length === 0}
+  className="bg-primary py-3 rounded-xl items-center mb-6 opacity-100 disabled:opacity-50"
  >
  {submitting ? (
  <ActivityIndicator color="white" />
@@ -613,15 +609,15 @@ export default function SalesOrdersScreen() {
  <Text className="text-2xl font-bold text-on-surface ">
  {activeSO?.so_number}
  </Text>
- <Pressable onPress={() => setActiveSO(null)} className="w-11 h-11 items-center justify-center">
+  <Pressable onPress={() => setActiveSO(null)} className="w-9 h-9 items-center justify-center">
  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
  </Pressable>
  </View>
 
  {activeSO && (
  <>
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface-variant ">{activeSO.customer.name}</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface-variant ">{activeSO.customer.name}</Text>
  {activeSO.customer.phone && (
  <Text className="text-sm text-on-surface-variant mt-1">{activeSO.customer.phone}</Text>
  )}
@@ -635,9 +631,9 @@ export default function SalesOrdersScreen() {
  })()}
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface mb-3">Items</Text>
- {activeSO.items.map((item) => (
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface mb-2">Items</Text>
+  {activeSO.items.map((item) => (
  <View key={item.id} className="flex-row items-center py-2 border-b border-outline-variant ">
  <View className="flex-1 mr-2">
  <Text className="text-sm font-bold text-on-surface ">{item.product.name}</Text>
@@ -652,17 +648,17 @@ export default function SalesOrdersScreen() {
  ))}
  </View>
 
- {activeSO.notes && (
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface mb-1">Notes</Text>
+  {activeSO.notes && (
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface mb-1">Notes</Text>
  <Text className="text-sm text-on-surface-variant ">{activeSO.notes}</Text>
  </View>
  )}
 
  {/* Status Actions */}
- {(VALID_TRANSITIONS[activeSO.status] || []).length > 0 && (
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface mb-3">Actions</Text>
+  {(VALID_TRANSITIONS[activeSO.status] || []).length > 0 && (
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface mb-2">Actions</Text>
  <View className="flex-row flex-wrap" style={{ gap: 8 }}>
  {VALID_TRANSITIONS[activeSO.status].map((nextStatus) => {
  const cfg = STATUS_CONFIG[nextStatus];

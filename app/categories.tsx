@@ -180,24 +180,24 @@ export default function CategoriesScreen() {
  <View className="px-6 mb-4 flex-row" style={{ gap: 8 }}>
  <Pressable
  onPress={() => setTab("categories")}
- className={`flex-1 py-2.5 rounded-xl items-center border ${
- tab === "categories"
- ? "bg-primary border-primary "
- : "bg-surface-container-lowest border-outline-variant "
- }`}
- >
- <Text
- className={`text-xs font-bold uppercase tracking-wider ${
- tab === "categories" ? "text-white" : "text-on-surface-variant "
- }`}
- >
- Categories
- </Text>
- </Pressable>
- <Pressable
- onPress={() => setTab("brands")}
- className={`flex-1 py-2.5 rounded-xl items-center border ${
- tab === "brands"
+className={`flex-1 py-2.5 rounded-full items-center border ${
+  tab === "categories"
+  ? "bg-primary border-primary "
+  : "bg-surface-container-lowest border-outline-variant "
+  }`}
+  >
+  <Text
+  className={`text-xs font-bold uppercase tracking-wider ${
+  tab === "categories" ? "text-white" : "text-on-surface-variant "
+  }`}
+  >
+  Categories
+  </Text>
+  </Pressable>
+  <Pressable
+  onPress={() => setTab("brands")}
+  className={`flex-1 py-2.5 rounded-full items-center border ${
+  tab === "brands"
  ? "bg-primary border-primary "
  : "bg-surface-container-lowest border-outline-variant "
  }`}

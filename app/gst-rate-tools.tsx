@@ -137,8 +137,8 @@ export default function GstRateToolsScreen() {
  contentContainerStyle={{ paddingBottom: bottomInset + 24 }}
  showsVerticalScrollIndicator={false}
  >
- {/* ── Bulk Update by Category ── */}
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-gray-100 shadow-sm mb-6">
+  {/* ── Bulk Update by Category ── */}
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-4">
  <Text className="text-lg font-bold text-on-surface mb-4">
  Bulk Update by Category
  </Text>
@@ -202,8 +202,8 @@ export default function GstRateToolsScreen() {
  </Pressable>
  </View>
 
- {/* ── Rate Mismatch Review ── */}
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-gray-100 shadow-sm mb-6">
+  {/* ── Rate Mismatch Review ── */}
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-4">
  <View className="flex-row items-center justify-between mb-4">
  <Text className="text-lg font-bold text-on-surface flex-1 mr-2">
  Rate Mismatch Review

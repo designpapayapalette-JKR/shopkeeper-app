@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Alert, Modal } from "react-native";
+import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
@@ -28,8 +29,9 @@ interface Suggestion {
 }
 
 export default function BankReconciliationScreen() {
- const theme = useTheme();
- const topInset = useTopInset();
+const router = useRouter();
+  const theme = useTheme();
+  const topInset = useTopInset();
  const bottomInset = useBottomInset();
  const [accounts, setAccounts] = useState<BankAccount[]>([]);
  const [accountId, setAccountId] = useState<string | null>(null);
@@ -140,8 +142,13 @@ export default function BankReconciliationScreen() {
 
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset + 8 }}>
- <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
- <Text className="text-xl font-black text-on-surface mb-1">Bank Reconciliation</Text>
+<ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
+  <View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="text-xl font-black text-on-surface mb-1">Bank Reconciliation</Text>
+  </View>
  <Text className="text-sm text-on-surface-variant mb-4">Import your bank statement and match each line to a recorded payment.</Text>
 
  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row mb-3">

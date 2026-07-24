@@ -118,10 +118,10 @@ export default function DebitNoteScreen() {
  if (result) {
  return (
  <View className="flex-1 items-center justify-center bg-background px-8" style={{ paddingTop: topInset }}>
- <MaterialCommunityIcons name="check-circle" size={48} color="#2E9E5B" />
- <Text className="text-xl font-black text-text-primary mt-3">Debit Note Created</Text>
- <Text className="text-base text-text-secondary mt-1">#{result.debitNoteNumber}</Text>
- <Text className="text-sm text-text-secondary mt-1">₹{Number(result.grandTotal).toLocaleString("en-IN")} — stock &amp; balance updated</Text>
+  <MaterialCommunityIcons name="check-circle" size={48} color="#2E9E5B" />
+  <Text className="text-xl font-black text-on-surface mt-3">Debit Note Created</Text>
+  <Text className="text-base text-on-surface-variant mt-1">#{result.debitNoteNumber}</Text>
+  <Text className="text-sm text-on-surface-variant mt-1">₹{Number(result.grandTotal).toLocaleString("en-IN")} — stock &amp; balance updated</Text>
  <View className="flex-row mt-6" style={{ gap: 10 }}>
  <Pressable onPress={() => setResult(null)} className="bg-primary px-5 py-3 rounded-xl">
  <Text className="text-white font-bold">New Debit Note</Text>
@@ -136,61 +136,67 @@ export default function DebitNoteScreen() {
 
  return (
  <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
- <ScrollView className="flex-1 bg-background px-6" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
- <Text className="text-2xl font-black text-text-primary mb-1">Debit Note</Text>
- <Text className="text-sm text-text-secondary mb-4">Record a purchase return against an existing bill.</Text>
+  <ScrollView className="flex-1 bg-background px-6" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
+  <View className="flex-row items-center mb-2">
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color="#6B7280" />
+  </Pressable>
+  <Text className="text-2xl font-black text-on-surface ml-1">Debit Note</Text>
+  </View>
+  <Text className="text-sm text-on-surface-variant mb-4">Record a purchase return against an existing bill.</Text>
 
- <View className="flex-row mb-4" style={{ gap: 8 }}>
- <TextInput
- value={purchaseNumber}
- onChangeText={setPurchaseNumber}
- placeholder="Purchase number, e.g. PO-2026-000045"
- placeholderTextColor="#A0A0A0"
- className="flex-1 bg-surface border border-gray-200 rounded-xl px-4 py-3 text-base font-medium text-text-primary"
- />
+  <View className="flex-row mb-4 items-center bg-surface-container-lowest rounded-2xl border border-outline-variant px-4" style={{ gap: 8 }}>
+  <MaterialCommunityIcons name="magnify" size={20} color="#6B7280" />
+  <TextInput
+  value={purchaseNumber}
+  onChangeText={setPurchaseNumber}
+  placeholder="Purchase number, e.g. PO-2026-000045"
+  placeholderTextColor="#6B7280"
+  className="flex-1 py-3 text-base font-medium text-on-surface"
+  />
  <Pressable onPress={findPurchase} disabled={searching} className="bg-primary px-5 rounded-xl items-center justify-center">
  {searching ? <ActivityIndicator color="white" size="small" /> : <Text className="text-white font-bold">Find</Text>}
  </Pressable>
  </View>
 
- {purchase && (
- <>
- <Text className="text-sm text-text-secondary mb-2">
- Supplier: <Text className="font-bold text-text-primary ">{purchase.supplier?.name || "—"}</Text>
- </Text>
+  {purchase && (
+  <>
+  <Text className="text-sm text-on-surface-variant mb-2">
+  Supplier: <Text className="font-bold text-on-surface">{purchase.supplier?.name || "—"}</Text>
+  </Text>
 
- {lines.map((l) => (
- <View key={l.productId} className="bg-surface p-4 rounded-xl border border-gray-100 mb-3">
- <Text className="font-bold text-on-surface mb-1">{l.productName}</Text>
- <View className="flex-row justify-between items-center">
- <Text className="text-sm text-text-secondary">₹{l.cost} × max {l.maxQty}</Text>
- <TextInput
- value={l.quantity}
- onChangeText={(v) => updateQty(l.productId, v)}
- placeholder="0"
- keyboardType="numeric"
- editable={l.maxQty > 0}
- className="bg-background border border-gray-200 rounded-xl px-3 py-2.5 text-base font-bold w-20 text-center"
- />
- </View>
- </View>
- ))}
+  {lines.map((l) => (
+  <View key={l.productId} className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant mb-3">
+  <Text className="font-bold text-on-surface mb-1">{l.productName}</Text>
+  <View className="flex-row justify-between items-center">
+  <Text className="text-sm text-on-surface-variant">₹{l.cost} × max {l.maxQty}</Text>
+  <TextInput
+  value={l.quantity}
+  onChangeText={(v) => updateQty(l.productId, v)}
+  placeholder="0"
+  keyboardType="numeric"
+  editable={l.maxQty > 0}
+  className="bg-surface-container border border-outline-variant rounded-xl px-3 py-2.5 text-base font-bold text-on-surface w-20 text-center"
+  />
+  </View>
+  </View>
+  ))}
 
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Reason</Text>
- <TextInput
- value={reason}
- onChangeText={setReason}
- placeholder="Damaged goods, wrong item, etc."
- placeholderTextColor="#A0A0A0"
- className="bg-surface border border-gray-200 rounded-xl px-4 py-3 text-base font-medium text-text-primary mb-4"
- />
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Reason</Text>
+  <TextInput
+  value={reason}
+  onChangeText={setReason}
+  placeholder="Damaged goods, wrong item, etc."
+  placeholderTextColor="#6B7280"
+  className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-base font-medium text-on-surface mb-4"
+  />
 
- {activeLines.length > 0 && (
- <View className="flex-row justify-between items-center py-3 border-t border-gray-100 mb-4">
- <Text className="text-base font-bold text-text-primary ">Debit Amount</Text>
- <Text className="text-lg font-black text-text-primary ">₹{subtotal.toLocaleString("en-IN")}</Text>
- </View>
- )}
+  {activeLines.length > 0 && (
+  <View className="flex-row justify-between items-center py-3 border-t border-outline-variant mb-4">
+  <Text className="text-base font-bold text-on-surface">Debit Amount</Text>
+  <Text className="text-lg font-black text-on-surface">₹{subtotal.toLocaleString("en-IN")}</Text>
+  </View>
+  )}
 
  <Pressable
  onPress={submit}

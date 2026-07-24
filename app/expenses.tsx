@@ -123,14 +123,14 @@ export default function ExpensesScreen() {
  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mb-3" contentContainerStyle={{ gap: 6 }}>
  {PERIODS.map((p) => (
  <Pressable key={p.key} onPress={() => setPeriod(p.key)}
- className={`rounded-xl px-4 py-2.5 ${period === p.key ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
- <Text className={`text-xs font-bold ${period === p.key ? "text-white" : "text-on-surface"}`}>{p.label}</Text>
+  className={`rounded-full px-3 py-1.5 ${period === p.key ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
+  <Text className={`text-xs font-bold ${period === p.key ? "text-white" : "text-on-surface"}`}>{p.label}</Text>
  </Pressable>
  ))}
  </ScrollView>
 
  {/* Total bar */}
- <View className="mx-5 mb-4 bg-primary/10 rounded-2xl p-4 flex-row items-center justify-between">
+  <View className="mx-5 mb-3 bg-primary/10 rounded-xl p-3 flex-row items-center justify-between">
  <Text className="text-sm font-bold text-on-surface">Total {PERIODS.find((p) => p.key === period)?.label}</Text>
  <Text className="text-xl font-bold text-primary">{formatRupee(total)}</Text>
  </View>
@@ -149,11 +149,11 @@ export default function ExpensesScreen() {
  <Pressable
  onPress={() => item.attachment && setViewingUri(item.attachment)}
  onLongPress={() => { setEditing(item); setEditAmt(item.amount); setEditCat(item.category); setEditNotes(item.notes || ""); }}
- className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 flex-row items-center"
- style={{ gap: 12 }}
- >
- <View className="w-11 h-11 rounded-full bg-primary/10 items-center justify-center">
- <MaterialCommunityIcons name={categoryIcon(item.category)} size={20} color={theme.colors.primary} />
+  className="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 flex-row items-center"
+  style={{ gap: 10 }}
+  >
+  <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center">
+  <MaterialCommunityIcons name={categoryIcon(item.category)} size={18} color={theme.colors.primary} />
  </View>
  <View className="flex-1">
  <Text className="font-bold text-on-surface capitalize">{item.category}</Text>
@@ -188,8 +188,8 @@ export default function ExpensesScreen() {
  <View className="flex-row flex-wrap mb-2" style={{ gap: 6 }}>
  {categories.map((c) => (
  <Pressable key={c} onPress={() => setEditCat(c)}
- className={`rounded-xl px-4 py-2.5 ${editCat.toLowerCase() === c.toLowerCase() ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
- <Text className={`text-xs font-bold ${editCat.toLowerCase() === c.toLowerCase() ? "text-white" : "text-on-surface"}`}>{c}</Text>
+  className={`rounded-full px-3 py-1.5 ${editCat.toLowerCase() === c.toLowerCase() ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
+  <Text className={`text-xs font-bold ${editCat.toLowerCase() === c.toLowerCase() ? "text-white" : "text-on-surface"}`}>{c}</Text>
  </Pressable>
  ))}
  </View>
@@ -201,7 +201,7 @@ export default function ExpensesScreen() {
  className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-4 text-base font-medium mb-6" />
 
  <Pressable onPress={handleEditSave} disabled={editLoading}
- className="bg-primary py-4 rounded-2xl items-center mb-4">
+  className="bg-primary py-3 rounded-2xl items-center mb-4">
  {editLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Save Changes</Text>}
  </Pressable>
  </ScrollView>

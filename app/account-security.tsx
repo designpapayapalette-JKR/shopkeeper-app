@@ -105,8 +105,8 @@ export default function AccountSecurityScreen() {
  </View>
  ) : (
  <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
- <View className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm mb-6">
- <View className="flex-row items-start justify-between" style={{ gap: 12 }}>
+  <View className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant mb-4">
+  <View className="flex-row items-start justify-between" style={{ gap: 12 }}>
  <View className="flex-1 flex-row items-start" style={{ gap: 10 }}>
  <MaterialCommunityIcons name="email-outline" size={18} color={theme.colors.onSurfaceVariant} style={{ marginTop: 2 }} />
  <View className="flex-1">
@@ -132,8 +132,8 @@ export default function AccountSecurityScreen() {
  {verifyMsg && <Text className="text-xs text-on-surface-variant mt-3">{verifyMsg}</Text>}
  </View>
 
- <View className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm mb-6">
- <View className="flex-row items-center justify-between" style={{ gap: 12 }}>
+  <View className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant mb-4">
+  <View className="flex-row items-center justify-between" style={{ gap: 12 }}>
  <View className="flex-1">
  <Text className="text-base font-bold text-on-surface ">
  Two-Factor Authentication

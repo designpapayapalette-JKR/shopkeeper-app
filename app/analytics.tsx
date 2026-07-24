@@ -91,23 +91,26 @@ export default function AnalyticsScreen() {
  >
  {/* Header */}
  <View className="flex-row items-center justify-between px-4 mb-4">
- <View className="flex-row items-center" style={{ gap: 8 }}>
- <MaterialCommunityIcons name="chart-arc" size={24} color={theme.colors.primary} />
- <Text className="text-2xl font-bold text-on-surface ">Analytics</Text>
+<View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <MaterialCommunityIcons name="chart-arc" size={24} color={theme.colors.primary} />
+  <Text className="text-2xl font-bold text-on-surface ">Analytics</Text>
  </View>
- <View className="flex-row bg-surface-container-high rounded-lg p-1 w-48">
- {MONTH_OPTIONS.map((btn) => (
- <Pressable
- key={btn.value}
- onPress={() => { setMonths(btn.value); setLoading(true); }}
- className={`flex-1 py-2 rounded-md items-center ${months === btn.value ? 'bg-primary' : ''}`}
- >
- <Text className={`text-xs font-bold ${months === btn.value ? 'text-white' : 'text-on-surface-variant'}`}>
- {btn.label}
- </Text>
- </Pressable>
- ))}
- </View>
+  <View className="flex-row bg-surface-container-high rounded-xl p-1 w-48">
+  {MONTH_OPTIONS.map((btn) => (
+  <Pressable
+  key={btn.value}
+  onPress={() => { setMonths(btn.value); setLoading(true); }}
+  className={`flex-1 py-2 rounded-lg items-center ${months === btn.value ? 'bg-primary' : ''}`}
+  >
+  <Text className={`text-xs font-bold ${months === btn.value ? 'text-white' : 'text-on-surface-variant'}`}>
+  {btn.label}
+  </Text>
+  </Pressable>
+  ))}
+  </View>
  </View>
 
  {/* Revenue Trend */}

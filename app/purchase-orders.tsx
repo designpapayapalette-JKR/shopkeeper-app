@@ -328,8 +328,8 @@ export default function PurchaseOrdersScreen() {
  ) : (
  <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
  <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }} showsVerticalScrollIndicator={false}>
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Supplier *</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Supplier *</Text>
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {suppliers.length === 0 ? (
  <Text className="text-sm text-on-surface-variant ">No suppliers found.</Text>
@@ -344,10 +344,18 @@ export default function PurchaseOrdersScreen() {
  </View>
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Products</Text>
- <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Search products..." placeholderTextColor="#A0A0A0"
- className="bg-background text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium mb-3" />
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Products</Text>
+   <View className="flex-row items-center bg-surface-container-lowest rounded-2xl border border-outline-variant px-4 mb-3">
+  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.onSurfaceVariant} />
+  <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Search products..." placeholderTextColor={theme.colors.onSurfaceVariant}
+  className="flex-1 py-3 font-medium text-on-surface ml-2" />
+  {searchQuery.length > 0 && (
+  <Pressable onPress={() => setSearchQuery("")} hitSlop={8}>
+  <MaterialCommunityIcons name="close-circle" size={18} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  )}
+  </View>
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {filteredProducts.slice(0, 30).map((p) => (
  <Pressable key={p.id} onPress={() => addToCart(p)}
@@ -359,8 +367,8 @@ export default function PurchaseOrdersScreen() {
  </View>
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-lg font-bold text-on-surface mb-3">Cart ({cart.length})</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-lg font-bold text-on-surface mb-2">Cart ({cart.length})</Text>
  {cart.length === 0 ? (
  <Text className="text-sm text-on-surface-variant ">No items added yet.</Text>
  ) : (
@@ -388,14 +396,14 @@ export default function PurchaseOrdersScreen() {
  )}
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Notes</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Notes</Text>
  <TextInput value={notes} onChangeText={setNotes} placeholder="Order notes..." placeholderTextColor="#A0A0A0" multiline numberOfLines={2}
  className="bg-background text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium" />
  </View>
 
  <Pressable onPress={handleCreatePO} disabled={submitting || !supplierId || cart.length === 0}
- className="bg-primary py-4 rounded-xl items-center mb-6 opacity-100 disabled:opacity-50">
+  className="bg-primary py-3 rounded-xl items-center mb-6 opacity-100 disabled:opacity-50">
  {submitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Create Purchase Order</Text>}
  </Pressable>
  </ScrollView>
@@ -408,14 +416,14 @@ export default function PurchaseOrdersScreen() {
  <View className="px-6 pb-8">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">{activePO?.po_number}</Text>
- <Pressable onPress={() => setActivePO(null)} className="w-11 h-11 items-center justify-center">
+  <Pressable onPress={() => setActivePO(null)} className="w-9 h-9 items-center justify-center">
  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
  </Pressable>
  </View>
  {activePO && (
  <>
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface-variant ">{activePO.supplier.name}</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface-variant ">{activePO.supplier.name}</Text>
  {activePO.supplier.phone && <Text className="text-sm text-on-surface-variant mt-1">{activePO.supplier.phone}</Text>}
  {(() => { const cfg = STATUS_CONFIG[activePO.status] || STATUS_CONFIG.draft; return (
  <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1.5 rounded-full self-start mt-2">
@@ -424,9 +432,9 @@ export default function PurchaseOrdersScreen() {
  ); })()}
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface mb-3">Items</Text>
- {activePO.items.map((item) => (
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface mb-2">Items</Text>
+  {activePO.items.map((item) => (
  <View key={item.id} className="flex-row items-center py-2 border-b border-outline-variant ">
  <View className="flex-1 mr-2">
  <Text className="text-sm font-bold text-on-surface ">{item.product.name}</Text>
@@ -437,16 +445,16 @@ export default function PurchaseOrdersScreen() {
  ))}
  </View>
 
- {activePO.notes && (
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface mb-1">Notes</Text>
+  {activePO.notes && (
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface mb-1">Notes</Text>
  <Text className="text-sm text-on-surface-variant ">{activePO.notes}</Text>
  </View>
  )}
 
- {(VALID_TRANSITIONS[activePO.status] || []).length > 0 && (
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface mb-3">Actions</Text>
+  {(VALID_TRANSITIONS[activePO.status] || []).length > 0 && (
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface mb-2">Actions</Text>
  <View className="flex-row flex-wrap" style={{ gap: 8 }}>
  {VALID_TRANSITIONS[activePO.status].map((nextStatus) => {
  const cfg = STATUS_CONFIG[nextStatus];

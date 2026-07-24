@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { api } from "../src/lib/api";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
@@ -18,8 +20,9 @@ interface AgingData {
 }
 
 export default function AgingReportScreen() {
- const theme = useTheme();
- const topInset = useTopInset();
+const router = useRouter();
+  const theme = useTheme();
+  const topInset = useTopInset();
  const bottomInset = useBottomInset();
  const [type, setType] = useState<"receivable" | "payable">("receivable");
  const [data, setData] = useState<AgingData | null>(null);
@@ -47,23 +50,28 @@ export default function AgingReportScreen() {
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset + 8 }}>
  <ScrollView contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
- <View className="px-4 py-3">
- <Text className="text-xl font-black text-on-surface mb-1">Aging Report</Text>
+<View className="px-4 py-3">
+  <View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="text-xl font-black text-on-surface mb-1">Aging Report</Text>
+  </View>
  <Text className="text-sm text-on-surface-variant mb-4">{type === "receivable" ? "Receivables (Customers)" : "Payables (Suppliers)"}</Text>
 
  <View className="flex-row gap-2 mb-4">
- <Pressable
- onPress={() => setType("receivable")}
- className={`px-4 py-2 rounded-xl ${type === "receivable" ? "bg-primary " : "bg-surface-container-lowest border border-outline-variant "}`}
- >
- <Text className={`text-sm font-bold ${type === "receivable" ? "text-white" : "text-on-surface "}`}>Receivables</Text>
- </Pressable>
- <Pressable
- onPress={() => setType("payable")}
- className={`px-4 py-2 rounded-xl ${type === "payable" ? "bg-primary " : "bg-surface-container-lowest border border-outline-variant "}`}
- >
- <Text className={`text-sm font-bold ${type === "payable" ? "text-white" : "text-on-surface "}`}>Payables</Text>
- </Pressable>
+  <Pressable
+  onPress={() => setType("receivable")}
+  className={`px-4 py-2 rounded-full ${type === "receivable" ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}
+  >
+  <Text className={`text-xs font-bold ${type === "receivable" ? "text-white" : "text-on-surface"}`}>Receivables</Text>
+  </Pressable>
+  <Pressable
+  onPress={() => setType("payable")}
+  className={`px-4 py-2 rounded-full ${type === "payable" ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}
+  >
+  <Text className={`text-xs font-bold ${type === "payable" ? "text-white" : "text-on-surface"}`}>Payables</Text>
+  </Pressable>
  </View>
 
  <Pressable onPress={load} disabled={loading} className="bg-primary px-6 py-3 rounded-xl items-center mb-4">

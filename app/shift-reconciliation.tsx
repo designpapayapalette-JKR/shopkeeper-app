@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { View, ScrollView, Pressable, ActivityIndicator, RefreshControl, Text, Alert } from "react-native";
 import { useTheme } from "react-native-paper";
+import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth-context";
@@ -25,8 +26,9 @@ function formatTime(iso: string): string {
 }
 
 export default function ShiftReconciliationScreen() {
- const theme = useTheme();
- const { userRole } = useAuth();
+const router = useRouter();
+  const theme = useTheme();
+  const { userRole } = useAuth();
  const topInset = useTopInset();
  const [loading, setLoading] = useState(true);
  const [refreshing, setRefreshing] = useState(false);
@@ -118,9 +120,14 @@ export default function ShiftReconciliationScreen() {
  contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: 32 }}
  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />}
  >
- <Text className="font-headline-md text-on-surface px-4 mb-4" style={{ fontSize: 22, fontWeight: "700" }}>
- {showOutletView ? "Day's Shifts" : "Shift"}
- </Text>
+<View className="flex-row items-center px-4 mb-4" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="font-headline-md text-on-surface" style={{ fontSize: 22, fontWeight: "700" }}>
+  {showOutletView ? "Day's Shifts" : "Shift"}
+  </Text>
+  </View>
 
  {loading ? (
  <View className="py-20 items-center">

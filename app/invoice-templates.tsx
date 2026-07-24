@@ -260,15 +260,15 @@ export default function InvoiceTemplatesScreen() {
  </Pressable>
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Name *</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Name *</Text>
  <TextInput value={formName} onChangeText={setFormName} placeholder="e.g. My POS Receipt" placeholderTextColor="#A0A0A0" autoFocus
  className="bg-background text-on-surface border border-outline-variant rounded-xl px-4 py-3.5 font-medium" />
  </View>
 
- {!editing && (
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-3">Module</Text>
+  {!editing && (
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Module</Text>
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {MODULES.map((m) => (
  <Pressable key={m} onPress={() => setFormModule(m)}
@@ -280,9 +280,9 @@ export default function InvoiceTemplatesScreen() {
  </View>
  )}
 
- {TOGGLE_GROUPS.map((group) => (
- <View key={group.title} className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-1">{group.title}</Text>
+  {TOGGLE_GROUPS.map((group) => (
+  <View key={group.title} className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-1">{group.title}</Text>
  {group.items.map((t, idx) => (
  <View key={t.key}
  className={`flex-row items-center justify-between py-3 ${idx < group.items.length - 1 ? "border-b border-outline-variant " : ""}`}>
@@ -293,8 +293,8 @@ export default function InvoiceTemplatesScreen() {
  </View>
  ))}
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Footer Text</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Footer Text</Text>
  <TextInput value={config.footer_text || ""} onChangeText={(v) => setConfig((prev) => ({ ...prev, footer_text: v }))}
  placeholder="e.g. Thank you, visit again!" placeholderTextColor="#A0A0A0" multiline numberOfLines={2}
  className="bg-background text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium" />

@@ -254,7 +254,7 @@ export default function DashboardScreen() {
             {outletBreakdown.map((outlet: any, i: number) => (
               <Pressable key={outlet.id}
                 onPress={() => router.push(`/invoice-history?outletId=${outlet.id}` as any)}
-                className="flex-row items-center justify-between px-4 py-3" style={{ borderBottomWidth: i < outletBreakdown.length - 1 ? 1 : 0, borderColor: "#E5E7EB" }}>
+                className="flex-row items-center justify-between px-4 py-3" style={{ borderBottomWidth: i < outletBreakdown.length - 1 ? 1 : 0, borderColor: theme.colors.outlineVariant }}>
                 <View className="flex-row items-center" style={{ gap: 10 }}>
                   <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
                     <MaterialCommunityIcons name="store" size={16} color={theme.colors.primary} />

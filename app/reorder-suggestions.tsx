@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput, RefreshControl } from "react-native";
+import { router } from "expo-router";
 import { useTheme } from "react-native-paper";
 import { api } from "../src/lib/api";
 import { useTopInset } from "../src/lib/useTopInset";
@@ -27,7 +28,8 @@ export default function ReorderSuggestionsScreen() {
  const theme = useTheme();
  const topInset = useTopInset();
  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
- const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
  const [selection, setSelection] = useState<Set<string>>(new Set());
  const [generating, setGenerating] = useState(false);
 
@@ -37,17 +39,29 @@ export default function ReorderSuggestionsScreen() {
  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
  const [poNotes, setPoNotes] = useState("");
 
- const load = async () => {
- setLoading(true);
- try {
- const res = await api.get<{ data: Suggestion[] }>("/purchases/reorder-suggestions");
- setSuggestions(res.data ?? []);
- } catch (e) {
- Alert.alert("Error", "Could not load reorder suggestions.");
- } finally {
- setLoading(false);
- }
- };
+  const load = async () => {
+  setLoading(true);
+  try {
+  const res = await api.get<{ data: Suggestion[] }>("/purchases/reorder-suggestions");
+  setSuggestions(res.data ?? []);
+  } catch (e) {
+  Alert.alert("Error", "Could not load reorder suggestions.");
+  } finally {
+  setLoading(false);
+  }
+  };
+
+  const onRefresh = async () => {
+  setRefreshing(true);
+  try {
+  const res = await api.get<{ data: Suggestion[] }>("/purchases/reorder-suggestions");
+  setSuggestions(res.data ?? []);
+  } catch (e) {
+  Alert.alert("Error", "Could not load reorder suggestions.");
+  } finally {
+  setRefreshing(false);
+  }
+  };
 
  useEffect(() => { load(); }, []);
 
@@ -112,14 +126,20 @@ export default function ReorderSuggestionsScreen() {
 
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset + 8 }}>
- <ScrollView style={{ flex: 1 }}>
- <View className="px-4 py-3">
- <View className="flex-row justify-between items-center mb-2">
- <Text className="text-xl font-black text-on-surface ">Reorder Suggestions</Text>
- {!loading && (
- <Pressable onPress={load}><MaterialCommunityIcons name="refresh" size={22} color={theme.colors.primary} /></Pressable>
- )}
- </View>
+  <ScrollView style={{ flex: 1 }}
+  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} tintColor={theme.colors.primary} />}>
+  <View className="px-4 py-3">
+  <View className="flex-row justify-between items-center mb-2">
+  <View className="flex-row items-center">
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color="#6B7280" />
+  </Pressable>
+  <Text className="text-xl font-black text-on-surface ">Reorder Suggestions</Text>
+  </View>
+  {!loading && (
+  <Pressable onPress={load}><MaterialCommunityIcons name="refresh" size={22} color={theme.colors.primary} /></Pressable>
+  )}
+  </View>
  <Text className="text-sm text-on-surface-variant mb-4">
  Products below reorder level — suggested purchase quantities calculated automatically.
  </Text>

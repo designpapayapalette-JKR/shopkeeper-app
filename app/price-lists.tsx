@@ -376,8 +376,16 @@ export default function PriceListsScreen() {
  </View>
 
  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Product</Text>
- <TextInput value={productSearch} onChangeText={setProductSearch} placeholder="Search products..." placeholderTextColor="#A0A0A0"
- className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3.5 font-medium mb-3" />
+  <View className="flex-row items-center bg-surface-container-lowest rounded-2xl border border-outline-variant px-4 mb-3">
+  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.onSurfaceVariant} />
+  <TextInput value={productSearch} onChangeText={setProductSearch} placeholder="Search products..." placeholderTextColor={theme.colors.onSurfaceVariant}
+  className="flex-1 py-3.5 font-medium text-on-surface ml-2" />
+  {productSearch.length > 0 && (
+  <Pressable onPress={() => setProductSearch("")} hitSlop={8}>
+  <MaterialCommunityIcons name="close-circle" size={18} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  )}
+  </View>
  <View className="flex-row flex-wrap mb-5" style={{ gap: 6 }}>
  {filteredProducts.slice(0, 20).map((p) => (
  <Pressable key={p.id} onPress={() => setSelectedProductId(p.id)}

@@ -299,8 +299,16 @@ export default function CustomerGroupsScreen() {
  </Pressable>
  </View>
  <View className="px-6">
- <TextInput value={partySearch} onChangeText={setPartySearch} placeholder="Search customers..." placeholderTextColor={theme.colors.onSurfaceVariant}
- className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3.5 font-medium mb-4" />
+  <View className="flex-row items-center bg-surface-container-lowest rounded-2xl border border-outline-variant px-4 mb-4">
+  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.onSurfaceVariant} />
+  <TextInput value={partySearch} onChangeText={setPartySearch} placeholder="Search customers..." placeholderTextColor={theme.colors.onSurfaceVariant}
+  className="flex-1 py-3.5 font-medium text-on-surface ml-2" />
+  {partySearch.length > 0 && (
+  <Pressable onPress={() => setPartySearch("")} hitSlop={8}>
+  <MaterialCommunityIcons name="close-circle" size={18} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  )}
+  </View>
  <ScrollView className="max-h-72">
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {filteredParties.slice(0, 30).map((p) => (

@@ -8,6 +8,7 @@ import {
  Alert,
  TextInput,
  PermissionsAndroid, Platform } from "react-native";
+import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import {
@@ -77,8 +78,9 @@ async function ensureBluetoothPermissions(): Promise<boolean> {
 }
 
 export default function PrinterSettingsScreen() {
- const theme = useTheme();
- const topInset = useTopInset();
+const router = useRouter();
+  const theme = useTheme();
+  const topInset = useTopInset();
  const bottomInset = useBottomInset();
  const [activeTab, setActiveTab] = useState<PrinterConnectionType>("bluetooth");
  const [printers, setPrinters] = useState<SavedPrinter[]>([]);
@@ -174,10 +176,15 @@ export default function PrinterSettingsScreen() {
 
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset }}>
- <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 40 + bottomInset }}>
- <Text className="text-2xl font-bold text-on-surface mb-1">
- Printer Settings
- </Text>
+<ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 40 + bottomInset }}>
+  <View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="text-2xl font-bold text-on-surface mb-1">
+  Printer Settings
+  </Text>
+  </View>
  <Text className="text-sm text-on-surface-variant mb-6">
  Pair one or more thermal receipt printers over Bluetooth, USB, or Wi-Fi/LAN — useful if you print from more than one counter or roll width.
  </Text>

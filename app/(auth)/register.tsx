@@ -75,10 +75,10 @@ export default function RegisterScreen() {
  <View className="w-16 h-16 bg-primary rounded-2xl items-center justify-center shadow-lg mb-4">
  <Text className="text-white text-3xl font-bold">S</Text>
  </View>
- <Text className="text-3xl font-extrabold text-text-primary text-center tracking-tight">
+ <Text className="text-3xl font-extrabold text-on-surface text-center tracking-tight">
  Start Your Free Trial
  </Text>
- <Text className="text-text-secondary text-center mt-2 font-medium">
+ <Text className="text-on-surface-variant text-center mt-2 font-medium">
  MMC Shop is invite-only during beta — enter your invite code below.
  </Text>
  </View>
@@ -134,7 +134,7 @@ function Field(props: {
  const [reveal, setReveal] = useState(false);
  return (
  <View className="mt-4">
- <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+ <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
  {props.label}
  </Text>
  <View className="relative justify-center">
@@ -146,7 +146,7 @@ function Field(props: {
  secureTextEntry={props.secureTextEntry && !reveal}
  autoCapitalize={props.autoCapitalize ?? "words"}
  keyboardType={props.keyboardType ?? "default"}
- className={`bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark ${props.secureTextEntry ? "pr-12" : ""}`}
+ className={`bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark ${props.secureTextEntry ? "pr-12" : ""}`}
  />
  {props.secureTextEntry && (
  <Pressable

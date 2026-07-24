@@ -100,16 +100,22 @@ export default function UnifiedLedgerScreen() {
  </View>
  </View>
 
- {/* Search */}
- <View className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-4 mb-4">
- <TextInput
- placeholder="Search by party name..."
- placeholderTextColor="#A0A0A0"
- value={search}
- onChangeText={setSearch}
- className="text-base font-medium text-on-surface "
- />
- </View>
+  {/* Search */}
+  <View className="flex-row items-center bg-surface-container-lowest rounded-2xl px-4 py-3 border border-outline-variant mb-4">
+  <MaterialCommunityIcons name="magnify" size={18} color="#6B7280" />
+  <TextInput
+  placeholder="Search by party name..."
+  placeholderTextColor="#9CA3AF"
+  value={search}
+  onChangeText={setSearch}
+  className="flex-1 ml-2 text-base font-medium text-on-surface"
+  />
+  {search ? (
+  <Pressable onPress={() => setSearch("")} className="ml-2">
+  <MaterialCommunityIcons name="close-circle" size={16} color="#9CA3AF" />
+  </Pressable>
+  ) : null}
+  </View>
 
  {/* Party type filter */}
  <View className="flex-row bg-surface-container-lowest border border-outline-variant p-1.5 rounded-full mb-6">

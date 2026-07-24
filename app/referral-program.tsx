@@ -127,7 +127,7 @@ export default function ReferralProgramScreen() {
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }}>
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">{editing ? "Edit" : "Add"} Program</Text>
- <Pressable onPress={() => setShowForm(false)} className="w-11 h-11 items-center justify-center">
+  <Pressable onPress={() => setShowForm(false)} className="w-9 h-9 items-center justify-center">
  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
  </Pressable>
  </View>

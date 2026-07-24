@@ -84,13 +84,13 @@ export default function ScannedDocumentsScreen() {
  <Pressable
  key={tab.key}
  onPress={() => setActiveTab(tab.key)}
- className={`flex-1 py-2.5 rounded-xl items-center border ${
- activeTab === tab.key
- ? "bg-primary border-primary "
- : "bg-surface-container-lowest border-outline-variant "
- }`}
- >
- <MaterialCommunityIcons name={tab.icon} size={16} color={activeTab === tab.key ? "#FFFFFF" : theme.colors.outline} />
+className={`flex-1 py-2.5 rounded-full items-center border ${
+  activeTab === tab.key
+  ? "bg-primary border-primary "
+  : "bg-surface-container-lowest border-outline-variant "
+  }`}
+  >
+  <MaterialCommunityIcons name={tab.icon} size={16} color={activeTab === tab.key ? "#FFFFFF" : theme.colors.outline} />
  <Text className={`text-xs font-bold mt-1 ${activeTab === tab.key ? "text-white" : "text-on-surface-variant "}`}>
  {tab.label}
  </Text>

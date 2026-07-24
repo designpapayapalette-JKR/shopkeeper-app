@@ -11,6 +11,7 @@ import type MapView from "react-native-maps";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/lib/auth-context";
+import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 import { api } from "../../src/lib/api";
 import AgentMapView from "../../src/components/AgentMapView";
 import { useTopInset } from "../../src/lib/useTopInset";
@@ -80,14 +81,15 @@ function statusColor(mins: number | null): { dot: string; text: string } {
 }
 
 export default function AgentsScreen() {
- const { user, activeCompany } = useAuth();
- const router = useRouter();
- const mapRef = useRef<MapView>(null);
- const topInset = useTopInset();
- const bottomInset = useBottomInset(24);
- const theme = useTheme();
+  const { user, activeCompany, userRole } = useAuth();
+  const { isModuleEnabled } = useModuleVisibility(userRole);
+  const router = useRouter();
+  const mapRef = useRef<MapView>(null);
+  const topInset = useTopInset();
+  const bottomInset = useBottomInset(24);
+  const theme = useTheme();
 
- const [agents, setAgents] = useState<AgentSummary[]>([]);
+  const [agents, setAgents] = useState<AgentSummary[]>([]);
  const [loading, setLoading] = useState(true);
  const [refreshing, setRefreshing] = useState(false);
  const [viewMode, setViewMode] = useState<ViewMode>("map");
@@ -198,18 +200,26 @@ export default function AgentsScreen() {
  longitudeDelta: 15,
  };
 
- if (loading) {
- return (
- <View className="flex-1 bg-background justify-center items-center">
- <ActivityIndicator size="large" color={theme.colors.primary} />
- <Text className="text-on-surface-variant mt-3 text-sm">
- Loading agent locations…
- </Text>
- </View>
- );
- }
+  if (loading) {
+    return (
+      <View className="flex-1 bg-background justify-center items-center">
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text className="text-on-surface-variant mt-3 text-sm">
+          Loading agent locations…
+        </Text>
+      </View>
+    );
+  }
 
- return (
+  if (!isModuleEnabled("agents")) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <EmptyState icon="map-marker-radius-outline" title="Not Available" description="Field tracking is not available for your role." />
+      </View>
+    );
+  }
+
+  return (
  <View className="flex-1 bg-background ">
  {/* ── Custom Header ── */}
  <View

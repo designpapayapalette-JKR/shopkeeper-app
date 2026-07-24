@@ -58,10 +58,10 @@ export default function ForgotPasswordScreen() {
  <View className="w-16 h-16 rounded-2xl items-center justify-center shadow-lg mb-4 overflow-hidden">
  <Image source={require("../../assets/icon.png")} className="w-16 h-16" resizeMode="contain" />
  </View>
- <Text className="text-3xl font-extrabold text-text-primary text-center tracking-tight">
+ <Text className="text-3xl font-extrabold text-on-surface text-center tracking-tight">
  Reset Password
  </Text>
- <Text className="text-text-secondary text-center mt-2 font-medium">
+ <Text className="text-on-surface-variant text-center mt-2 font-medium">
  We'll email you a link to set a new password.
  </Text>
  </View>
@@ -69,10 +69,10 @@ export default function ForgotPasswordScreen() {
  <View className="bg-surface p-6 rounded-3xl border border-gray-100 shadow-xl">
  {sent ? (
  <>
- <Text className="text-xl font-bold text-text-primary mb-2">
+ <Text className="text-xl font-bold text-on-surface mb-2">
  Check your email
  </Text>
- <Text className="text-text-secondary text-sm font-medium mb-6">
+ <Text className="text-on-surface-variant text-sm font-medium mb-6">
  If an account exists for {email}, a reset link has been sent. Open it on your
  phone or computer to set a new password, then come back and sign in here.
  </Text>
@@ -87,7 +87,7 @@ export default function ForgotPasswordScreen() {
  </>
  ) : (
  <>
- <Text className="text-xl font-bold text-text-primary mb-4">
+ <Text className="text-xl font-bold text-on-surface mb-4">
  Forgot Password
  </Text>
 
@@ -97,7 +97,7 @@ export default function ForgotPasswordScreen() {
  </View>
  )}
 
- <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+ <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
  Email Address
  </Text>
  <TextInput
@@ -109,7 +109,7 @@ export default function ForgotPasswordScreen() {
  autoFocus
  keyboardType="email-address"
  autoCorrect={false}
- className="bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark"
+ className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark"
  />
 
  <Pressable

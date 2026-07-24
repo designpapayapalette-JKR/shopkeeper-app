@@ -151,9 +151,12 @@ export default function PayrollScreen() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 mb-4">
-          <View className="flex-row items-center" style={{ gap: 8 }}>
-            <MaterialCommunityIcons name="cash-multiple" size={24} color={theme.colors.primary} />
-            <Text className="text-2xl font-bold text-on-surface">Payroll</Text>
+<View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <MaterialCommunityIcons name="cash-multiple" size={24} color={theme.colors.primary} />
+  <Text className="text-2xl font-bold text-on-surface">Payroll</Text>
           </View>
         </View>
 

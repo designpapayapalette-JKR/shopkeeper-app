@@ -214,10 +214,10 @@ export default function LoginScreen() {
  elevation: 8,
  }}
  >
- <Text className="text-xl font-bold text-text-primary mb-1">
+ <Text className="text-xl font-bold text-on-surface mb-1">
  Enter Verification Code
  </Text>
- <Text className="text-text-secondary text-sm font-medium mb-4">
+ <Text className="text-on-surface-variant text-sm font-medium mb-4">
  We sent a 6-digit code to {email}. It expires in 10 minutes.
  </Text>
 
@@ -240,7 +240,7 @@ export default function LoginScreen() {
  keyboardType="number-pad"
  maxLength={6}
  autoFocus
- className="bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary :border-primary-dark"
+ className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary :border-primary-dark"
  />
 
  <GradientButton
@@ -260,7 +260,7 @@ export default function LoginScreen() {
  accessibilityRole="button"
  accessibilityLabel="Back to log in"
  >
- <Text className="text-text-secondary font-semibold text-sm">Back to log in</Text>
+ <Text className="text-on-surface-variant font-semibold text-sm">Back to log in</Text>
  </Pressable>
  </View>
  ) : (
@@ -274,7 +274,7 @@ export default function LoginScreen() {
  elevation: 8,
  }}
  >
- <Text className="text-xl font-bold text-text-primary mb-4">
+ <Text className="text-xl font-bold text-on-surface mb-4">
  {isPinLogin ? "Quick PIN Login" : "Sign In"}
  </Text>
 
@@ -288,7 +288,7 @@ export default function LoginScreen() {
  // Email / Password Form
  <View className="space-y-4">
  <View>
- <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+ <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
  Email Address
  </Text>
  <TextInput
@@ -299,12 +299,12 @@ export default function LoginScreen() {
  autoCapitalize="none"
  keyboardType="email-address"
  autoCorrect={false}
- className="bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark"
+ className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark"
  />
  </View>
 
  <View>
- <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+ <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
  Password
  </Text>
  <View className="relative justify-center">
@@ -316,7 +316,7 @@ export default function LoginScreen() {
  secureTextEntry={!showPassword}
  autoCapitalize="none"
  autoCorrect={false}
- className="bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 pr-12 text-base font-medium focus:border-primary :border-primary-dark"
+ className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 pr-12 text-base font-medium focus:border-primary :border-primary-dark"
  />
  <Pressable
  onPress={() => setShowPassword((v) => !v)}
@@ -331,7 +331,7 @@ export default function LoginScreen() {
  </View>
 
  <View className="pt-1">
- <Text className="text-xs text-text-secondary ">
+ <Text className="text-xs text-on-surface-variant ">
  Having trouble? Use email login (or request access).
  </Text>
  </View>
@@ -339,7 +339,7 @@ export default function LoginScreen() {
  ) : (
  // PIN Form
  <View>
- <Text className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
+ <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
  Enter 4-Digit PIN
  </Text>
  <TextInput
@@ -350,9 +350,9 @@ export default function LoginScreen() {
  secureTextEntry
  maxLength={4}
  keyboardType="number-pad"
- className="bg-background text-text-primary border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary :border-primary-dark"
+ className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary :border-primary-dark"
  />
- <Text className="text-xs text-text-secondary mt-3">
+ <Text className="text-xs text-on-surface-variant mt-3">
  Tip: Switch to email login if your session expired.
  </Text>
  </View>
@@ -408,7 +408,7 @@ export default function LoginScreen() {
  </Text>
  </Pressable>
 
- <Text className="text-xs text-text-secondary mt-4 text-center">
+ <Text className="text-xs text-on-surface-variant mt-4 text-center">
  Need help? Contact support via your admin.
  </Text>
  </>

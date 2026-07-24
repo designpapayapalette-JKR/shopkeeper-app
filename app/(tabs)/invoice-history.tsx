@@ -209,10 +209,10 @@ export default function InvoiceHistoryScreen() {
  return (
  <Pressable
  onPress={() => openDetail(item.id, tab)}
- className="bg-surface-container-lowest rounded-2xl mx-4 mb-3 overflow-hidden active:opacity-80"
- >
- <View style={{ borderLeftWidth: 3, borderLeftColor: typeColor }}>
- <View className="p-4">
+  className="bg-surface-container-lowest rounded-xl mx-4 mb-2 overflow-hidden active:opacity-80"
+  >
+  <View style={{ borderLeftWidth: 3, borderLeftColor: typeColor }}>
+  <View className="p-3">
  <View className="flex-row items-center justify-between mb-1">
  <View className="flex-row items-center flex-1 mr-2" style={{ gap: 6 }}>
  <Text className="font-mono text-sm font-bold text-on-surface" numberOfLines={1}>
@@ -258,17 +258,17 @@ export default function InvoiceHistoryScreen() {
  <Text className="text-sm text-on-surface-variant mb-1" numberOfLines={1}>{party}</Text>
  <Text className="text-2xl font-black text-on-surface mb-4">{formatRupee(amount)}</Text>
 
- <View className="bg-surface-container rounded-xl p-4 mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Details</Text>
+  <View className="bg-surface-container rounded-xl p-3 mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Details</Text>
  <DetailRow label="Date" value={formatDate(detailInvoice.date)} />
  <DetailRow label="Invoice" value={number} />
  {detailInvoice.paymentMode && <DetailRow label="Payment" value={detailInvoice.paymentMode} />}
  {detailInvoice.warehouse?.name && <DetailRow label="Warehouse" value={detailInvoice.warehouse.name} />}
  </View>
 
- {detailInvoice.items && detailInvoice.items.length > 0 && (
- <View className="bg-surface-container rounded-xl p-4 mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Items</Text>
+  {detailInvoice.items && detailInvoice.items.length > 0 && (
+  <View className="bg-surface-container rounded-xl p-3 mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Items</Text>
  {detailInvoice.items.map((item: any, idx: number) => (
  <View key={idx} className="flex-row items-center justify-between py-1.5" style={idx > 0 ? { borderTopWidth: 1, borderTopColor: "#E5E7EB" } : undefined}>
  <Text className="flex-1 mr-2 text-sm text-on-surface" numberOfLines={1}>
@@ -282,8 +282,8 @@ export default function InvoiceHistoryScreen() {
  </View>
  )}
 
- <View className="bg-surface-container rounded-xl p-4 mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Actions</Text>
+  <View className="bg-surface-container rounded-xl p-3 mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Actions</Text>
  <View className="flex-row flex-wrap" style={{ gap: 8 }}>
  <ActionButton icon="share-variant" label="Share" onPress={() => Share.share({ message: `${number}: ${formatRupee(amount)}` })} />
  <ActionButton icon="file-pdf-box" label="PDF" onPress={async () => {
@@ -300,9 +300,9 @@ export default function InvoiceHistoryScreen() {
  </View>
  </View>
 
- {detailTab === "sales" && (
- <View className="bg-surface-container rounded-xl p-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Compliance</Text>
+  {detailTab === "sales" && (
+  <View className="bg-surface-container rounded-xl p-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Compliance</Text>
  <ComplianceField
  label="e-Way Bill"
  value={detailInvoice.ewayBill ? `EWB ${detailInvoice.ewayBill.ewbNumber}` : null}
@@ -359,10 +359,10 @@ export default function InvoiceHistoryScreen() {
  <Pressable
  key={tab.key}
  onPress={() => { setActiveTab(tab.key); setSearchQuery(""); setStatusFilter("All"); }}
- className={`flex-row items-center rounded-xl px-4 py-2.5 ${
- isActive ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"
- }`}
- style={{ gap: 6 }}
+  className={`flex-row items-center rounded-full px-3 py-1.5 ${
+  isActive ? "bg-primary" : "bg-surface-container-high"
+  }`}
+  style={{ gap: 5 }}
  >
  <MaterialCommunityIcons name={tab.icon} size={16} color={isActive ? "#FFFFFF" : theme.colors.onSurfaceVariant} />
  <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 14, color: isActive ? "#FFFFFF" : theme.colors.onSurfaceVariant }}>

@@ -5,22 +5,27 @@ import { api } from "../../src/lib/api";
 import { useTopInset, useBottomInset } from "../../src/lib/useTopInset";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import EmptyState from "../../src/components/EmptyState";
+import { useAuth } from "../../src/lib/auth-context";
+import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 
 interface PaymentRow {
- id: string;
- date: string;
- party_name: string;
- direction: "in" | "out";
- amount: number;
- mode?: string;
- reference?: string;
- invoice_number?: string | null;
+  id: string;
+  date: string;
+  party_name: string;
+  direction: "in" | "out";
+  amount: number;
+  mode?: string;
+  reference?: string;
+  invoice_number?: string | null;
 }
 
 export default function PaymentHistoryScreen() {
- const theme = useTheme();
- const topInset = useTopInset();
- const bottomInset = useBottomInset();
+  const theme = useTheme();
+  const { userRole } = useAuth();
+  const { isModuleEnabled } = useModuleVisibility(userRole);
+
+  const topInset = useTopInset();
+  const bottomInset = useBottomInset();
  const today = () => new Date().toISOString().slice(0, 10);
  const monthStart = () => {
  const d = new Date();
@@ -50,10 +55,18 @@ export default function PaymentHistoryScreen() {
 
  useEffect(() => { load(); }, []);
 
- const totalIn = payments.filter((p) => p.direction === "in").reduce((s, p) => s + p.amount, 0);
- const totalOut = payments.filter((p) => p.direction === "out").reduce((s, p) => s + p.amount, 0);
+  const totalIn = payments.filter((p) => p.direction === "in").reduce((s, p) => s + p.amount, 0);
+  const totalOut = payments.filter((p) => p.direction === "out").reduce((s, p) => s + p.amount, 0);
 
- return (
+  if (!isModuleEnabled("payments")) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <EmptyState icon="credit-card-outline" title="Not Available" description="Payments is not available for your role." />
+      </View>
+    );
+  }
+
+  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset + 8 }}>
  <ScrollView contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
  <View className="px-4 py-3">
@@ -81,18 +94,18 @@ export default function PaymentHistoryScreen() {
  </View>
  </View>
 
- <View className="flex-row gap-2 mb-3">
- {["", "in", "out"].map((d) => (
- <Pressable
- key={d}
- onPress={() => setDirection(d)}
- className={`px-3 py-2 rounded-xl ${direction === d ? "bg-primary " : "bg-surface-container-lowest border border-outline-variant "}`}
- >
- <Text className={`text-xs font-bold ${direction === d ? "text-white" : "text-on-surface "}`}>
- {d === "" ? "All" : d === "in" ? "Received" : "Sent"}
- </Text>
- </Pressable>
- ))}
+  <View className="flex-row gap-2 mb-3">
+  {["", "in", "out"].map((d) => (
+  <Pressable
+  key={d}
+  onPress={() => setDirection(d)}
+  className={`px-3 py-2 rounded-full ${direction === d ? "bg-primary " : "bg-surface-container-lowest border border-outline-variant "}`}
+  >
+  <Text className={`text-xs font-bold ${direction === d ? "text-white" : "text-on-surface "}`}>
+  {d === "" ? "All" : d === "in" ? "Received" : "Sent"}
+  </Text>
+  </Pressable>
+  ))}
  <Pressable onPress={load} className="bg-primary px-4 py-2 rounded-xl items-center justify-center">
  <MaterialCommunityIcons name="magnify" size={18} color="white" />
  </Pressable>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { api } from "../src/lib/api";
@@ -52,6 +53,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 export default function BalanceSheetScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const topInset = useTopInset();
   const bottomInset = useBottomInset();
@@ -87,6 +89,9 @@ export default function BalanceSheetScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: topInset + 8 }}>
       <View className="px-5 pb-2 flex-row items-center" style={{ gap: 10 }}>
+        <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+        <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+        </Pressable>
         <View className="w-1.5 h-7 rounded-full bg-primary" />
         <Text className="text-xl font-black text-on-surface">Reports</Text>
       </View>

@@ -137,9 +137,12 @@ export default function RemindersScreen() {
  ListHeaderComponent={
  <>
  <View className="flex-row items-center justify-between mb-4">
- <View className="flex-row items-center" style={{ gap: 8 }}>
- <MaterialCommunityIcons name="bell-ring-outline" size={24} color={theme.colors.primary} />
- <Text className="text-2xl font-bold text-on-surface ">Reminders</Text>
+<View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <MaterialCommunityIcons name="bell-ring-outline" size={24} color={theme.colors.primary} />
+  <Text className="text-2xl font-bold text-on-surface ">Reminders</Text>
  </View>
  </View>
 

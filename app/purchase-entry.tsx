@@ -118,7 +118,12 @@ export default function PurchaseEntryScreen() {
  return (
  <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
  <ScrollView className="flex-1 bg-background px-5" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
- <Text className="font-headline-md text-on-surface mb-1" style={{ fontSize: 20, fontWeight: "700" }}>Record Purchase</Text>
+  <View className="flex-row items-center mb-1">
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color="#6B7280" />
+  </Pressable>
+  <Text className="font-headline-md text-on-surface" style={{ fontSize: 20, fontWeight: "700" }}>Record Purchase</Text>
+  </View>
  <Text className="text-sm text-on-surface-variant mb-4">Log stock received from a supplier.</Text>
 
  {/* Supplier */}

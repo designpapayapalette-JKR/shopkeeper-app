@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "react-native-paper";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
@@ -40,8 +40,9 @@ interface PurchaseRecord {
 }
 
 export default function PurchaseHistoryScreen() {
- const topInset = useTopInset();
- const bottomInset = useBottomInset();
+const router = useRouter();
+  const topInset = useTopInset();
+  const bottomInset = useBottomInset();
  const confirm = useConfirm();
  const theme = useTheme();
  const params = useLocalSearchParams<{ openPurchaseId?: string }>();
@@ -132,8 +133,13 @@ export default function PurchaseHistoryScreen() {
  return (
  <View className="flex-1 bg-background ">
  <View className="bg-surface-container-lowest border-b border-outline-variant px-4 pb-3" style={{ paddingTop: topInset, gap: 12 }}>
- <View className="flex-row items-center justify-between">
- <Text className="text-2xl font-bold text-on-surface ">Purchase History</Text>
+<View className="flex-row items-center justify-between">
+  <View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="text-2xl font-bold text-on-surface ">Purchase History</Text>
+  </View>
  <Pressable onPress={() => {
  const headers = ["Purchase #", "Supplier", "Date", "Items", "Total"];
  const rows = purchases.map((p) => [p.purchase_number, p.supplier.name, new Date(p.date).toLocaleDateString("en-IN"), String(p.items.length), `₹${parseFloat(p.grand_total).toLocaleString("en-IN")}`]);
@@ -143,13 +149,21 @@ export default function PurchaseHistoryScreen() {
  <Text className="text-xs font-bold text-white">Export</Text>
  </Pressable>
  </View>
- <TextInput
- value={search}
- onChangeText={setSearch}
- placeholder="Search by purchase number"
- placeholderTextColor="#A0A0A0"
- className="bg-background text-on-surface border border-outline-variant rounded-xl px-4 py-3 text-base"
- />
+  <View className="flex-row items-center bg-surface-container-lowest rounded-2xl border border-outline-variant px-4">
+  <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.onSurfaceVariant} />
+  <TextInput
+  value={search}
+  onChangeText={setSearch}
+  placeholder="Search by purchase number"
+  placeholderTextColor={theme.colors.onSurfaceVariant}
+  className="flex-1 py-3 text-base text-on-surface ml-2"
+  />
+  {search.length > 0 && (
+  <Pressable onPress={() => setSearch("")} hitSlop={8}>
+  <MaterialCommunityIcons name="close-circle" size={18} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  )}
+  </View>
  </View>
 
  {loading ? (
@@ -200,8 +214,8 @@ export default function PurchaseHistoryScreen() {
 
  {detailPurchase && (
  <>
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm text-on-surface-variant mb-1">Supplier</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm text-on-surface-variant mb-1">Supplier</Text>
  <Text className="text-lg font-bold text-on-surface mb-3">{detailPurchase.supplier.name}</Text>
  <Text className="text-sm text-on-surface-variant mb-1">Date</Text>
  <Text className="text-sm font-bold text-on-surface mb-3">{formatDate(detailPurchase.date)}</Text>
@@ -209,8 +223,8 @@ export default function PurchaseHistoryScreen() {
  <Text className="text-2xl font-black text-on-surface ">₹{parseFloat(detailPurchase.grand_total).toLocaleString("en-IN")}</Text>
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant shadow-sm mb-4">
- <Text className="text-sm font-bold text-on-surface mb-3">Items ({detailPurchase.items.length})</Text>
+  <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
+  <Text className="text-sm font-bold text-on-surface mb-2">Items ({detailPurchase.items.length})</Text>
  {detailPurchase.items.map((item, idx) => (
  <View key={item.product.id + idx} className="flex-row items-center py-2.5 border-b border-outline-variant ">
  <View className="flex-1 mr-2">

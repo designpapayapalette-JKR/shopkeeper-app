@@ -8,7 +8,7 @@ import {
  Alert,
  TextInput,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../src/lib/api";
 import { rowsToCsv, shareCsv } from "../src/lib/csvExport";
@@ -165,8 +165,9 @@ function GstPurchaseRowCard({ row }: { row: GstPurchaseRow }) {
 }
 
 export default function GstReportsScreen() {
- const topInset = useTopInset();
- const bottomInset = useBottomInset();
+const router = useRouter();
+  const topInset = useTopInset();
+  const bottomInset = useBottomInset();
  const { t } = useTerminology();
  const theme = useTheme();
  const params = useLocalSearchParams<{ tab?: string }>();
@@ -298,10 +299,15 @@ export default function GstReportsScreen() {
 
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset }}>
- <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
- <Text className="text-2xl font-bold text-on-surface mb-1">
- GST & Compliance Reports
- </Text>
+<ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }}>
+  <View className="flex-row items-center" style={{ gap: 8 }}>
+  <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
+  <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="text-2xl font-bold text-on-surface mb-1">
+  GST & Compliance Reports
+  </Text>
+  </View>
  <Text className="text-sm text-on-surface-variant mb-6">
  HSN summary, GSTR-ready sales/purchase registers, and a day book — export any of these as CSV to hand off to your accountant.
  </Text>
@@ -311,8 +317,8 @@ export default function GstReportsScreen() {
  <Pressable
  key={tab.key}
  onPress={() => setActiveTab(tab.key)}
- className={`flex-1 py-3 rounded-xl border items-center ${
- activeTab === tab.key
+className={`flex-1 py-3 rounded-full border items-center ${
+  activeTab === tab.key
  ? "bg-primary border-primary "
  : "bg-surface-container-lowest border-outline-variant "
  }`}
