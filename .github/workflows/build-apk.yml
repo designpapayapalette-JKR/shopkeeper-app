@@ -5,6 +5,9 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -49,8 +52,4 @@ jobs:
       - name: Upload APK to beta-latest release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload beta-latest shopkeeper-app-latest.apk --clobber || \
-          gh release create beta-latest shopkeeper-app-latest.apk \
-            --title "Shopkeeper App - Beta" \
-            --notes "Beta build for invited testers. Install this APK directly on Android."
+        run: gh release upload beta-latest shopkeeper-app-latest.apk --clobber
