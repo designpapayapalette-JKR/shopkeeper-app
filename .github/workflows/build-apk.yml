@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -35,9 +36,11 @@ jobs:
           EXPO_PUBLIC_API_URL: https://api.managemycounter.com
 
       - name: Build debug APK
-        run: cd android && ./gradlew assembleDebug
+        working-directory: android
         env:
+          GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=1g
           EXPO_PUBLIC_API_URL: https://api.managemycounter.com
+        run: ./gradlew assembleDebug
 
       - name: Rename APK
         run: |
