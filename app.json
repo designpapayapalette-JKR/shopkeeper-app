@@ -40,7 +40,8 @@
           "android": {
             "enableProguardInReleaseBuilds": false,
             "enableShrinkResourcesInReleaseBuilds": false,
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": true,
+            "enableMinifyInReleaseBuilds": false
           }
         }
       ],
@@ -67,7 +68,17 @@
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_SCAN",
         "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.ACCESS_WIFI_STATE"
+        "android.permission.ACCESS_WIFI_STATE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_WIFI_STATE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "experiments": {
@@ -81,6 +92,12 @@
         "projectId": "a9c628d7-7fd8-481b-8076-a32a0ce72a68"
       }
     },
-    "owner": "papayapalette"
+    "owner": "papayapalette",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a9c628d7-7fd8-481b-8076-a32a0ce72a68"
+    }
   }
 }
