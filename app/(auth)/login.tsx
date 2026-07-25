@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "react-native-paper";
 import { useAuth } from "../../src/lib/auth-context";
 import { TwoFactorRequiredError, resendTwoFactorCode } from "../../src/lib/api";
 
@@ -109,8 +110,9 @@ function GradientButton({
 }
 
 export default function LoginScreen() {
- const router = useRouter();
- const { login, verifyTwoFactor, unlockWithPin, pinLoginAvailable } = useAuth();
+  const theme = useTheme();
+  const router = useRouter();
+  const { login, verifyTwoFactor, unlockWithPin, pinLoginAvailable } = useAuth();
  const [email, setEmail] = useState("");
  const [password, setPassword] = useState("");
  const [pin, setPin] = useState("");
@@ -236,11 +238,11 @@ export default function LoginScreen() {
  value={otpCode}
  onChangeText={(v) => setOtpCode(v.replace(/\D/g, "").slice(0, 6))}
  placeholder="000000"
- placeholderTextColor="#A0A0A0"
+  placeholderTextColor={theme.colors.onSurfaceVariant}
  keyboardType="number-pad"
  maxLength={6}
  autoFocus
- className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary :border-primary-dark"
+  className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary"
  />
 
  <GradientButton
@@ -295,11 +297,11 @@ export default function LoginScreen() {
  value={email}
  onChangeText={setEmail}
  placeholder="you@business.com"
- placeholderTextColor="#A0A0A0"
+  placeholderTextColor={theme.colors.onSurfaceVariant}
  autoCapitalize="none"
  keyboardType="email-address"
  autoCorrect={false}
- className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark"
+  className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary"
  />
  </View>
 
@@ -312,7 +314,7 @@ export default function LoginScreen() {
  value={password}
  onChangeText={setPassword}
  placeholder="Enter your password"
- placeholderTextColor="#A0A0A0"
+  placeholderTextColor={theme.colors.onSurfaceVariant}
  secureTextEntry={!showPassword}
  autoCapitalize="none"
  autoCorrect={false}
@@ -346,11 +348,11 @@ export default function LoginScreen() {
  value={pin}
  onChangeText={setPin}
  placeholder="••••"
- placeholderTextColor="#A0A0A0"
+  placeholderTextColor={theme.colors.onSurfaceVariant}
  secureTextEntry
  maxLength={4}
  keyboardType="number-pad"
- className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary :border-primary-dark"
+  className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 font-bold text-3xl text-center tracking-widest focus:border-primary"
  />
  <Text className="text-xs text-on-surface-variant mt-3">
  Tip: Switch to email login if your session expired.

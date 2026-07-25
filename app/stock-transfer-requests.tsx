@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, FlatList, ActivityIndicator, Pressable, Alert, TextInput, Modal, ScrollView, Platform, KeyboardAvoidingView, RefreshControl } from "react-native";
 import { Text } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api, ApiError } from "../src/lib/api";
@@ -121,16 +120,16 @@ export default function StockTransferRequestsScreen() {
  if (!detailReq) return <ActivityIndicator />;
  const s = STATUS_STYLE[detailReq.status] || STATUS_STYLE.draft;
  return (
- <ScrollView className="flex-1 px-5 pb-10" style={{ paddingTop: topInset }}>
- <View className="flex-row justify-between items-start mb-5">
- <View>
- <Text className="font-headline-md text-on-surface" style={{ fontSize: 20, fontWeight: "700" }}>Transfer #{detailReq.id.slice(0, 8)}</Text>
- <Text className="text-xs text-on-surface-variant mt-0.5">{new Date(detailReq.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</Text>
- </View>
- <View style={{ backgroundColor: s.bg }} className="px-3 py-1.5 rounded-full"><Text style={{ color: s.color }} className="text-xs font-bold">{s.label}</Text></View>
- </View>
+  <ScrollView className="flex-1 px-4 pb-8" style={{ paddingTop: topInset }}>
+  <View className="flex-row justify-between items-start mb-4">
+  <View>
+  <Text className="font-headline-md text-on-surface" style={{ fontSize: 18, fontWeight: "700" }}>Transfer #{detailReq.id.slice(0, 8)}</Text>
+  <Text className="text-xs text-on-surface-variant mt-0.5">{new Date(detailReq.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</Text>
+  </View>
+  <View style={{ backgroundColor: s.bg }} className="px-3 py-1 rounded-full"><Text style={{ color: s.color }} className="text-xs font-bold">{s.label}</Text></View>
+  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant mb-4">
+  <View className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant mb-3">
  <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
  <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
  <MaterialCommunityIcons name="export-variant" size={18} color={theme.colors.primary} />
@@ -142,7 +141,7 @@ export default function StockTransferRequestsScreen() {
  </View>
  <View className="flex-row items-center" style={{ gap: 8 }}>
  <View className="w-10 h-10 rounded-xl bg-secondary/10 items-center justify-center">
- <MaterialCommunityIcons name="import" size={18} color="#835400" />
+  <MaterialCommunityIcons name="import" size={18} color={theme.colors.secondary} />
  </View>
  <View className="flex-1">
  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">To</Text>
@@ -157,8 +156,8 @@ export default function StockTransferRequestsScreen() {
  )}
  </View>
 
- <View className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Items ({detailReq.items?.length || 0})</Text>
+  <View className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Items ({detailReq.items?.length || 0})</Text>
  {detailReq.items?.map((item: any, idx: number) => (
  <View key={item.id || item.product_id}
  className={`flex-row justify-between items-center py-3 ${idx < (detailReq.items?.length || 0) - 1 ? "border-b border-outline-variant" : ""}`}>
@@ -168,27 +167,27 @@ export default function StockTransferRequestsScreen() {
  ))}
  </View>
 
- {detailReq.status === "pending" && (
- <View className="flex-row mt-2" style={{ gap: 10 }}>
- <Pressable onPress={() => handleStatus(detailReq.id, "approved")}
- className="flex-1 bg-success py-3.5 rounded-xl items-center" style={{ gap: 4 }}>
- <MaterialCommunityIcons name="check" size={16} color="white" />
- <Text className="text-white font-bold">Approve</Text>
- </Pressable>
- <Pressable onPress={() => handleStatus(detailReq.id, "rejected")}
- className="flex-1 bg-error py-3.5 rounded-xl items-center" style={{ gap: 4 }}>
- <MaterialCommunityIcons name="close" size={16} color="white" />
- <Text className="text-white font-bold">Reject</Text>
- </Pressable>
- </View>
- )}
- {detailReq.status === "approved" && (
- <Pressable onPress={() => handleStatus(detailReq.id, "completed")}
- className="mt-4 bg-primary py-3.5 rounded-xl items-center" style={{ gap: 4 }}>
- <MaterialCommunityIcons name="check-all" size={16} color="white" />
- <Text className="text-white font-bold">Mark Completed</Text>
- </Pressable>
- )}
+  {detailReq.status === "pending" && (
+  <View className="flex-row mt-1" style={{ gap: 8 }}>
+  <Pressable onPress={() => handleStatus(detailReq.id, "approved")}
+  className="flex-1 bg-success py-3 rounded-xl items-center" style={{ gap: 4 }}>
+  <MaterialCommunityIcons name="check" size={15} color="white" />
+  <Text className="text-white font-bold text-sm">Approve</Text>
+  </Pressable>
+  <Pressable onPress={() => handleStatus(detailReq.id, "rejected")}
+  className="flex-1 bg-error py-3 rounded-xl items-center" style={{ gap: 4 }}>
+  <MaterialCommunityIcons name="close" size={15} color="white" />
+  <Text className="text-white font-bold text-sm">Reject</Text>
+  </Pressable>
+  </View>
+  )}
+  {detailReq.status === "approved" && (
+  <Pressable onPress={() => handleStatus(detailReq.id, "completed")}
+  className="mt-3 bg-primary py-3 rounded-xl items-center" style={{ gap: 4 }}>
+  <MaterialCommunityIcons name="check-all" size={15} color="white" />
+  <Text className="text-white font-bold text-sm">Mark Completed</Text>
+  </Pressable>
+  )}
  </ScrollView>
  );
  };
@@ -225,21 +224,21 @@ export default function StockTransferRequestsScreen() {
 
  return (
  <View className="flex-1 bg-background" style={{ paddingTop: topInset }}>
- {/* Header */}
- <View className="flex-row items-center justify-between px-5 py-4">
- <View className="flex-row items-center" style={{ gap: 8 }}>
- <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center">
- <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
- </Pressable>
- <Text className="font-headline-md text-on-surface" style={{ fontSize: 20, fontWeight: "700" }}>Stock Transfers</Text>
- </View>
- <Pressable onPress={() => setShowForm(true)} className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center" style={{ gap: 4 }}>
- <MaterialCommunityIcons name="plus" size={16} color="white" /><Text className="text-white font-bold text-sm">New</Text>
- </Pressable>
- </View>
+  {/* Header */}
+  <View className="flex-row items-center justify-between px-4 py-3">
+  <View className="flex-row items-center" style={{ gap: 6 }}>
+  <Pressable onPress={() => router.back()} className="w-8 h-8 items-center justify-center">
+  <MaterialCommunityIcons name="arrow-left" size={20} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="font-headline-md text-on-surface" style={{ fontSize: 18, fontWeight: "700" }}>Stock Transfers</Text>
+  </View>
+  <Pressable onPress={() => setShowForm(true)} className="bg-primary px-3.5 py-2 rounded-xl flex-row items-center" style={{ gap: 4 }}>
+  <MaterialCommunityIcons name="plus" size={15} color="white" /><Text className="text-white font-bold text-sm">New</Text>
+  </Pressable>
+  </View>
 
- {/* Filter chips */}
- <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mb-3" contentContainerStyle={{ gap: 6 }}>
+  {/* Filter chips */}
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mb-2" contentContainerStyle={{ gap: 6 }}>
   {["all", ...STATUSES].map((s) => (
   <Pressable key={s} onPress={() => setFilterStatus(s)}
   className={`rounded-full px-3 py-1.5 ${filterStatus === s ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
@@ -253,40 +252,37 @@ export default function StockTransferRequestsScreen() {
  ) : filtered.length === 0 ? (
  <EmptyState icon="swap-horizontal-bold" title="No transfer requests" description="Create stock transfers between warehouses." />
  ) : (
- <FlatList data={filtered} keyExtractor={(item) => item.id} renderItem={renderItem}
- refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
- contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomInset + 24 }} showsVerticalScrollIndicator={false} />
+  <FlatList data={filtered} keyExtractor={(item) => item.id} renderItem={renderItem}
+  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+  contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: bottomInset + 16 }} showsVerticalScrollIndicator={false} />
  )}
 
  {/* Detail modal */}
- <Modal visible={!!showDetail} animationType="slide" onRequestClose={() => setShowDetail(null)}>
- <SafeAreaProvider>
- <View className="flex-1 bg-background">
- <View className="flex-row items-center px-5 py-4">
- <Pressable onPress={() => setShowDetail(null)} className="w-9 h-9 items-center justify-center">
- <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
- </Pressable>
- </View>
- {renderDetail()}
- </View>
- </SafeAreaProvider>
- </Modal>
+  <Modal visible={!!showDetail} animationType="slide" onRequestClose={() => setShowDetail(null)}>
+  <View className="flex-1 bg-background">
+  <View className="flex-row items-center px-4 py-3">
+  <Pressable onPress={() => setShowDetail(null)} className="w-8 h-8 items-center justify-center">
+  <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  </View>
+  {renderDetail()}
+  </View>
+  </Modal>
 
  {/* Form modal */}
- <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
- <SafeAreaProvider>
- <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
- <ScrollView className="flex-1 bg-background px-5 pb-10" style={{ paddingTop: topInset }}>
- <View className="flex-row justify-between items-center mb-5">
- <Text className="font-headline-md text-on-surface" style={{ fontSize: 20, fontWeight: "700" }}>New Transfer</Text>
- <Pressable onPress={() => setShowForm(false)} className="w-11 h-11 items-center justify-center">
- <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
- </Pressable>
- </View>
+  <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
+  <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+  <ScrollView className="flex-1 bg-background px-4 pb-8" style={{ paddingTop: topInset }}>
+  <View className="flex-row justify-between items-center mb-4">
+  <Text className="font-headline-md text-on-surface" style={{ fontSize: 18, fontWeight: "700" }}>New Transfer</Text>
+  <Pressable onPress={() => setShowForm(false)} className="w-9 h-9 items-center justify-center">
+  <MaterialCommunityIcons name="close" size={18} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  </View>
 
- {/* From warehouse */}
- <View className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">From Warehouse</Text>
+  {/* From warehouse */}
+  <View className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">From Warehouse</Text>
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {warehouses.filter((w) => w.id !== toWh).map((w) => (
  <Pressable key={w.id} onPress={() => setFromWh(w.id)}
@@ -297,9 +293,9 @@ export default function StockTransferRequestsScreen() {
  </View>
  </View>
 
- {/* To warehouse */}
- <View className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">To Warehouse</Text>
+  {/* To warehouse */}
+  <View className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">To Warehouse</Text>
  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  {warehouses.filter((w) => w.id !== fromWh).map((w) => (
  <Pressable key={w.id} onPress={() => setToWh(w.id)}
@@ -310,9 +306,9 @@ export default function StockTransferRequestsScreen() {
  </View>
  </View>
 
- {/* Items */}
- <View className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Items</Text>
+  {/* Items */}
+  <View className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Items</Text>
  <Pressable onPress={() => setShowPicker(true)}
  className="flex-row items-center justify-center bg-primary/10 border border-dashed border-primary rounded-xl py-3.5 mb-3">
  <MaterialCommunityIcons name="plus" size={16} color={theme.colors.primary} />
@@ -335,7 +331,7 @@ export default function StockTransferRequestsScreen() {
  <MaterialCommunityIcons name="plus" size={14} color={theme.colors.onSurfaceVariant} />
  </Pressable>
  <Pressable onPress={() => removeItem(item.product_id)} className="w-8 h-8 items-center justify-center">
- <MaterialCommunityIcons name="trash-can-outline" size={16} color="#D64545" />
+  <MaterialCommunityIcons name="trash-can-outline" size={16} color={theme.colors.error} />
  </Pressable>
  </View>
  </View>
@@ -343,26 +339,24 @@ export default function StockTransferRequestsScreen() {
  )}
  </View>
 
- {/* Notes */}
- <View className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant mb-4">
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Notes</Text>
- <TextInput value={formNotes} onChangeText={setFormNotes} placeholder="Optional notes" placeholderTextColor="#9CA3AF"
+  {/* Notes */}
+  <View className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant mb-3">
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Notes</Text>
+  <TextInput value={formNotes} onChangeText={setFormNotes} placeholder="Optional notes" placeholderTextColor={theme.colors.onSurfaceVariant}
  multiline numberOfLines={2}
  className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium" />
  </View>
 
- <Pressable onPress={handleCreate} disabled={saving}
- className="bg-primary py-4 rounded-2xl items-center mt-2" style={{ marginBottom: bottomInset }}>
- {saving ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold">Create Transfer Request</Text>}
- </Pressable>
- </ScrollView>
- </KeyboardAvoidingView>
- </SafeAreaProvider>
- </Modal>
+  <Pressable onPress={handleCreate} disabled={saving}
+  className="bg-primary py-3 rounded-xl items-center mt-1" style={{ marginBottom: bottomInset }}>
+  {saving ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-sm">Create Transfer Request</Text>}
+  </Pressable>
+  </ScrollView>
+  </KeyboardAvoidingView>
+  </Modal>
 
- {/* Product picker */}
- <Modal visible={showPicker} animationType="slide" onRequestClose={() => setShowPicker(false)}>
- <SafeAreaProvider>
+  {/* Product picker */}
+  <Modal visible={showPicker} animationType="slide" onRequestClose={() => setShowPicker(false)}>
  <View className="flex-1 bg-background" style={{ paddingTop: topInset }}>
  <View className="flex-row items-center justify-between px-5 py-4">
  <Text className="font-headline-md text-on-surface" style={{ fontSize: 20, fontWeight: "700" }}>Select Product</Text>
@@ -384,10 +378,9 @@ export default function StockTransferRequestsScreen() {
  <MaterialCommunityIcons name="plus-circle-outline" size={20} color={theme.colors.primary} />
  </Pressable>
  )}
- contentContainerStyle={{ paddingBottom: bottomInset + 24 }} />
- </View>
- </SafeAreaProvider>
- </Modal>
+  contentContainerStyle={{ paddingBottom: bottomInset + 24 }} />
+  </View>
+  </Modal>
  </View>
  );
 }

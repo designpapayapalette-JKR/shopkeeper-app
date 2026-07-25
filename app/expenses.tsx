@@ -111,16 +111,16 @@ export default function ExpensesScreen() {
 
  return (
  <View className="flex-1 bg-background" style={{ paddingTop: topInset }}>
- {/* Header */}
- <View className="flex-row items-center px-5 py-4" style={{ gap: 12 }}>
- <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">
- <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.onSurfaceVariant} />
- </Pressable>
- <Text className="font-headline-md text-on-surface" style={{ fontSize: 20, fontWeight: "700" }}>Expenses</Text>
- </View>
+  {/* Header */}
+  <View className="flex-row items-center px-4 py-3" style={{ gap: 10 }}>
+  <Pressable onPress={() => router.back()} className="w-8 h-8 items-center justify-center">
+  <MaterialCommunityIcons name="arrow-left" size={20} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="font-headline-md text-on-surface" style={{ fontSize: 18, fontWeight: "700" }}>Expenses</Text>
+  </View>
 
- {/* Period chips */}
- <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mb-3" contentContainerStyle={{ gap: 6 }}>
+  {/* Period chips */}
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mb-2" contentContainerStyle={{ gap: 6 }}>
  {PERIODS.map((p) => (
  <Pressable key={p.key} onPress={() => setPeriod(p.key)}
   className={`rounded-full px-3 py-1.5 ${period === p.key ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
@@ -130,7 +130,7 @@ export default function ExpensesScreen() {
  </ScrollView>
 
  {/* Total bar */}
-  <View className="mx-5 mb-3 bg-primary/10 rounded-xl p-3 flex-row items-center justify-between">
+   <View className="mx-4 mb-2 bg-primary/10 rounded-xl p-2.5 flex-row items-center justify-between">
  <Text className="text-sm font-bold text-on-surface">Total {PERIODS.find((p) => p.key === period)?.label}</Text>
  <Text className="text-xl font-bold text-primary">{formatRupee(total)}</Text>
  </View>
@@ -144,7 +144,7 @@ export default function ExpensesScreen() {
  data={filtered}
  keyExtractor={(item) => item.id}
  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
- contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomInset + 16, gap: 10 }}
+  contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: bottomInset + 16, gap: 8 }}
  renderItem={({ item }) => (
  <Pressable
  onPress={() => item.attachment && setViewingUri(item.attachment)}
@@ -162,7 +162,7 @@ export default function ExpensesScreen() {
  {item.notes ? ` · ${item.notes}` : ""}
  </Text>
  </View>
- {item.attachment && <MaterialCommunityIcons name="paperclip" size={16} color="#9CA3AF" style={{ marginRight: 2 }} />}
+  {item.attachment && <MaterialCommunityIcons name="paperclip" size={16} color={theme.colors.onSurfaceVariant} style={{ marginRight: 2 }} />}
  <Text className="font-bold text-on-surface">{formatRupee(parseFloat(item.amount))}</Text>
  </Pressable>
  )}
@@ -171,21 +171,21 @@ export default function ExpensesScreen() {
 
  {/* Edit modal */}
  <Modal visible={!!editing} animationType="slide" transparent onRequestClose={() => setEditing(null)}>
- <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 justify-end bg-black/40">
- <ScrollView className="bg-background rounded-t-3xl px-5 pt-5" style={{ paddingBottom: bottomInset + 24 }}>
- <View className="flex-row justify-between items-center mb-4">
- <Text className="font-headline-md text-on-surface" style={{ fontSize: 20, fontWeight: "700" }}>Edit Expense</Text>
- <Pressable onPress={() => setEditing(null)} className="w-9 h-9 items-center justify-center">
- <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
- </Pressable>
- </View>
+  <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 justify-end bg-black/40">
+  <ScrollView className="bg-background rounded-t-2xl px-4 pt-4" style={{ paddingBottom: bottomInset + 20 }}>
+  <View className="flex-row justify-between items-center mb-3">
+  <Text className="font-headline-md text-on-surface" style={{ fontSize: 18, fontWeight: "700" }}>Edit Expense</Text>
+  <Pressable onPress={() => setEditing(null)} className="w-8 h-8 items-center justify-center">
+  <MaterialCommunityIcons name="close" size={18} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  </View>
 
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Amount *</Text>
- <TextInput value={editAmt} onChangeText={setEditAmt} keyboardType="numeric"
- className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-4 text-base font-medium mb-4" />
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Amount *</Text>
+  <TextInput value={editAmt} onChangeText={setEditAmt} keyboardType="numeric"
+  className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-3 text-base font-medium mb-3" />
 
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Category</Text>
- <View className="flex-row flex-wrap mb-2" style={{ gap: 6 }}>
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Category</Text>
+  <View className="flex-row flex-wrap mb-1.5" style={{ gap: 6 }}>
  {categories.map((c) => (
  <Pressable key={c} onPress={() => setEditCat(c)}
   className={`rounded-full px-3 py-1.5 ${editCat.toLowerCase() === c.toLowerCase() ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}>
@@ -193,15 +193,15 @@ export default function ExpensesScreen() {
  </Pressable>
  ))}
  </View>
- <TextInput value={editCat} onChangeText={setEditCat} placeholder="Or type custom..." placeholderTextColor="#9CA3AF"
- className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-3 text-sm font-medium mb-4" />
+  <TextInput value={editCat} onChangeText={setEditCat} placeholder="Or type custom..." placeholderTextColor={theme.colors.onSurfaceVariant}
+  className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-3 text-sm font-medium mb-3" />
 
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Notes</Text>
- <TextInput value={editNotes} onChangeText={setEditNotes} multiline numberOfLines={2}
- className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-4 text-base font-medium mb-6" />
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Notes</Text>
+  <TextInput value={editNotes} onChangeText={setEditNotes} multiline numberOfLines={2}
+  className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-3 text-sm font-medium mb-4" />
 
- <Pressable onPress={handleEditSave} disabled={editLoading}
-  className="bg-primary py-3 rounded-2xl items-center mb-4">
+  <Pressable onPress={handleEditSave} disabled={editLoading}
+   className="bg-primary py-3 rounded-xl items-center mb-3">
  {editLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Save Changes</Text>}
  </Pressable>
  </ScrollView>

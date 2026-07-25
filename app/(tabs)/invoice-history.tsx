@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, useMemo } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, Modal, ScrollView, TextInput, RefreshControl, Share } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { api, ApiError, apiUrl } from "../../src/lib/api";
@@ -76,9 +76,10 @@ export default function InvoiceHistoryScreen() {
  const [detailInvoice, setDetailInvoice] = useState<any | null>(null);
  const [detailLoading, setDetailLoading] = useState(false);
 
- const [voiding, setVoiding] = useState(false);
- const [returning, setReturning] = useState(false);
- const [sending, setSending] = useState(false);
+  const [voiding, setVoiding] = useState(false);
+  const [returning, setReturning] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [promptCb, setPromptCb] = useState<((val: string) => void) | null>(null);
 
  const statuses = useMemo(() => {
  return ["All", ...new Set([...invoices, ...b2bInvoices, ...purchases].map((i) => i.payment_status || "pending"))];
@@ -255,22 +256,22 @@ export default function InvoiceHistoryScreen() {
  </View>
  {renderStatusBadge(detailInvoice.paymentStatus || detailInvoice.payment_status)}
  </View>
- <Text className="text-sm text-on-surface-variant mb-1" numberOfLines={1}>{party}</Text>
- <Text className="text-2xl font-black text-on-surface mb-4">{formatRupee(amount)}</Text>
+  <Text className="text-sm text-on-surface-variant mb-1" numberOfLines={1}>{party}</Text>
+  <Text className="text-2xl font-black text-on-surface mb-3">{formatRupee(amount)}</Text>
 
-  <View className="bg-surface-container rounded-xl p-3 mb-3">
-  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Details</Text>
- <DetailRow label="Date" value={formatDate(detailInvoice.date)} />
- <DetailRow label="Invoice" value={number} />
- {detailInvoice.paymentMode && <DetailRow label="Payment" value={detailInvoice.paymentMode} />}
- {detailInvoice.warehouse?.name && <DetailRow label="Warehouse" value={detailInvoice.warehouse.name} />}
- </View>
+   <View className="bg-surface-container rounded-xl p-3 mb-2">
+   <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Details</Text>
+  <DetailRow label="Date" value={formatDate(detailInvoice.date)} />
+  <DetailRow label="Invoice" value={number} />
+  {detailInvoice.paymentMode && <DetailRow label="Payment" value={detailInvoice.paymentMode} />}
+  {detailInvoice.warehouse?.name && <DetailRow label="Warehouse" value={detailInvoice.warehouse.name} />}
+  </View>
 
-  {detailInvoice.items && detailInvoice.items.length > 0 && (
-  <View className="bg-surface-container rounded-xl p-3 mb-3">
+   {detailInvoice.items && detailInvoice.items.length > 0 && (
+   <View className="bg-surface-container rounded-xl p-3 mb-2">
   <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Items</Text>
- {detailInvoice.items.map((item: any, idx: number) => (
- <View key={idx} className="flex-row items-center justify-between py-1.5" style={idx > 0 ? { borderTopWidth: 1, borderTopColor: "#E5E7EB" } : undefined}>
+  {detailInvoice.items.map((item: any, idx: number) => (
+  <View key={idx} className={`flex-row items-center justify-between py-1.5 ${idx > 0 ? "border-t border-outline-variant" : ""}`}>
  <Text className="flex-1 mr-2 text-sm text-on-surface" numberOfLines={1}>
  {item.product?.name || item.name || `Item ${idx + 1}`}
  </Text>
@@ -282,9 +283,9 @@ export default function InvoiceHistoryScreen() {
  </View>
  )}
 
-  <View className="bg-surface-container rounded-xl p-3 mb-3">
-  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Actions</Text>
- <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+   <View className="bg-surface-container rounded-xl p-3 mb-2">
+   <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Actions</Text>
+  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  <ActionButton icon="share-variant" label="Share" onPress={() => Share.share({ message: `${number}: ${formatRupee(amount)}` })} />
  <ActionButton icon="file-pdf-box" label="PDF" onPress={async () => {
  const pdfUrl = `${apiUrl}/invoices/${detailInvoice.id}/pdf`;
@@ -300,59 +301,58 @@ export default function InvoiceHistoryScreen() {
  </View>
  </View>
 
-  {detailTab === "sales" && (
-  <View className="bg-surface-container rounded-xl p-3">
-  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Compliance</Text>
- <ComplianceField
- label="e-Way Bill"
- value={detailInvoice.ewayBill ? `EWB ${detailInvoice.ewayBill.ewbNumber}` : null}
- onAdd={() => {
- Alert.prompt?.("e-Way Bill", "Enter e-way bill number:", async (val) => {
- if (!val?.trim()) return;
- try {
- const res = await api.post<{ data: any }>(`/eway-bills/${detailInvoice.id}`, { ewbNumber: val.trim() });
- setDetailInvoice({ ...detailInvoice, ewayBill: res.data });
- } catch (e) { Alert.alert("Error", e instanceof ApiError ? e.message : "Failed."); }
- });
- }}
- />
- <ComplianceField
- label="e-Invoice (IRN)"
- value={detailInvoice.eInvoice ? `IRN ${detailInvoice.eInvoice.irn}` : null}
- onAdd={() => {
- Alert.prompt?.("e-Invoice", "Enter IRN:", async (val) => {
- if (!val?.trim()) return;
- try {
- const res = await api.post<{ data: any }>(`/e-invoices/${detailInvoice.id}`, { irn: val.trim() });
- setDetailInvoice({ ...detailInvoice, eInvoice: res.data });
- } catch (e) { Alert.alert("Error", e instanceof ApiError ? e.message : "Failed."); }
- });
- }}
- />
+   {detailTab === "sales" && (
+   <View className="bg-surface-container rounded-xl p-3">
+   <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Compliance</Text>
+  <ComplianceField
+  label="e-Way Bill"
+  value={detailInvoice.ewayBill ? `EWB ${detailInvoice.ewayBill.ewbNumber}` : null}
+  onAdd={() => setPromptCb(() => async (val: string) => {
+  if (!val.trim()) return;
+  try {
+  const res = await api.post<{ data: any }>(`/eway-bills/${detailInvoice.id}`, { ewbNumber: val.trim() });
+  setDetailInvoice({ ...detailInvoice, ewayBill: res.data });
+  } catch (e) { Alert.alert("Error", e instanceof ApiError ? e.message : "Failed."); }
+  })}
+  />
+  <ComplianceField
+  label="e-Invoice (IRN)"
+  value={detailInvoice.eInvoice ? `IRN ${detailInvoice.eInvoice.irn}` : null}
+  onAdd={() => setPromptCb(() => async (val: string) => {
+  if (!val.trim()) return;
+  try {
+  const res = await api.post<{ data: any }>(`/e-invoices/${detailInvoice.id}`, { irn: val.trim() });
+  setDetailInvoice({ ...detailInvoice, eInvoice: res.data });
+  } catch (e) { Alert.alert("Error", e instanceof ApiError ? e.message : "Failed."); }
+  })}
+  />
  </View>
  )}
- </ScrollView>
- );
- };
+  </ScrollView>
+  );
+  };
 
- return (
+  const promptRef = React.useRef("");
+
+  return (
  <View className="flex-1 bg-background" style={{ paddingTop: topInset }}>
- {/* Header */}
- <View className="flex-row items-center px-4 py-3 border-b border-outline-variant">
- <Pressable onPress={() => router.back()} className="w-9 h-9 rounded-full bg-surface-container items-center justify-center mr-3">
- <MaterialCommunityIcons name="arrow-left" size={20} color="#374151" />
- </Pressable>
- <Text className="font-headline-md text-on-surface flex-1" style={{ fontSize: 18, fontWeight: "700" }}>
- {activeTab === "sales" ? "Sales" : activeTab === "b2b" ? "B2B Orders" : "Purchases"}
- </Text>
- <Pressable onPress={handleExport} className="flex-row items-center bg-primary rounded-xl px-3 py-2" style={{ gap: 4 }}>
- <MaterialCommunityIcons name="file-pdf-box" size={14} color="white" />
- <Text className="text-white text-xs font-bold">Export</Text>
- </Pressable>
- </View>
+  {/* Header */}
+  <View className="flex-row items-center px-4 py-2.5 border-b border-outline-variant">
+  <Pressable onPress={() => router.back()} className="w-8 h-8 rounded-full bg-surface-container items-center justify-center mr-2.5">
+  <MaterialCommunityIcons name="arrow-left" size={18} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  <Text className="font-headline-md text-on-surface flex-1" style={{ fontSize: 17, fontWeight: "700" }}>
+  {activeTab === "sales" ? "Sales" : activeTab === "b2b" ? "B2B Orders" : "Purchases"}
+  </Text>
+  <Pressable onPress={handleExport} className="flex-row items-center bg-primary rounded-xl px-2.5 py-1.5" style={{ gap: 3 }}>
+  <MaterialCommunityIcons name="file-pdf-box" size={13} color="white" />
+  <Text className="text-white text-xs font-bold">Export</Text>
+  </Pressable>
+  </View>
 
- {/* Tabs */}
- <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-3" contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+  {/* Tabs */}
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-2" contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}
+   style={{ minHeight: 34 }}>
  {TABS.map((tab) => {
  const isActive = activeTab === tab.key;
  return (
@@ -373,37 +373,37 @@ export default function InvoiceHistoryScreen() {
  })}
  </ScrollView>
 
- {/* Search + Filter */}
- <View className="px-4 pb-3" style={{ gap: 8 }}>
- <View className="flex-row items-center bg-surface-container-lowest rounded-2xl px-4 py-3 border border-outline-variant">
- <MaterialCommunityIcons name="magnify" size={18} color="#6B7280" />
- <TextInput
- value={searchQuery}
- onChangeText={setSearchQuery}
- placeholder="Search by invoice or party..."
- placeholderTextColor="#9CA3AF"
- className="flex-1 ml-2 text-sm font-medium text-on-surface"
- />
- {searchQuery.length > 0 && (
- <Pressable onPress={() => setSearchQuery("")} className="ml-2">
- <MaterialCommunityIcons name="close-circle" size={16} color="#9CA3AF" />
- </Pressable>
- )}
- </View>
- <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16, gap: 6 }}>
- {statuses.map((s) => (
- <Pressable
- key={s}
- onPress={() => setStatusFilter(s)}
- className={`rounded-full px-3 py-1.5 ${statusFilter === s ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}
- >
- <Text className={`text-xs font-bold ${statusFilter === s ? "text-white" : "text-on-surface-variant"}`}>
- {s === "All" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
- </Text>
- </Pressable>
- ))}
- </ScrollView>
- </View>
+  {/* Search + Filter */}
+  <View className="px-4 pb-2" style={{ gap: 6 }}>
+  <View className="flex-row items-center bg-surface-container-lowest rounded-xl px-3 py-2 border border-outline-variant">
+  <MaterialCommunityIcons name="magnify" size={16} color={theme.colors.onSurfaceVariant} />
+  <TextInput
+  value={searchQuery}
+  onChangeText={setSearchQuery}
+  placeholder="Search by invoice or party..."
+  placeholderTextColor={theme.colors.onSurfaceVariant}
+  className="flex-1 ml-1.5 text-sm font-medium text-on-surface"
+  />
+  {searchQuery.length > 0 && (
+  <Pressable onPress={() => setSearchQuery("")} className="ml-1.5">
+  <MaterialCommunityIcons name="close-circle" size={15} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  )}
+  </View>
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16, gap: 5 }}>
+  {statuses.map((s) => (
+  <Pressable
+  key={s}
+  onPress={() => setStatusFilter(s)}
+  className={`rounded-full px-2.5 py-1 ${statusFilter === s ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}
+  >
+  <Text className={`text-xs font-bold ${statusFilter === s ? "text-white" : "text-on-surface-variant"}`}>
+  {s === "All" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+  </Text>
+  </Pressable>
+  ))}
+  </ScrollView>
+  </View>
 
  {/* List */}
  {loading ? (
@@ -422,30 +422,53 @@ export default function InvoiceHistoryScreen() {
  keyExtractor={(i) => i.id}
  renderItem={({ item }) => renderCard(item, activeTab)}
  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
- contentContainerStyle={{ paddingTop: 8, paddingBottom: bottomInset + 24 }}
+  contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
  />
  )}
 
- {/* Detail bottom sheet */}
- <Modal visible={detailInvoiceId !== null} animationType="slide" transparent onRequestClose={() => setDetailInvoiceId(null)}>
- <View className="flex-1 justify-end bg-black/40">
- <View className="bg-background rounded-t-3xl px-5 pt-6 pb-10" style={{ maxHeight: "85%" }}>
- <View className="flex-row items-center justify-between mb-4">
- <View className="flex-1 mr-3">
- <Text className="font-bold text-lg text-on-surface" numberOfLines={1}>
- {detailInvoice?.invoiceNumber || detailInvoice?.invoice_number || detailInvoice?.purchaseNumber || detailInvoice?.purchase_number || "Detail"}
- </Text>
- </View>
- <Pressable onPress={() => setDetailInvoiceId(null)} className="w-9 h-9 rounded-full bg-surface-container items-center justify-center">
- <MaterialCommunityIcons name="close" size={18} color="#374151" />
- </Pressable>
- </View>
+  {/* Detail bottom sheet */}
+  <Modal visible={detailInvoiceId !== null} animationType="slide" transparent onRequestClose={() => setDetailInvoiceId(null)}>
+  <View className="flex-1 justify-end bg-black/40">
+  <View className="bg-background rounded-t-2xl px-4 pt-4 pb-8" style={{ maxHeight: "85%" }}>
+  <View className="flex-row items-center justify-between mb-3">
+  <View className="flex-1 mr-2">
+  <Text className="font-bold text-base text-on-surface" numberOfLines={1}>
+  {detailInvoice?.invoiceNumber || detailInvoice?.invoice_number || detailInvoice?.purchaseNumber || detailInvoice?.purchase_number || "Detail"}
+  </Text>
+  </View>
+  <Pressable onPress={() => setDetailInvoiceId(null)} className="w-8 h-8 rounded-full bg-surface-container items-center justify-center">
+  <MaterialCommunityIcons name="close" size={16} color={theme.colors.onSurfaceVariant} />
+  </Pressable>
+  </View>
  {renderDetailSheet()}
  </View>
  </View>
- </Modal>
- </View>
- );
+  </Modal>
+
+  {/* Cross-platform input prompt modal (replaces iOS-only Alert.prompt) */}
+  <Modal visible={promptCb !== null} transparent animationType="fade" onRequestClose={() => setPromptCb(null)}>
+  <Pressable className="flex-1 bg-black/40 justify-center px-6" onPress={() => setPromptCb(null)}>
+  <Pressable className="bg-background rounded-2xl p-5" onPress={() => {}}>
+  <Text className="font-bold text-lg text-on-surface mb-3">Enter value</Text>
+  <TextInput
+  autoFocus onChangeText={(t) => { promptRef.current = t; }}
+  placeholder="Type here..." placeholderTextColor={theme.colors.onSurfaceVariant}
+  className="bg-surface-container text-on-surface border border-outline-variant rounded-xl px-4 py-3 text-base font-medium mb-4"
+  />
+  <View className="flex-row justify-end" style={{ gap: 10 }}>
+  <Pressable onPress={() => setPromptCb(null)} className="px-5 py-2.5 rounded-xl bg-surface-container-high">
+  <Text className="font-bold text-on-surface">Cancel</Text>
+  </Pressable>
+  <Pressable onPress={() => { const cb = promptCb; setPromptCb(null); if (cb) cb(promptRef.current); promptRef.current = ""; }}
+  className="px-5 py-2.5 rounded-xl bg-primary">
+  <Text className="font-bold text-white">OK</Text>
+  </Pressable>
+  </View>
+  </Pressable>
+  </Pressable>
+  </Modal>
+  </View>
+  );
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -470,14 +493,13 @@ function ActionButton({
  fill?: boolean;
  color?: string;
 }) {
- const bgColor = color ? undefined : fill ? undefined : undefined;
- const textColor = fill ? "#fff" : color || "#1E8E85";
+  const textColor = fill ? "#fff" : color || "#0368FE";
 
- return (
- <Pressable
- onPress={onPress}
- className={`flex-row items-center rounded-xl px-3.5 py-2.5 ${fill ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}
- style={[fill ? {} : { backgroundColor: bgColor }, color && !fill ? { borderColor: color + "40" } : undefined]}
+  return (
+  <Pressable
+  onPress={onPress}
+  className={`flex-row items-center rounded-xl px-3.5 py-2.5 ${fill ? "bg-primary" : "bg-surface-container-lowest border border-outline-variant"}`}
+  style={color && !fill ? { borderColor: color + "40" } : undefined}
  >
  <MaterialCommunityIcons name={icon} size={14} color={fill ? "#fff" : textColor} />
  <Text className="text-xs font-bold ml-1.5" style={{ color: fill ? "#fff" : textColor }}>{label}</Text>

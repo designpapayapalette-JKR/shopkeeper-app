@@ -149,7 +149,7 @@ export default function DashboardScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          paddingTop: topInset + 16,
+          paddingTop: topInset,
           paddingBottom: 36,
           paddingHorizontal: 20,
           borderBottomLeftRadius: 28,
