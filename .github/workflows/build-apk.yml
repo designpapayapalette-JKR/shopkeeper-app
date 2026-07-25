@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -41,14 +41,19 @@ jobs:
       - name: Raise Gradle/Kotlin daemon memory limits
         # GRADLE_OPTS alone doesn't reach the Kotlin compile daemon that runs
         # kspReleaseKotlin (expo-updates) — it needs org.gradle.jvmargs /
-        # kotlin.daemon.jvmargs set directly in gradle.properties, which is
-        # what was actually causing the Metaspace OOM here. Also cap worker
-        # parallelism so concurrent JVMs don't exhaust the runner's RAM.
+        # kotlin.daemon.jvmargs set directly in gradle.properties. The 1536m
+        # cap still OOM'd after ~13min into kspReleaseKotlin, so this raises
+        # it further and serializes workers (max=1) so only one heavy JVM
+        # holds memory at a time instead of several competing for Metaspace.
+        # ksp.incremental=false avoids the incremental-cache growth that's a
+        # known contributor to KSP metaspace bloat on cold CI runners.
         run: |
+          free -h
           {
-            echo "org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1536m"
-            echo "kotlin.daemon.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1536m"
-            echo "org.gradle.workers.max=2"
+            echo "org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=3g"
+            echo "kotlin.daemon.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=3g"
+            echo "org.gradle.workers.max=1"
+            echo "ksp.incremental=false"
           } >> android/gradle.properties
 
       - name: Build release APK
