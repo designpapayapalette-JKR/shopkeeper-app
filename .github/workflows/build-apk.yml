@@ -38,12 +38,24 @@ jobs:
       - name: Prebuild (generate android/ folder)
         run: npx expo prebuild --platform android --no-install
 
+      - name: Raise Gradle/Kotlin daemon memory limits
+        # GRADLE_OPTS alone doesn't reach the Kotlin compile daemon that runs
+        # kspReleaseKotlin (expo-updates) — it needs org.gradle.jvmargs /
+        # kotlin.daemon.jvmargs set directly in gradle.properties, which is
+        # what was actually causing the Metaspace OOM here. Also cap worker
+        # parallelism so concurrent JVMs don't exhaust the runner's RAM.
+        run: |
+          {
+            echo "org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1536m"
+            echo "kotlin.daemon.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1536m"
+            echo "org.gradle.workers.max=2"
+          } >> android/gradle.properties
+
       - name: Build release APK
         working-directory: android
         env:
-          GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=2g -Dkotlin.daemon.jvm.options="-Xmx4g,-XX:MaxMetaspaceSize=2g"
           EXPO_PUBLIC_API_URL: https://api.managemycounter.com
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Rename APK
         run: mv android/app/build/outputs/apk/release/app-release.apk shopkeeper-app-latest.apk
