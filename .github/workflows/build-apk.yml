@@ -1,8 +1,8 @@
-name: Build APK
+name: Build APK (Shopkeeper App)
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]
   workflow_dispatch:
 
 permissions:
@@ -14,14 +14,16 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
-      - name: Setup JDK 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -33,23 +35,28 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Generate native code
-        run: npx expo prebuild --platform android --clean
-        env:
-          EXPO_PUBLIC_API_URL: https://api.managemycounter.com
+      - name: Prebuild (generate android/ folder)
+        run: npx expo prebuild --platform android --no-install
 
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: android
         env:
           GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=1g
           EXPO_PUBLIC_API_URL: https://api.managemycounter.com
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleRelease
 
       - name: Rename APK
-        run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk shopkeeper-app-latest.apk
+        run: mv android/app/build/outputs/apk/release/app-release.apk shopkeeper-app-latest.apk
 
-      - name: Upload APK to beta-latest release
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shopkeeper-app-apk
+          path: shopkeeper-app-latest.apk
+
+      - name: Upload to existing release
+        if: github.ref == 'refs/heads/master'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload beta-latest shopkeeper-app-latest.apk --clobber
+        run: |
+          gh release upload beta-latest shopkeeper-app-latest.apk --clobber
