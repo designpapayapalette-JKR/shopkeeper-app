@@ -41,7 +41,7 @@ jobs:
       - name: Build release APK
         working-directory: android
         env:
-          GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=1g
+          GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=2g -Dkotlin.daemon.jvm.options="-Xmx4g,-XX:MaxMetaspaceSize=2g"
           EXPO_PUBLIC_API_URL: https://api.managemycounter.com
         run: ./gradlew assembleRelease
 
