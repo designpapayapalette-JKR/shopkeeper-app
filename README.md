@@ -1,6 +1,10 @@
 # shopkeeper-app
 
-Owner/manager/staff-facing app — mobile + tablet, full feature set (Expo + React Native + Expo Router + NativeWind). See the [master build doc](../Shopkeeper-ERP-App-Master-Build-Document.md) and [Stitch Design Brief](../Stitch-Design-Brief.md) (§5, Part A).
+**MMC ERP** owner/manager/staff mobile app — branded "MMC Shop" in-app
+(see `app.json`) — mobile + tablet, full feature set (Expo + React Native +
+Expo Router + NativeWind). Part of the ManageMyCounter (MMC) platform.
+(Repo name is a pre-rebrand holdover — see the workspace root
+[README](../README.md#a-note-on-naming).)
 
 This repo was hand-scaffolded (package.json, config, and a placeholder screen per module) rather than generated via `create-expo-app`, since Node wasn't available at scaffold time. Before first run:
 
