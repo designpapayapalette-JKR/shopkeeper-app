@@ -96,7 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  return;
  }
 
- const me = await fetchMe();
+ const result = await fetchMe();
+ // "transient" (network/server error, not a real 401) falls back to the
+ // last-known cached profile rather than kicking the user to the login
+ // screen — the stored tokens are still valid, this device just
+ // couldn't verify them against the server right now. Only an explicit
+ // "unauthenticated" (server confirmed the session is dead) or no
+ // cached profile at all results in showing login.
+ const me = result.status === "ok" ? result.user : result.status === "transient" ? result.cachedUser : null;
  if (me) {
  setUser(me);
  setUserRole(me.role || null);
@@ -226,7 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  // PIN is correct — restore the already-persisted session rather than
  // re-authenticating with email/password (which we never store).
  try {
- const me = await fetchMe();
+ const result = await fetchMe();
+ const me = result.status === "ok" ? result.user : result.status === "transient" ? result.cachedUser : null;
  if (!me) return false;
  setUser(me);
  setUserRole(me.role || null);

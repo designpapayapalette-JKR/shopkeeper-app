@@ -63,19 +63,31 @@ async function refreshAccessToken(): Promise<string | null> {
  const auth = await getAuthData();
  if (!auth?.refreshToken) return null;
 
+ try {
  const res = await fetch(`${apiUrl}/auth/refresh`, {
  method: "POST",
  headers: { "Content-Type": "application/json" },
  body: JSON.stringify({ refreshToken: auth.refreshToken }),
  });
- if (!res.ok) {
+ // 401 is the server's ONLY status for "this refresh token is genuinely
+ // dead" (not found, expired past its 7-day TTL, reuse-detected/theft, or
+ // the user no longer exists — see shopkeeper-api's POST /auth/refresh).
+ // Anything else (a network error below, a stray 5xx, a malformed body)
+ // is transient and must NOT clear the stored session — that would log
+ // someone out over a blip that has nothing to do with their session.
+ if (res.status === 401) {
  await setAuthData(null);
  return null;
  }
+ if (!res.ok) return null;
  const json = await res.json();
  const updated: AuthData = { ...auth, accessToken: json.accessToken, expiresAt: json.expiresAt };
  await setAuthData(updated);
  return updated.accessToken;
+ } catch {
+ // Network failure reaching the server at all — transient, same as above.
+ return null;
+ }
  })();
 
  try {
@@ -260,14 +272,49 @@ export async function logout(): Promise<void> {
  await setAuthData(null);
 }
 
-export async function fetchMe(): Promise<any | null> {
- const auth = await getAuthData();
- if (!auth) return null;
+const LAST_USER_KEY = "shopkeeper_last_user";
+
+// Cached alongside the tokens so a transient fetchMe() failure (see below)
+// can still render the app with the last-known profile instead of forcing
+// a login screen — the whole point of this cache is to make "no logout
+// without manual action" actually achievable on a cold boot with a flaky
+// connection, not just "don't clear the tokens."
+async function getCachedUser(): Promise<any | null> {
  try {
- const json: any = await request<any>("GET", "/auth/me");
- return json.user;
+ const raw = await SecureStore.getItemAsync(LAST_USER_KEY);
+ return raw ? JSON.parse(raw) : null;
  } catch {
  return null;
+ }
+}
+
+async function setCachedUser(user: unknown): Promise<void> {
+ try {
+ await SecureStore.setItemAsync(LAST_USER_KEY, JSON.stringify(user));
+ } catch {
+ // best-effort — losing the cache just means a future transient failure
+ // can't fall back to it, not a functional break right now.
+ }
+}
+
+export type FetchMeResult = { status: "ok"; user: any } | { status: "unauthenticated" } | { status: "transient"; cachedUser: any | null };
+
+export async function fetchMe(): Promise<FetchMeResult> {
+ const auth = await getAuthData();
+ if (!auth) return { status: "unauthenticated" };
+ try {
+ const json: any = await request<any>("GET", "/auth/me");
+ await setCachedUser(json.user);
+ return { status: "ok", user: json.user };
+ } catch (e) {
+ // A real 401 here means request()'s own reactive refresh-and-retry
+ // (see request() above) already tried once and the server confirmed
+ // the session is genuinely dead — anything else (network error, 5xx,
+ // timeout) is transient and must not be treated as "logged out."
+ if (e instanceof ApiError && e.status === 401) {
+ return { status: "unauthenticated" };
+ }
+ return { status: "transient", cachedUser: await getCachedUser() };
  }
 }
 
