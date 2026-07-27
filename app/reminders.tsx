@@ -9,10 +9,11 @@ import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 interface OverdueParty {
  id: string;
  name: string;
- phone?: string;
- total_due: number;
- days_overdue: number;
- last_invoice_date?: string;
+ phone?: string | null;
+ currentBalance: number;
+ daysOverdue: number | null;
+ tone: "friendly" | "firm" | "urgent";
+ suggestedMessage?: { en: string; hi: string };
 }
 
 type Severity = "urgent" | "warning" | "notice";
@@ -23,19 +24,16 @@ const SEVERITY_CONFIG: Record<Severity, { color: string; bg: string; label: stri
  notice: { color: "#eab308", bg: "#fefce8", label: "Due Soon" },
 };
 
-function getSeverity(days: number): Severity {
- if (days >= 30) return "urgent";
- if (days >= 15) return "warning";
+// tone comes pre-computed from the server (based on the oldest unpaid
+// invoice's due date) — this just maps it onto the existing 3-tier UI.
+function severityForTone(tone: OverdueParty["tone"]): Severity {
+ if (tone === "urgent") return "urgent";
+ if (tone === "firm") return "warning";
  return "notice";
 }
 
 function formatCurrency(amount: number): string {
  return "₹" + Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-}
-
-function formatDate(iso?: string): string {
- if (!iso) return "—";
- return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export default function RemindersScreen() {
@@ -49,6 +47,7 @@ export default function RemindersScreen() {
  const [data, setData] = useState<OverdueParty[]>([]);
  const [search, setSearch] = useState("");
  const [sendingId, setSendingId] = useState<string | null>(null);
+ const [lang, setLang] = useState<"en" | "hi">("en");
 
  const fetchData = useCallback(async () => {
  try {
@@ -64,41 +63,35 @@ export default function RemindersScreen() {
 
  useEffect(() => { fetchData(); }, [fetchData]);
 
- const grouped = data.reduce((acc, item) => {
- const sev = getSeverity(item.days_overdue);
+ const filtered = search.trim()
+ ? data.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+ : data;
+
+ const grouped = filtered.reduce((acc, item) => {
+ const sev = severityForTone(item.tone);
  if (!acc[sev]) acc[sev] = [];
  acc[sev].push(item);
  return acc;
  }, {} as Record<Severity, OverdueParty[]>);
 
- const filtered = search.trim()
- ? data.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
- : data;
-
- const filteredGrouped = search.trim()
- ? filtered.reduce((acc, item) => {
- const sev = getSeverity(item.days_overdue);
- if (!acc[sev]) acc[sev] = [];
- acc[sev].push(item);
- return acc;
- }, {} as Record<Severity, OverdueParty[]>)
- : grouped;
-
- const totalDue = data.reduce((sum, p) => sum + p.total_due, 0);
+ const totalDue = data.reduce((sum, p) => sum + p.currentBalance, 0);
 
  const handleSendReminder = async (party: OverdueParty) => {
  setSendingId(party.id);
  try {
  await api.post(`/reminders/${party.id}/mark-sent`);
- Alert.alert("", `Reminder sent to ${party.name}`);
  if (party.phone) {
- const text = encodeURIComponent(
- `Dear ${party.name}, this is a reminder that ${formatCurrency(party.total_due)} is overdue by ${party.days_overdue} days. Please clear the outstanding at your earliest.`
- );
+ const message =
+ party.suggestedMessage?.[lang] ??
+ `Dear ${party.name}, this is a reminder that ${formatCurrency(party.currentBalance)} is overdue. Please clear the outstanding at your earliest.`;
+ const text = encodeURIComponent(message);
  Linking.openURL(`whatsapp://send?text=${text}&phone=${party.phone}`).catch(() => {
  Alert.alert("WhatsApp Not Found", "Please install WhatsApp to send messages.");
  });
+ } else {
+ Alert.alert("", `Reminder marked as sent for ${party.name}`);
  }
+ setData((prev) => prev.filter((p) => p.id !== party.id));
  } catch {
  Alert.alert("Error", "Failed to send reminder. Please try again.");
  } finally {
@@ -108,9 +101,9 @@ export default function RemindersScreen() {
 
  const sections: { severity: Severity; items: OverdueParty[] }[] = (
  ["urgent", "warning", "notice"] as Severity[]
- ).filter((s) => (filteredGrouped[s]?.length || 0) > 0).map((s) => ({
+ ).filter((s) => (grouped[s]?.length || 0) > 0).map((s) => ({
  severity: s,
- items: filteredGrouped[s] || [],
+ items: grouped[s] || [],
  }));
 
  if (loading) {
@@ -143,6 +136,14 @@ export default function RemindersScreen() {
   </Pressable>
   <MaterialCommunityIcons name="bell-ring-outline" size={24} color={theme.colors.primary} />
   <Text className="text-2xl font-bold text-on-surface ">Reminders</Text>
+ </View>
+ <View className="flex-row rounded-full overflow-hidden border border-outline-variant">
+ <Pressable onPress={() => setLang("en")} className="px-3 py-1.5" style={{ backgroundColor: lang === "en" ? theme.colors.primary : "transparent" }}>
+ <Text className="text-xs font-bold" style={{ color: lang === "en" ? "white" : theme.colors.onSurfaceVariant }}>EN</Text>
+ </Pressable>
+ <Pressable onPress={() => setLang("hi")} className="px-3 py-1.5" style={{ backgroundColor: lang === "hi" ? theme.colors.primary : "transparent" }}>
+ <Text className="text-xs font-bold" style={{ color: lang === "hi" ? "white" : theme.colors.onSurfaceVariant }}>हिं</Text>
+ </Pressable>
  </View>
  </View>
 
@@ -217,8 +218,7 @@ export default function RemindersScreen() {
  </View>
 
  {section.items.map((party) => {
- const sev = getSeverity(party.days_overdue);
- const cfg = SEVERITY_CONFIG[sev];
+ const cfg = SEVERITY_CONFIG[section.severity];
  const isSending = sendingId === party.id;
 
  return (
@@ -233,20 +233,15 @@ export default function RemindersScreen() {
  </View>
 
  <Text className="text-xl font-black text-on-surface mt-1">
- {formatCurrency(party.total_due)}
+ {formatCurrency(party.currentBalance)}
  </Text>
 
  <View className="flex-row items-center mt-1.5" style={{ gap: 8 }}>
  <View className="rounded-full px-3 py-1" style={{ backgroundColor: cfg.bg }}>
  <Text className="text-xs font-bold" style={{ color: cfg.color, fontSize: 10 }}>
- {party.days_overdue} days
+ {party.daysOverdue != null ? `${party.daysOverdue} days` : "No due date"}
  </Text>
  </View>
- {party.last_invoice_date && (
- <Text className="text-xs text-on-surface-variant ">
- Last: {formatDate(party.last_invoice_date)}
- </Text>
- )}
  </View>
  </View>
 

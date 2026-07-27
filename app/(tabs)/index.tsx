@@ -62,6 +62,7 @@ export default function DashboardScreen() {
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [pendingTransferCount, setPendingTransferCount] = useState(0);
+  const [overdueCount, setOverdueCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [outletBreakdown, setOutletBreakdown] = useState<any[]>([]);
@@ -79,9 +80,10 @@ export default function DashboardScreen() {
       // Live Activity intentionally not fetched/shown here — that feed
       // stays web-only per product decision; mobile just shows the Owner's
       // own KPIs/outlets/approvals.
-      const [dashRes, approvalRes] = await Promise.all([
+      const [dashRes, approvalRes, remindersRes] = await Promise.all([
         api.get<any>("/dashboard/owner").catch(() => ({ data: {} })),
         api.get<any>("/approval-queue/pending").catch(() => ({ data: [] })),
+        api.get<any>("/reminders/overdue").catch(() => ({ data: [] })),
       ]);
       setStats({
         salesToday: parseFloat(dashRes.data?.salesToday ?? 0),
@@ -91,6 +93,7 @@ export default function DashboardScreen() {
       });
       setOutletBreakdown(Array.isArray(dashRes.data?.outlets) ? dashRes.data.outlets : []);
       setPendingApprovals(Array.isArray(approvalRes.data) ? approvalRes.data.length : 0);
+      setOverdueCount(Array.isArray(remindersRes.data) ? remindersRes.data.length : 0);
     } catch {}
   }, []);
 
@@ -116,6 +119,8 @@ export default function DashboardScreen() {
       if (isManager) {
         const approvalRes = await api.get<any>("/approval-queue/pending").catch(() => ({ data: [] }));
         setPendingApprovals(Array.isArray(approvalRes.data) ? approvalRes.data.length : 0);
+        const remindersRes = await api.get<any>("/reminders/overdue").catch(() => ({ data: [] }));
+        setOverdueCount(Array.isArray(remindersRes.data) ? remindersRes.data.length : 0);
       }
     } catch {}
     finally { setLoading(false); setRefreshing(false); }
@@ -242,6 +247,34 @@ export default function DashboardScreen() {
               <Text className="text-sm text-on-surface" style={{ fontWeight: "600" }}>{pendingApprovals} approval{pendingApprovals > 1 ? "s" : ""} pending</Text>
             </View>
             <Text className="text-xs font-bold" style={{ color: "#1E8E85" }}>Review</Text>
+          </View>
+        </Pressable>
+      )}
+
+      {/* Overdue payments alert — Manager & Owner */}
+      {(isManager || isOwner) && overdueCount > 0 && (
+        <Pressable onPress={() => router.push("/reminders" as any)}
+          className="mx-5 mb-3 rounded-2xl overflow-hidden" style={{ backgroundColor: "#FEF2F2", borderLeftWidth: 3, borderLeftColor: "#ef4444" }}>
+          <View className="flex-row items-center justify-between px-4 py-3">
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <MaterialCommunityIcons name="bell-ring-outline" size={20} color="#ef4444" />
+              <Text className="text-sm text-on-surface" style={{ fontWeight: "600" }}>{overdueCount} customer{overdueCount > 1 ? "s" : ""} overdue on payment</Text>
+            </View>
+            <Text className="text-xs font-bold" style={{ color: "#ef4444" }}>Remind</Text>
+          </View>
+        </Pressable>
+      )}
+
+      {/* Insights quick-link — Manager & Owner */}
+      {(isManager || isOwner) && (
+        <Pressable onPress={() => router.push("/insights" as any)}
+          className="mx-5 mb-3 rounded-2xl overflow-hidden" style={{ backgroundColor: "#EEF2FF", borderLeftWidth: 3, borderLeftColor: "#6366F1" }}>
+          <View className="flex-row items-center justify-between px-4 py-3">
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <MaterialCommunityIcons name="creation" size={20} color="#6366F1" />
+              <Text className="text-sm text-on-surface" style={{ fontWeight: "600" }}>Insights — near-expiry, credit risk, unusual discounts</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={18} color="#6366F1" />
           </View>
         </Pressable>
       )}
