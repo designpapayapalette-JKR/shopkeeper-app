@@ -3,7 +3,7 @@ import { View, Text, FlatList, ActivityIndicator, Pressable, Alert, Modal, Scrol
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
-import { api, ApiError, apiUrl } from "../../src/lib/api";
+import { api, ApiError } from "../../src/lib/api";
 import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { shareDataAsPdf } from "../../src/lib/pdfExport";
@@ -288,8 +288,17 @@ export default function InvoiceHistoryScreen() {
   <View className="flex-row flex-wrap" style={{ gap: 6 }}>
  <ActionButton icon="share-variant" label="Share" onPress={() => Share.share({ message: `${number}: ${formatRupee(amount)}` })} />
  <ActionButton icon="file-pdf-box" label="PDF" onPress={async () => {
- const pdfUrl = `${apiUrl}/invoices/${detailInvoice.id}/pdf`;
- await Share.share({ message: `Download: ${pdfUrl}` });
+ // GET /invoices/:id/pdf requires auth and returns JSON ({data:{url}}),
+ // not a raw downloadable file — sharing that URL directly would just
+ // hand the recipient a link they can't open. Fetch it first (generates
+ // and caches the PDF on Cloudinary on first call) and share the real
+ // public URL it returns instead.
+ try {
+ const res = await api.get<{ url: string }>(`/invoices/${detailInvoice.id}/pdf`);
+ await Share.share({ message: `Download: ${res.url}` });
+ } catch {
+ Alert.alert("Error", "Could not generate the invoice PDF link. Please try again.");
+ }
  }} />
  <ActionButton icon="email" label={sending ? "..." : "Send"} onPress={handleSend} fill />
  {detailTab === "sales" && (
