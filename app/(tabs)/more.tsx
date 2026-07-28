@@ -1824,20 +1824,30 @@ export default function MoreScreen() {
  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
  </Pressable>
 
- <Pressable
- onPress={() => {
- fetchSetupData();
- fetchSalariesHistory();
- setIsSalaryModal(true);
- }}
- className="border border-outline-variant py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:opacity-80"
- >
- <Text className="text-base font-bold text-on-surface flex-1 mr-2">
- Employee Salaries
- </Text>
- <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
- </Pressable>
- </View>
+  <Pressable
+   onPress={() => {
+    fetchSetupData();
+    fetchSalariesHistory();
+    setIsSalaryModal(true);
+   }}
+   className="border border-outline-variant py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:opacity-80"
+  >
+   <Text className="text-base font-bold text-on-surface flex-1 mr-2">
+    Employee Salaries
+   </Text>
+   <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+
+  <View className="h-px bg-outline-variant my-3" />
+
+  <Pressable
+   onPress={() => router.push("/employee-advances" as any)}
+   className="border border-outline-variant py-2.5 px-4 rounded-2xl flex-row justify-between items-center active:opacity-80"
+  >
+   <Text className="text-base font-bold text-on-surface flex-1 mr-2">Employee Advances</Text>
+   <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+  </View>
 
  {/* ══════════════════════ SETTINGS ══════════════════════
  Configuration you set up once and rarely touch again. */}

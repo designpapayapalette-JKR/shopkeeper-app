@@ -23,21 +23,48 @@ export async function shareInvoiceFile(
  });
 }
 
-export function shareInvoice(invoiceNumber: string, customerName: string, customerPhone: string, total: number) {
- const message = `Hello ${customerName}, your invoice ${invoiceNumber} of amount ₹${total.toFixed(2)} has been generated. Thank you for shopping with us!`;
- const cleanPhone = customerPhone.replace(/[^0-9]/g, "");
- const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
- 
- Linking.canOpenURL(whatsappUrl)
- .then((supported) => {
- if (supported) {
- Linking.openURL(whatsappUrl);
- } else {
- // Fallback to generic share or email
- Alert.alert("Error", "WhatsApp is not installed or url scheme is not supported.");
- }
- })
- .catch((err) => console.error("Error opening WhatsApp URL:", err));
+export async function shareInvoice(
+  invoiceNumber: string,
+  customerName: string,
+  customerPhone: string,
+  total: number,
+  invoiceId?: string
+) {
+  let cleanPhone = customerPhone.replace(/\D/g, "");
+  if (cleanPhone.length === 10) cleanPhone = `91${cleanPhone}`;
+
+  let pdfUrl = "";
+  if (invoiceId) {
+    try {
+      const res = await fetch(`https://api.managemycounter.com/invoices/${invoiceId}/pdf`);
+      const json = await res.json().catch(() => null);
+      if (json?.data?.url) pdfUrl = json.data.url;
+    } catch (e) {}
+  }
+
+  const webUrl = invoiceId ? `https://app.managemycounter.com/print/invoice/${invoiceId}` : "";
+  let message = `Dear ${customerName || "Customer"},\n\nYour invoice ${invoiceNumber} for ₹${total.toFixed(2)} is ready.`;
+  if (webUrl) {
+    message += `\n\n📄 View / Print Online:\n${webUrl}`;
+  }
+  if (pdfUrl) {
+    message += `\n\n📥 Download PDF:\n${pdfUrl}`;
+  }
+  message += `\n\nThank you for shopping with us!`;
+
+  const whatsappUrl = cleanPhone
+    ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+    : `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+  try {
+    await Linking.openURL(whatsappUrl);
+  } catch (err) {
+    try {
+      await Linking.openURL(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`);
+    } catch (e) {
+      Alert.alert("Error", "Could not open WhatsApp.");
+    }
+  }
 }
 
 export function shareLedgerReminder(partyName: string, partyPhone: string, balance: number, isSupplier: boolean) {

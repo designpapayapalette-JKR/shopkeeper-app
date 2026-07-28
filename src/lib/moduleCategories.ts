@@ -1,4 +1,4 @@
-export type UserRole = "owner" | "manager" | "staff" | "warehouse_manager" | "field_agent";
+export type UserRole = "owner" | "manager" | "staff" | "warehouse_manager" | "field_agent" | "general_staff" | "peon";
 
 export interface ModuleItem {
  key: string;
@@ -109,8 +109,9 @@ export const MODULE_CATEGORIES: ModuleCategory[] = [
  { key: "staff", label: "Staff", icon: "account-multiple-outline", desc: "Employee profiles and roles", route: "/staff" },
  { key: "attendance", label: "Attendance", icon: "calendar-check", desc: "Staff attendance marking", route: "/attendance" },
  { key: "payroll", label: "Payroll", icon: "cash-multiple", desc: "Salary structures and payslips", route: "/payroll", gateKey: "payroll" },
- { key: "holidays", label: "Holidays", icon: "calendar-star", desc: "Company holiday calendar", route: "/holidays" },
- { key: "leaves", label: "Leaves", icon: "calendar-remove", desc: "Staff leave requests", route: "/leaves" },
+  { key: "holidays", label: "Holidays", icon: "calendar-star", desc: "Company holiday calendar", route: "/holidays" },
+  { key: "leaves", label: "Leaves", icon: "calendar-remove", desc: "Staff leave requests", route: "/leaves" },
+  { key: "employee-advances", label: "Employee Advances", icon: "currency-inr", desc: "Salary advance requests and repayments", route: "/employee-advances" },
  ],
  },
  {
@@ -176,6 +177,7 @@ export const MODULE_CATEGORIES: ModuleCategory[] = [
  { key: "brands", label: "Brands", icon: "shopping", desc: "Multi-brand configuration", route: "/brands" },
  { key: "referral-program", label: "Referral Program", icon: "gift-outline", desc: "Merchant referral tracking", route: "/referral-program", gateKey: "referrals" },
  { key: "support-tickets", label: "Support Tickets", icon: "lifebuoy", desc: "Help & support requests", route: "/support-tickets" },
+ { key: "data-backup", label: "Data Backup & Recovery", icon: "shield-check", desc: "Local device backup & restore", route: "/data-backup" },
  { key: "notifications", label: "Notifications", icon: "bell-outline", desc: "Notification preferences", route: "/notifications" },
  { key: "reminders", label: "Reminders", icon: "bell-ring-outline", desc: "Payment reminder settings", route: "/reminders" },
  { key: "subscription-billing", label: "Subscription & Billing", icon: "credit-card-outline", desc: "Plan, usage & billing", route: "/subscription-billing" },
@@ -204,9 +206,9 @@ export const ALL_MODULES = [
  // Owner full-parity additions (2026-07-22) — see MODULE_CATEGORIES above.
  "sales-orders", "price-lists", "bulk-price-update", "recurring-invoices",
  "reorder-suggestions", "gst-rate-tools",
- "customer-groups", "credit-note", "debit-note", "unified-ledger",
- "payroll", "holidays", "leaves",
- "outlets", "counters", "account-security",
+  "customer-groups", "credit-note", "debit-note", "unified-ledger",
+  "payroll", "holidays", "leaves", "employee-advances",
+  "outlets", "counters", "account-security",
  "pnl-report", "balance-sheet", "gst-reports", "daybook", "aging-report",
  "bank-accounts", "bank-reconciliation", "analytics", "financial-year",
  "scanned-documents", "activity-log", "recycle-bin",
@@ -266,19 +268,29 @@ export const ROLE_MODULES: Record<UserRole, string[]> = {
  "scanned-documents", "recycle-bin",
  // Global Configuration & SaaS Settings
  "business-profile", "modules-settings", "tax-rates", "invoice-templates", "shop-hours", "brands",
- "referral-program", "support-tickets", "notifications", "reminders",
+ "referral-program", "support-tickets", "notifications", "reminders", "data-backup",
  "printer-settings",
  ],
- // "attendance" added — web gives staff self-check-in; mobile's screen
- // already supported it, but the module list blocked reaching it outside
- // Profile. See docs/web-vs-mobile-role-access-gap-analysis.md R5.
- staff: [
- "pos", "history", "held-bills", "returns",
- "ledger",
- "payments",
- "attendance",
- "printer-settings",
- ],
+  // "attendance" added — web gives staff self-check-in; mobile's screen
+  // already supported it, but the module list blocked reaching it outside
+  // Profile. See docs/web-vs-mobile-role-access-gap-analysis.md R5.
+  staff: [
+  "pos", "history", "held-bills", "returns",
+  "ledger",
+  "payments",
+  "attendance",
+  "printer-settings",
+  "employee-advances",
+  ],
+  general_staff: [
+  "pos", "history",
+  "attendance",
+  "employee-advances",
+  ],
+  peon: [
+  "attendance",
+  "employee-advances",
+  ],
  // "attendance" and "scanned-documents" added to match web's warehouse
  // manager access. See docs/web-vs-mobile-role-access-gap-analysis.md R4.
  warehouse_manager: [
