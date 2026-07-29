@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { api, login as apiLogin, logout as apiLogout, registerCompany as apiRegisterCompany, fetchMe, hasStoredSession, verifyTwoFactor as apiVerifyTwoFactor } from "./api";
 import { setPin, verifyPin, hasPin, setLastUserId, getLastUserId } from "./pin";
 import { registerForPushNotifications } from "./pushNotifications";
+import { emitDataRefresh } from "./dataRefreshBus";
 
 import type { UserRole } from "./moduleCategories";
 
@@ -81,6 +82,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshBrands(),
       refreshCompany(),
     ]);
+    // auth-context has no direct handle on per-screen product/party/invoice
+    // state (each screen owns its own fetch), so a brand/company switch
+    // can't refetch them directly — broadcast instead and let whichever
+    // screens are mounted refetch themselves.
+    emitDataRefresh("products");
+    emitDataRefresh("parties");
+    emitDataRefresh("invoices");
   };
 
  useEffect(() => {

@@ -5,7 +5,9 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
+import * as SecureStore from "expo-secure-store";
 import { api, ApiError } from "../../src/lib/api";
+import { subscribeDataRefresh } from "../../src/lib/dataRefreshBus";
 import { useAuth } from "../../src/lib/auth-context";
 import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 import { useConfirm } from "../../src/components/ConfirmDialog";
@@ -129,6 +131,35 @@ export default function InventoryScreen() {
  };
 
  useEffect(fetchWarehouses, [user, canManageWarehouses]);
+
+ // Persist the selected warehouse per-company so the filter survives app
+ // restarts/remounts instead of silently resetting to "All Warehouses"
+ // every time (previously a plain useState with no storage backing at all).
+ const warehouseSelectionKey = user?.company_id ? `inventory_active_warehouse_${user.company_id}` : null;
+
+ useEffect(() => {
+ if (!warehouseSelectionKey || warehouses.length === 0) return;
+ SecureStore.getItemAsync(warehouseSelectionKey)
+ .then((stored) => {
+ // Only restore if that warehouse still exists — a deleted/renamed
+ // warehouse shouldn't leave the filter pointed at a dead id.
+ if (stored && warehouses.some((w) => w.id === stored)) {
+ setActiveWarehouseId(stored);
+ }
+ })
+ .catch(() => {});
+ // Only run once per warehouse-list load, not on every activeWarehouseId change.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [warehouseSelectionKey, warehouses.length]);
+
+ useEffect(() => {
+ if (!warehouseSelectionKey) return;
+ if (activeWarehouseId) {
+ SecureStore.setItemAsync(warehouseSelectionKey, activeWarehouseId).catch(() => {});
+ } else {
+ SecureStore.deleteItemAsync(warehouseSelectionKey).catch(() => {});
+ }
+ }, [warehouseSelectionKey, activeWarehouseId]);
 
  const resetWarehouseForm = () => {
  setEditingWarehouseId(null);
@@ -343,6 +374,11 @@ export default function InventoryScreen() {
  useEffect(() => {
  fetchProducts();
  }, [user, activeBrand, search]);
+
+ // Refetch when auth-context broadcasts a data invalidation (e.g. brand/
+ // company switch) — this screen owns its own fetch, so it can't be
+ // refreshed centrally, only told to refresh itself.
+ useEffect(() => subscribeDataRefresh("products", fetchProducts), []);
 
  // Deep-link support: Recent Activity / Activity Log rows navigate here
  // with the specific product id so tapping a product-related entry opens
@@ -635,10 +671,28 @@ export default function InventoryScreen() {
  reason: adjustReason.trim(),
  });
  Alert.alert("Success", `Stock ${adjustType === "add" ? "added" : "removed"} successfully`);
+ // Patch local state with the known signed delta instead of a full
+ // fetchProducts() refetch — stockQuantity is a company-wide total, so
+ // this stays correct regardless of which warehouse the adjustment
+ // was made against. If a specific warehouse filter is active, its
+ // per-warehouse figure is patched the same way.
+ const adjustedId = adjustTarget.id;
+ setProducts((prev) =>
+ prev.map((p) =>
+ p.id === adjustedId
+ ? { ...p, stock_quantity: String((parseFloat(p.stock_quantity) || 0) + quantity) }
+ : p
+ )
+ );
+ if (activeWarehouseId) {
+ setWarehouseStock((prev) => ({
+ ...prev,
+ [adjustedId]: (prev[adjustedId] ?? 0) + quantity,
+ }));
+ }
  setAdjustTarget(null);
  setAdjustQuantity("");
  setAdjustReason("");
- fetchProducts();
  } catch (e: any) {
  Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to adjust stock");
  } finally {

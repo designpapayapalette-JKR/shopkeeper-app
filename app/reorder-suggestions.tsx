@@ -42,24 +42,24 @@ export default function ReorderSuggestionsScreen() {
   const load = async () => {
   setLoading(true);
   try {
-  const res = await api.get<{ data: Suggestion[] }>("/purchases/reorder-suggestions");
-  setSuggestions(res.data ?? []);
+    const res = await api.get<{ data: Suggestion[] }>("/purchase-orders/suggestions/reorder");
+    setSuggestions(res.data ?? []);
   } catch (e) {
-  Alert.alert("Error", "Could not load reorder suggestions.");
+    Alert.alert("Error", "Could not load reorder suggestions.");
   } finally {
-  setLoading(false);
+    setLoading(false);
   }
   };
 
   const onRefresh = async () => {
   setRefreshing(true);
   try {
-  const res = await api.get<{ data: Suggestion[] }>("/purchases/reorder-suggestions");
-  setSuggestions(res.data ?? []);
+    const res = await api.get<{ data: Suggestion[] }>("/purchase-orders/suggestions/reorder");
+    setSuggestions(res.data ?? []);
   } catch (e) {
-  Alert.alert("Error", "Could not load reorder suggestions.");
+    Alert.alert("Error", "Could not load reorder suggestions.");
   } finally {
-  setRefreshing(false);
+    setRefreshing(false);
   }
   };
 

@@ -112,37 +112,40 @@ function NavigationGuard() {
  );
 }
 
+import { AppUpdateGate } from "../src/components/AppUpdateGate";
+
 export default function RootLayout() {
- const [fontsLoaded] = useAppFonts();
+  const [fontsLoaded] = useAppFonts();
 
- useEffect(() => {
- try { startConnectivityMonitoring(); } catch {}
- try { colorScheme.set("light"); } catch {}
- }, []);
+  useEffect(() => {
+    try { startConnectivityMonitoring(); } catch {}
+    try { colorScheme.set("light"); } catch {}
+  }, []);
 
- if (!fontsLoaded) {
- return (
- <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
- <ActivityIndicator size="large" color={MMCTheme.colors?.primary ?? "#0368FE"} />
- </View>
- );
- }
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={MMCTheme.colors?.primary ?? "#0368FE"} />
+      </View>
+    );
+  }
 
- return (
- <SafeAreaProvider>
- <PaperProvider theme={MMCTheme}>
- <TerminologyProvider>
- <AuthProvider>
- <OutletProvider>
- <ConfirmDialogProvider>
- <StatusBar style="dark" />
- <NavigationGuard />
- </ConfirmDialogProvider>
- </OutletProvider>
- </AuthProvider>
- </TerminologyProvider>
- </PaperProvider>
- </SafeAreaProvider>
- );
+  return (
+    <SafeAreaProvider>
+      <PaperProvider theme={MMCTheme}>
+        <TerminologyProvider>
+          <AuthProvider>
+            <OutletProvider>
+              <ConfirmDialogProvider>
+                <AppUpdateGate appType="admin">
+                  <StatusBar style="dark" />
+                  <NavigationGuard />
+                </AppUpdateGate>
+              </ConfirmDialogProvider>
+            </OutletProvider>
+          </AuthProvider>
+        </TerminologyProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
+  );
 }
-

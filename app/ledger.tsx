@@ -18,6 +18,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/lib/auth-context";
+import { subscribeDataRefresh } from "../src/lib/dataRefreshBus";
 import { api, ApiError } from "../src/lib/api";
 import { useConfirm } from "../src/components/ConfirmDialog";
 import { useTopInset } from "../src/lib/useTopInset";
@@ -215,6 +216,11 @@ export default function LedgerScreen() {
  useEffect(() => {
  fetchParties();
  }, [user, activeTab]);
+
+ // Refetch when auth-context broadcasts a data invalidation (e.g. brand/
+ // company switch) — this screen owns its own fetch, so it can't be
+ // refreshed centrally, only told to refresh itself.
+ useEffect(() => subscribeDataRefresh("parties", fetchParties), []);
 
  // Deep-link support: Recent Activity / Activity Log rows navigate here
  // with the specific party id (+ its customer/supplier tab, set as the

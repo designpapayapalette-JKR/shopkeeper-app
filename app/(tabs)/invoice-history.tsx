@@ -8,6 +8,7 @@ import { useTopInset } from "../../src/lib/useTopInset";
 import { useBottomInset } from "../../src/lib/useBottomInset";
 import { shareDataAsPdf } from "../../src/lib/pdfExport";
 import EmptyState from "../../src/components/EmptyState";
+import { subscribeDataRefresh } from "../../src/lib/dataRefreshBus";
 
 function formatRupee(n: number): string {
  return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -101,6 +102,11 @@ export default function InvoiceHistoryScreen() {
  }, [activeTab]);
 
  useEffect(() => { loadData(); }, [loadData]);
+
+ // Refetch when auth-context broadcasts a data invalidation (e.g. brand/
+ // company switch) — this screen owns its own fetch, so it can't be
+ // refreshed centrally, only told to refresh itself.
+ useEffect(() => subscribeDataRefresh("invoices", loadData), [loadData]);
 
  const onRefresh = useCallback(async () => {
  setRefreshing(true);
