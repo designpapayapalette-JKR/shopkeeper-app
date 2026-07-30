@@ -39,6 +39,12 @@ import { useKeepAwake } from "expo-keep-awake";
 import { writeCache, readCache, getCacheKey } from "../../src/lib/apiCache";
 import { verifyPin } from "../../src/lib/pin";
 
+function dueDateFromNow(creditPeriodDays: number): string {
+ const date = new Date();
+ date.setDate(date.getDate() + creditPeriodDays);
+ return date.toISOString();
+}
+
 // Indian lakh/crore grouping — shopkeeper-mobile-design-system.md §3.1.
 // Money is what this screen is for; formatting it the way a shopkeeper
 // actually reads it (₹1,20,000, not ₹120,000) applies everywhere on POS.
@@ -953,7 +959,7 @@ if (total < 0) {
 // The entire invoice + items + stock + ledger write happens atomically
 // server-side now — see shopkeeper-api/src/routes/pos.ts checkout.
 const hasCreditSplit = isSplitPayment && splitPayments.some((p) => p.method === "credit");
-const dueDate = creditPeriod ? new Date(Date.now() + creditPeriod * 86400000).toISOString() : undefined;
+const dueDate = creditPeriod ? dueDateFromNow(creditPeriod) : undefined;
 const checkoutPayload = {
 party_id: checkoutParty.id,
 brand_id: activeBrand?.id,

@@ -214,8 +214,16 @@ export const ALL_MODULES = [
  "scanned-documents", "activity-log", "recycle-bin",
  "business-profile", "modules-settings", "tax-rates", "invoice-templates", "shop-hours", "brands",
  "referral-program", "support-tickets", "notifications", "reminders",
- "subscription-billing",
+  "subscription-billing",
 ];
+
+// Which gateKeys are blocked for each outlet type. Modules whose gateKey
+// appears in this list are hidden for that outlet type. shop/showroom/branch
+// have no blocks (everything is visible). Matches the API/web OUTLET_TYPE_MODULES.
+export const OUTLET_TYPE_BLOCKED_GATE_KEYS: Record<string, string[]> = {
+  warehouse_only: ["pos", "b2b", "estimates", "payments", "agents", "referrals"],
+  office: ["pos", "b2b", "estimates", "inventory", "warehouse", "challans", "agents", "referrals"],
+};
 
 export const ROLE_MODULES: Record<UserRole, string[]> = {
  owner: [

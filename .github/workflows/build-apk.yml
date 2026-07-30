@@ -66,6 +66,10 @@ jobs:
         working-directory: android
         env:
           EXPO_PUBLIC_API_URL: https://api.managemycounter.com
+          # beta-latest must remain compatible with the certificate used by
+          # existing direct-download installations. Move the production track
+          # to a managed release keystore before publishing to an app store.
+          ALLOW_DEBUG_RELEASE_SIGNING: "true"
         run: ./gradlew assembleRelease --no-daemon -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintReportRelease
 
       - name: Rename APK

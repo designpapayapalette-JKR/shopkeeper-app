@@ -19,6 +19,8 @@ import EmptyState from "../../src/components/EmptyState";
 import { GstRatePicker } from "../../src/components/GstRatePicker";
 import { useTerminology } from "../../src/lib/terminology-context";
 import { useProductAttributeDefs, ProductCustomFieldsFormSection, loadProductCustomFieldValues, saveProductCustomFieldValues, CustomFieldValue } from "../../src/components/ProductCustomFields";
+import { useProductVerticalConfig } from "../../src/lib/useProductVerticalConfig";
+import { getVerticalSections, VerticalFieldsSection } from "../../src/components/VerticalProductFields";
 
 function formatRupee(n: number): string {
  return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -59,9 +61,12 @@ export default function InventoryScreen() {
   const { isModuleEnabled } = useModuleVisibility(userRole);
   const { t } = useTerminology();
 
-  const { defs: customFieldDefs, loading: customFieldDefsLoading } = useProductAttributeDefs();
+const { defs: customFieldDefs, loading: customFieldDefsLoading } = useProductAttributeDefs();
 
- const canManageWarehouses = isModuleEnabled("warehouse");
+  // Vertical-aware product field configuration
+  const { config: verticalConfig, loading: vcLoading } = useProductVerticalConfig();
+
+  const canManageWarehouses = isModuleEnabled("warehouse");
  const router = useRouter();
  const confirm = useConfirm();
  const topInset = useTopInset();
@@ -333,14 +338,36 @@ export default function InventoryScreen() {
  const [newProductTracksSerials, setNewProductTracksSerials] = useState(false);
  const [newProductRackNumber, setNewProductRackNumber] = useState("");
  const [newProductShelfNumber, setNewProductShelfNumber] = useState("");
- const [newProductParentId, setNewProductParentId] = useState<string | null>(null);
- const [newProductVariantLabel, setNewProductVariantLabel] = useState("");
- const [parentPickerSearch, setParentPickerSearch] = useState("");
- const [addLoading, setAddLoading] = useState(false);
- const [newProductCustomFields, setNewProductCustomFields] = useState<CustomFieldValue[]>([]);
- const [editCustomFieldsLoading, setEditCustomFieldsLoading] = useState(false);
+const [newProductParentId, setNewProductParentId] = useState<string | null>(null);
+  const [newProductVariantLabel, setNewProductVariantLabel] = useState("");
+  const [parentPickerSearch, setParentPickerSearch] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [newProductCustomFields, setNewProductCustomFields] = useState<CustomFieldValue[]>([]);
+  const [editCustomFieldsLoading, setEditCustomFieldsLoading] = useState(false);
 
- // Edit Product Modal State
+  // Vertical-specific fields (new product)
+  const [newProductGenericName, setNewProductGenericName] = useState("");
+  const [newProductStrength, setNewProductStrength] = useState("");
+  const [newProductDosageForm, setNewProductDosageForm] = useState("");
+  const [newProductScheduleCategory, setNewProductScheduleCategory] = useState("NONE");
+  const [newProductManufacturer, setNewProductManufacturer] = useState("");
+  const [newProductIsColdChain, setNewProductIsColdChain] = useState(false);
+  const [newProductIsNarcotic, setNewProductIsNarcotic] = useState(false);
+  const [newProductIsPsychotropic, setNewProductIsPsychotropic] = useState(false);
+  const [newProductIsAntibiotic, setNewProductIsAntibiotic] = useState(false);
+  const [newProductModelNumber, setNewProductModelNumber] = useState("");
+  const [newProductWarrantyPeriodMonths, setNewProductWarrantyPeriodMonths] = useState(0);
+  const [newProductWarrantyType, setNewProductWarrantyType] = useState("");
+  const [newProductGender, setNewProductGender] = useState("");
+  const [newProductApparelSize, setNewProductApparelSize] = useState("");
+  const [newProductColor, setNewProductColor] = useState("");
+  const [newProductFabric, setNewProductFabric] = useState("");
+  const [newProductCareInstructions, setNewProductCareInstructions] = useState("");
+  const [newProductPerishable, setNewProductPerishable] = useState(false);
+  const [newProductShelfLifeDays, setNewProductShelfLifeDays] = useState(0);
+  const [newProductIsLoose, setNewProductIsLoose] = useState(false);
+
+  // Edit Product Modal State
  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
  const [editProductName, setEditProductName] = useState("");
  const [editProductPrice, setEditProductPrice] = useState("");
@@ -351,9 +378,31 @@ export default function InventoryScreen() {
  const [editProductRackNumber, setEditProductRackNumber] = useState("");
  const [editProductShelfNumber, setEditProductShelfNumber] = useState("");
  const [editLoading, setEditLoading] = useState(false);
- const [editProductCustomFields, setEditProductCustomFields] = useState<CustomFieldValue[]>([]);
+const [editProductCustomFields, setEditProductCustomFields] = useState<CustomFieldValue[]>([]);
 
- const fetchProducts = async () => {
+  // Edit vertical fields
+  const [editGenericName, setEditGenericName] = useState("");
+  const [editStrength, setEditStrength] = useState("");
+  const [editDosageForm, setEditDosageForm] = useState("");
+  const [editScheduleCategory, setEditScheduleCategory] = useState("NONE");
+  const [editManufacturer, setEditManufacturer] = useState("");
+  const [editIsColdChain, setEditIsColdChain] = useState(false);
+  const [editIsNarcotic, setEditIsNarcotic] = useState(false);
+  const [editIsPsychotropic, setEditIsPsychotropic] = useState(false);
+  const [editIsAntibiotic, setEditIsAntibiotic] = useState(false);
+  const [editModelNumber, setEditModelNumber] = useState("");
+  const [editWarrantyPeriodMonths, setEditWarrantyPeriodMonths] = useState(0);
+  const [editWarrantyType, setEditWarrantyType] = useState("");
+  const [editGender, setEditGender] = useState("");
+  const [editApparelSize, setEditApparelSize] = useState("");
+  const [editColor, setEditColor] = useState("");
+  const [editFabric, setEditFabric] = useState("");
+  const [editCareInstructions, setEditCareInstructions] = useState("");
+  const [editPerishable, setEditPerishable] = useState(false);
+  const [editShelfLifeDays, setEditShelfLifeDays] = useState(0);
+  const [editIsLoose, setEditIsLoose] = useState(false);
+
+  const fetchProducts = async () => {
  if (!user?.company_id) return;
  setLoading(true);
  try {
@@ -433,86 +482,128 @@ export default function InventoryScreen() {
  Alert.alert("Barcode Scanned", `Filtered catalog by barcode: ${data}`);
  };
 
- const handleAddProduct = async () => {
- if (!newProductName || !newProductPrice) {
- Alert.alert("Required Fields", "Product Name and Selling Price are required.");
- return;
- }
- if (!user?.company_id) return;
+const handleAddProduct = async () => {
+  if (!newProductName || !newProductPrice) {
+    Alert.alert("Required Fields", "Product Name and Selling Price are required.");
+    return;
+  }
+  if (!user?.company_id) return;
 
- setAddLoading(true);
- try {
- const payload: any = {
- name: newProductName,
- sku: newProductSku || undefined,
- barcode: newProductBarcode || undefined,
- hsn_code: newProductHsn || undefined,
- tax_rate: parseFloat(newProductTax) || 0.0,
- price: parseFloat(newProductPrice) || 0.0,
- mrp: newProductMrp ? parseFloat(newProductMrp) : undefined,
- cost: parseFloat(newProductCost) || 0.0,
- stock_quantity: parseFloat(newProductStock) || 0,
- reorder_level: newProductReorderLevel ? parseFloat(newProductReorderLevel) : null,
- status: "active",
- unit: newProductUnit.trim() || "pcs",
- pack_unit: newProductPackUnit.trim() || undefined,
- pack_size: newProductPackSize ? parseFloat(newProductPackSize) : undefined,
- tracks_serials: newProductTracksSerials,
- rack_number: newProductRackNumber.trim() || undefined,
- shelf_number: newProductShelfNumber.trim() || undefined,
- parent_product_id: newProductParentId || undefined,
- variant_label: newProductParentId ? newProductVariantLabel.trim() || undefined : undefined,
- };
+  setAddLoading(true);
+  try {
+    const payload: any = {
+    name: newProductName,
+    sku: newProductSku || undefined,
+    barcode: newProductBarcode || undefined,
+    hsn_code: newProductHsn || undefined,
+    tax_rate: parseFloat(newProductTax) || 0.0,
+    price: parseFloat(newProductPrice) || 0.0,
+    mrp: newProductMrp ? parseFloat(newProductMrp) : undefined,
+    cost: parseFloat(newProductCost) || 0.0,
+    stock_quantity: parseFloat(newProductStock) || 0,
+    reorder_level: newProductReorderLevel ? parseFloat(newProductReorderLevel) : null,
+    status: "active",
+    unit: newProductUnit.trim() || "pcs",
+    pack_unit: newProductPackUnit.trim() || undefined,
+    pack_size: newProductPackSize ? parseFloat(newProductPackSize) : undefined,
+    tracks_serials: newProductTracksSerials,
+    rack_number: newProductRackNumber.trim() || undefined,
+    shelf_number: newProductShelfNumber.trim() || undefined,
+    parent_product_id: newProductParentId || undefined,
+    variant_label: newProductParentId ? newProductVariantLabel.trim() || undefined : undefined,
+    // Vertical-specific fields
+    generic_name: newProductGenericName.trim() || undefined,
+    strength: newProductStrength.trim() || undefined,
+    dosage_form: newProductDosageForm || undefined,
+    schedule_category: newProductScheduleCategory,
+    manufacturer: newProductManufacturer.trim() || undefined,
+    is_cold_chain: newProductIsColdChain,
+    is_narcotic: newProductIsNarcotic,
+    is_psychotropic: newProductIsPsychotropic,
+    is_antibiotic: newProductIsAntibiotic,
+    model_number: newProductModelNumber.trim() || undefined,
+    warranty_period_months: newProductWarrantyPeriodMonths || undefined,
+    warranty_type: newProductWarrantyType || undefined,
+    gender: newProductGender || undefined,
+    apparel_size: newProductApparelSize || undefined,
+    color: newProductColor.trim() || undefined,
+    fabric: newProductFabric.trim() || undefined,
+    care_instructions: newProductCareInstructions.trim() || undefined,
+    perishable: newProductPerishable,
+    shelf_life_days: newProductShelfLifeDays || undefined,
+    is_loose: newProductIsLoose,
+  };
 
- if (activeBrand?.id) {
- payload.brand_id = activeBrand.id;
- }
+  if (activeBrand?.id) {
+    payload.brand_id = activeBrand.id;
+  }
 
- const res = await api.post<{ data: { id: string } }>("/products", payload);
- const newProductId = res?.data?.id;
- if (newProductId && newProductCustomFields.length > 0) {
- try {
- await saveProductCustomFieldValues(newProductId, newProductCustomFields);
- } catch (e) {
- console.error("[Inventory] Failed to save custom fields for new product:", e);
- }
- }
- Alert.alert("Success", "Product added successfully.");
+  const res = await api.post<{ data: { id: string } }>("/products", payload);
+  const newProductId = res?.data?.id;
+  if (newProductId && newProductCustomFields.length > 0) {
+    try {
+      await saveProductCustomFieldValues(newProductId, newProductCustomFields);
+    } catch (e) {
+      console.error("[Inventory] Failed to save custom fields for new product:", e);
+    }
+  }
+  Alert.alert("Success", "Product added successfully.");
 
- resetAddProductForm();
- setIsAdding(false);
- setProductPhotoUri(null);
+  resetAddProductForm();
+  setIsAdding(false);
+  setProductPhotoUri(null);
 
- fetchProducts();
- } catch (error: any) {
- Alert.alert("Error", error instanceof ApiError ? error.message : "Failed to add product.");
- } finally {
- setAddLoading(false);
- }
- };
+  fetchProducts();
+  } catch (error: any) {
+    Alert.alert("Error", error instanceof ApiError ? error.message : "Failed to add product.");
+  } finally {
+    setAddLoading(false);
+  }
+};
 
- const resetAddProductForm = () => {
- setNewProductName("");
- setNewProductSku("");
- setNewProductBarcode("");
- setNewProductHsn("");
- setNewProductTax(activeCompany?.default_product_gst_rate?.toString() || "18.00");
- setNewProductPrice("");
- setNewProductMrp("");
- setNewProductCost("");
- setNewProductStock("");
- setNewProductReorderLevel("");
- setNewProductUnit(activeCompany?.default_unit_of_measure || "pcs");
- setNewProductPackUnit("");
- setNewProductPackSize("");
- setNewProductTracksSerials(false);
- setNewProductRackNumber("");
- setNewProductShelfNumber("");
- setNewProductParentId(null);
- setNewProductVariantLabel("");
- setParentPickerSearch("");
- setNewProductCustomFields([]);
- };
+const resetAddProductForm = () => {
+  setNewProductName("");
+  setNewProductSku("");
+  setNewProductBarcode("");
+  setNewProductHsn("");
+  setNewProductTax(activeCompany?.default_product_gst_rate?.toString() || "18.00");
+  setNewProductPrice("");
+  setNewProductMrp("");
+  setNewProductCost("");
+  setNewProductStock("");
+  setNewProductReorderLevel("");
+  setNewProductUnit(activeCompany?.default_unit_of_measure || "pcs");
+  setNewProductPackUnit("");
+  setNewProductPackSize("");
+  setNewProductTracksSerials(false);
+  setNewProductRackNumber("");
+  setNewProductShelfNumber("");
+  setNewProductParentId(null);
+  setNewProductVariantLabel("");
+  setParentPickerSearch("");
+  setNewProductCustomFields([]);
+  // Vertical fields
+  setNewProductGenericName("");
+  setNewProductStrength("");
+  setNewProductDosageForm("");
+  setNewProductScheduleCategory("NONE");
+  setNewProductManufacturer("");
+  setNewProductIsColdChain(false);
+  setNewProductIsNarcotic(false);
+  setNewProductIsPsychotropic(false);
+  setNewProductIsAntibiotic(false);
+  setNewProductModelNumber("");
+  setNewProductWarrantyPeriodMonths(0);
+  setNewProductWarrantyType("");
+  setNewProductGender("");
+  setNewProductApparelSize("");
+  setNewProductColor("");
+  setNewProductFabric("");
+  setNewProductCareInstructions("");
+  setNewProductPerishable(false);
+  setNewProductShelfLifeDays(0);
+  setNewProductIsLoose(false);
+};
 
  const closeAddProduct = async () => {
  const hasChanges =
@@ -528,12 +619,33 @@ export default function InventoryScreen() {
  newProductPackUnit.trim() !== "" ||
  newProductPackSize.trim() !== "" ||
  newProductRackNumber.trim() !== "" ||
- newProductShelfNumber.trim() !== "" ||
- newProductParentId !== null ||
- newProductVariantLabel.trim() !== "" ||
- newProductTax !== "18.00" ||
- newProductUnit !== "pcs" ||
- newProductCustomFields.length > 0;
+newProductShelfNumber.trim() !== "" ||
+  newProductParentId !== null ||
+  newProductVariantLabel.trim() !== "" ||
+  newProductTax !== "18.00" ||
+  newProductUnit !== "pcs" ||
+  newProductCustomFields.length > 0 ||
+  // Vertical fields
+  newProductGenericName.trim() !== "" ||
+  newProductStrength.trim() !== "" ||
+  newProductDosageForm.trim() !== "" ||
+  newProductScheduleCategory !== "NONE" ||
+  newProductManufacturer.trim() !== "" ||
+  newProductIsColdChain ||
+  newProductIsNarcotic ||
+  newProductIsPsychotropic ||
+  newProductIsAntibiotic ||
+  newProductModelNumber.trim() !== "" ||
+  newProductWarrantyPeriodMonths !== 0 ||
+  newProductWarrantyType.trim() !== "" ||
+  newProductGender.trim() !== "" ||
+  newProductApparelSize.trim() !== "" ||
+  newProductColor.trim() !== "" ||
+  newProductFabric.trim() !== "" ||
+  newProductCareInstructions.trim() !== "" ||
+  newProductPerishable ||
+  newProductShelfLifeDays !== 0 ||
+  newProductIsLoose;
  if (hasChanges) {
  const ok = await confirm({
  title: "Discard changes?",
@@ -548,54 +660,96 @@ export default function InventoryScreen() {
  resetAddProductForm();
  };
 
- const openEditModal = (p: Product) => {
- setEditingProduct(p);
- setEditProductName(p.name);
- setEditProductPrice(p.price);
- setEditProductMrp(p.mrp || "");
- setEditProductCost(p.cost || "");
- setEditProductTax(p.tax_rate || "18.00");
- setEditProductIsPinned(Boolean(p.is_pinned));
- setEditProductRackNumber(p.rack_number || "");
- setEditProductShelfNumber(p.shelf_number || "");
- setEditCustomFieldsLoading(true);
- loadProductCustomFieldValues(p.id).then((vals) => {
- setEditProductCustomFields(vals);
- setEditCustomFieldsLoading(false);
- });
- };
+const openEditModal = (p: Product) => {
+  setEditingProduct(p);
+  setEditProductName(p.name);
+  setEditProductPrice(p.price);
+  setEditProductMrp(p.mrp || "");
+  setEditProductCost(p.cost || "");
+  setEditProductTax(p.tax_rate || "18.00");
+  setEditProductIsPinned(Boolean(p.is_pinned));
+  setEditProductRackNumber(p.rack_number || "");
+  setEditProductShelfNumber(p.shelf_number || "");
+  setEditCustomFieldsLoading(true);
+  loadProductCustomFieldValues(p.id).then((vals) => {
+    setEditProductCustomFields(vals);
+    setEditCustomFieldsLoading(false);
+  });
+  // Vertical fields
+  setEditGenericName((p as any).generic_name || "");
+  setEditStrength((p as any).strength || "");
+  setEditDosageForm((p as any).dosage_form || "");
+  setEditScheduleCategory((p as any).schedule_category || "NONE");
+  setEditManufacturer((p as any).manufacturer || "");
+  setEditIsColdChain(Boolean((p as any).is_cold_chain));
+  setEditIsNarcotic(Boolean((p as any).is_narcotic));
+  setEditIsPsychotropic(Boolean((p as any).is_psychotropic));
+  setEditIsAntibiotic(Boolean((p as any).is_antibiotic));
+  setEditModelNumber((p as any).model_number || "");
+  setEditWarrantyPeriodMonths((p as any).warranty_period_months || 0);
+  setEditWarrantyType((p as any).warranty_type || "");
+  setEditGender((p as any).gender || "");
+  setEditApparelSize((p as any).apparel_size || "");
+  setEditColor((p as any).color || "");
+  setEditFabric((p as any).fabric || "");
+  setEditCareInstructions((p as any).care_instructions || "");
+  setEditPerishable(Boolean((p as any).perishable));
+setEditShelfLifeDays((p as any).shelf_life_days || 0);
+  setEditIsLoose(Boolean((p as any).is_loose));
+};
 
- const handleEditProduct = async () => {
- if (!editingProduct || !editProductName || !editProductPrice) {
- Alert.alert("Required Fields", "Name and Selling Price are required.");
- return;
- }
- setEditLoading(true);
- try {
- await api.patch(`/products/${editingProduct.id}`, {
- name: editProductName,
- price: editProductPrice,
- mrp: editProductMrp ? parseFloat(editProductMrp) : null,
- cost: editProductCost || undefined,
- tax_rate: editProductTax || undefined,
- is_pinned: editProductIsPinned,
- rack_number: editProductRackNumber.trim() || null,
- shelf_number: editProductShelfNumber.trim() || null,
- });
- try {
- await saveProductCustomFieldValues(editingProduct.id, editProductCustomFields);
- } catch (e) {
- console.error("[Inventory] Failed to save custom fields for edit:", e);
- }
- Alert.alert("Success", "Product updated successfully.");
- resetEditProductForm();
- fetchProducts();
- } catch (e: any) {
- Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to update product.");
- } finally {
- setEditLoading(false);
- }
- };
+const handleEditProduct = async () => {
+  if (!editingProduct || !editProductName || !editProductPrice) {
+    Alert.alert("Required Fields", "Name and Selling Price are required.");
+    return;
+  }
+  setEditLoading(true);
+  try {
+    await api.patch(`/products/${editingProduct.id}`, {
+    name: editProductName,
+    price: editProductPrice,
+    mrp: editProductMrp ? parseFloat(editProductMrp) : null,
+    cost: editProductCost || undefined,
+    tax_rate: editProductTax || undefined,
+    is_pinned: editProductIsPinned,
+    rack_number: editProductRackNumber.trim() || null,
+    shelf_number: editProductShelfNumber.trim() || null,
+    // Vertical-specific fields
+    generic_name: editGenericName.trim() || null,
+    strength: editStrength.trim() || null,
+    dosage_form: editDosageForm || null,
+    schedule_category: editScheduleCategory,
+    manufacturer: editManufacturer.trim() || null,
+    is_cold_chain: editIsColdChain,
+    is_narcotic: editIsNarcotic,
+    is_psychotropic: editIsPsychotropic,
+    is_antibiotic: editIsAntibiotic,
+    model_number: editModelNumber.trim() || null,
+    warranty_period_months: editWarrantyPeriodMonths || null,
+    warranty_type: editWarrantyType || null,
+    gender: editGender || null,
+    apparel_size: editApparelSize || null,
+    color: editColor.trim() || null,
+    fabric: editFabric.trim() || null,
+    care_instructions: editCareInstructions.trim() || null,
+    perishable: editPerishable,
+    shelf_life_days: editShelfLifeDays || null,
+    is_loose: editIsLoose,
+  });
+    try {
+      await saveProductCustomFieldValues(editingProduct.id, editProductCustomFields);
+    } catch (e) {
+      console.error("[Inventory] Failed to save custom fields for edit:", e);
+    }
+    Alert.alert("Success", "Product updated successfully.");
+    resetEditProductForm();
+    fetchProducts();
+  } catch (e: any) {
+    Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to update product.");
+  } finally {
+    setEditLoading(false);
+  }
+};
 
  const resetEditProductForm = () => {
  setEditingProduct(null);
@@ -1374,9 +1528,36 @@ export default function InventoryScreen() {
  </View>
  )}
  </View>
- </View>
+</View>
 
- {!customFieldDefsLoading && customFieldDefs.length > 0 && (
+  {!vcLoading && getVerticalSections(verticalConfig).map((section) => {
+    const createSetters: Record<string, (v: any) => void> = {
+      genericName: setNewProductGenericName, strength: setNewProductStrength,
+      dosageForm: setNewProductDosageForm, scheduleCategory: setNewProductScheduleCategory,
+      manufacturer: setNewProductManufacturer,
+      isColdChain: setNewProductIsColdChain, isNarcotic: setNewProductIsNarcotic,
+      isPsychotropic: setNewProductIsPsychotropic, isAntibiotic: setNewProductIsAntibiotic,
+      modelNumber: setNewProductModelNumber,
+      warrantyPeriodMonths: setNewProductWarrantyPeriodMonths, warrantyType: setNewProductWarrantyType,
+      gender: setNewProductGender, apparelSize: setNewProductApparelSize, color: setNewProductColor,
+      fabric: setNewProductFabric, careInstructions: setNewProductCareInstructions,
+      perishable: setNewProductPerishable, shelfLifeDays: setNewProductShelfLifeDays, isLoose: setNewProductIsLoose,
+    };
+    const createValues: Record<string, string | number | boolean> = {
+      genericName: newProductGenericName, strength: newProductStrength, dosageForm: newProductDosageForm,
+      scheduleCategory: newProductScheduleCategory, manufacturer: newProductManufacturer,
+      isColdChain: newProductIsColdChain, isNarcotic: newProductIsNarcotic,
+      isPsychotropic: newProductIsPsychotropic, isAntibiotic: newProductIsAntibiotic,
+      modelNumber: newProductModelNumber, warrantyPeriodMonths: newProductWarrantyPeriodMonths,
+      warrantyType: newProductWarrantyType,
+      gender: newProductGender, apparelSize: newProductApparelSize, color: newProductColor,
+      fabric: newProductFabric, careInstructions: newProductCareInstructions,
+      perishable: newProductPerishable, shelfLifeDays: newProductShelfLifeDays, isLoose: newProductIsLoose,
+    };
+    return <VerticalFieldsSection key={section} config={verticalConfig} prefix="new" values={createValues} setters={createSetters} section={section} />;
+  })}
+
+  {!customFieldDefsLoading && customFieldDefs.length > 0 && (
  <ProductCustomFieldsFormSection
  defs={customFieldDefs}
  values={newProductCustomFields}
@@ -1477,9 +1658,36 @@ export default function InventoryScreen() {
  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-4 text-base font-medium"
  />
  </View>
- </View>
+</View>
 
- {editCustomFieldsLoading ? (
+  {!vcLoading && getVerticalSections(verticalConfig).map(section => {
+    const editSetters: Record<string, (v: any) => void> = {
+      genericName: setEditGenericName, strength: setEditStrength,
+      dosageForm: setEditDosageForm, scheduleCategory: setEditScheduleCategory,
+      manufacturer: setEditManufacturer,
+      isColdChain: setEditIsColdChain, isNarcotic: setEditIsNarcotic,
+      isPsychotropic: setEditIsPsychotropic, isAntibiotic: setEditIsAntibiotic,
+      modelNumber: setEditModelNumber,
+      warrantyPeriodMonths: setEditWarrantyPeriodMonths, warrantyType: setEditWarrantyType,
+      gender: setEditGender, apparelSize: setEditApparelSize, color: setEditColor,
+      fabric: setEditFabric, careInstructions: setEditCareInstructions,
+      perishable: setEditPerishable, shelfLifeDays: setEditShelfLifeDays, isLoose: setEditIsLoose,
+    };
+    const editValues: Record<string, string | number | boolean> = {
+      genericName: editGenericName, strength: editStrength, dosageForm: editDosageForm,
+      scheduleCategory: editScheduleCategory, manufacturer: editManufacturer,
+      isColdChain: editIsColdChain, isNarcotic: editIsNarcotic,
+      isPsychotropic: editIsPsychotropic, isAntibiotic: editIsAntibiotic,
+      modelNumber: editModelNumber, warrantyPeriodMonths: editWarrantyPeriodMonths,
+      warrantyType: editWarrantyType,
+      gender: editGender, apparelSize: editApparelSize, color: editColor,
+      fabric: editFabric, careInstructions: editCareInstructions,
+      perishable: editPerishable, shelfLifeDays: editShelfLifeDays, isLoose: editIsLoose,
+    };
+    return <VerticalFieldsSection key={section} config={verticalConfig} prefix="edit" values={editValues} setters={editSetters} section={section} />;
+  })}
+
+  {editCustomFieldsLoading ? (
  <View className="mt-6 pt-4 border-t border-outline-variant items-center py-4">
  <ActivityIndicator size="small" color={theme.colors.primary} />
  </View>

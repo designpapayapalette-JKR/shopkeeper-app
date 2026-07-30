@@ -13,8 +13,11 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.29.95:8056"
+        "EXPO_PUBLIC_API_URL": "https://api.managemycounter.com"
       }
     },
     "production": {

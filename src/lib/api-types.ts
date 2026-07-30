@@ -219,7 +219,7 @@ export interface Outlet {
   id: string;
   name: string;
   code: string;
-  type: "shop" | "showroom" | "branch" | "warehouse_only";
+  type: "shop" | "showroom" | "branch" | "warehouse_only" | "office";
   is_active: boolean;
 }
 

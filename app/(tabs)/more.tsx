@@ -33,10 +33,6 @@ import { StatePicker } from "../../src/components/StatePicker";
 
 // Not meant to be memorable — it's shared with the new employee over
 // WhatsApp and they're expected to change it after first login.
-function randomTempPassword(): string {
- return Math.random().toString(36).slice(-8) + "!1";
-}
-
 // The new backend has a fixed set of assignable roles (see
 // shopkeeper-api/src/routes/staff.ts) instead of Directus's dynamic
 // directus_roles collection — Owner can't be created via this screen.
@@ -217,7 +213,7 @@ export default function MoreScreen() {
  const [showOutletPicker, setShowOutletPicker] = useState(false);
 
  // Module Configuration
- const { isModuleEnabled, enabledModules, refresh: refreshEnabledModules } = useModuleVisibility(userRole);
+  const { isModuleEnabled, enabledModules, refresh: refreshEnabledModules } = useModuleVisibility(userRole, selectedOutlet?.type);
  const isOwner = user?.role === "owner";
  const canManageWarehouse = isModuleEnabled("warehouse");
  // The raw mobile-specific selection (as opposed to `enabledModules` above,
@@ -418,7 +414,6 @@ export default function MoreScreen() {
  const [newStaffLastName, setNewStaffLastName] = useState("");
  const [newStaffEmail, setNewStaffEmail] = useState("");
  const [newStaffPhone, setNewStaffPhone] = useState("");
- const [newStaffPassword, setNewStaffPassword] = useState("");
  const [newStaffRole, setNewStaffRole] = useState<string>(activeCompany?.default_staff_role || "");
  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
  const [addStaffLoading, setAddStaffLoading] = useState(false);
@@ -1119,7 +1114,6 @@ export default function MoreScreen() {
  setNewStaffLastName("");
  setNewStaffEmail("");
  setNewStaffPhone("");
- setNewStaffPassword("");
  setNewStaffRole(activeCompany?.default_staff_role || STAFF_ROLES[0].id);
  };
 
@@ -1127,35 +1121,32 @@ export default function MoreScreen() {
  const hasChanges =
  newStaffFirstName.trim() !== "" ||
  newStaffLastName.trim() !== "" ||
- newStaffEmail.trim() !== "" ||
- newStaffPassword.trim() !== "";
+ newStaffEmail.trim() !== "";
  if (hasChanges && !(await confirmDiscard())) return;
  setIsAddingStaff(false);
  resetAddStaffForm();
  };
 
  const handleAddStaff = async () => {
- if (!newStaffFirstName || !newStaffEmail || !newStaffPassword || !newStaffRole) {
- Alert.alert("Required Fields", "First Name, Email, Password, and Role are required.");
+ if (!newStaffFirstName || !newStaffEmail || !newStaffRole) {
+ Alert.alert("Required Fields", "First Name, Email, and Role are required.");
  return;
  }
  if (!user?.company_id) return;
 
  setAddStaffLoading(true);
  try {
- await api.post("/staff", {
+ const result = await api.post<{ invitation_sent?: boolean }>("/staff", {
  first_name: newStaffFirstName,
  last_name: newStaffLastName || undefined,
  email: newStaffEmail,
  phone: newStaffPhone.trim() || undefined,
- password: newStaffPassword,
  role: newStaffRole,
  });
  setIsAddingStaff(false);
  const createdPhone = newStaffPhone.trim();
  const createdName = newStaffFirstName;
  const createdEmail = newStaffEmail;
- const createdPassword = newStaffPassword;
  const createdRole = newStaffRole;
  resetAddStaffForm();
  fetchSetupData();
@@ -1167,21 +1158,28 @@ export default function MoreScreen() {
  if (createdPhone) {
  const ok = await confirm({
  title: "Employee Created",
- message: `Send ${createdName}'s login (email + password) to them over WhatsApp now?`,
- confirmLabel: "Send via WhatsApp",
+ message: result.invitation_sent
+   ? `A secure password setup link was emailed to ${createdEmail}. Send the app instructions over WhatsApp too?`
+   : `The employee was added, but the password setup email failed. Send app instructions now and retry the email before they sign in.`,
+ confirmLabel: "Send Instructions",
  });
  if (ok) {
  const isFieldRole = createdRole === "staff" || createdRole === "field_agent";
  const appName = isFieldRole ? "MMC Agent" : "MMC Shop";
  const downloadUrl = isFieldRole ? AGENT_APP_DOWNLOAD_URL : APP_DOWNLOAD_URL;
- const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the ${appName}.\n\n1. Download the app: ${downloadUrl}\n2. Log in with:\nEmail: ${createdEmail}\nPassword: ${createdPassword}\n\nPlease change your password after logging in.`;
+ const message = `Hi ${createdName}! You've been added to ${activeCompany?.name ?? "our team"} on the ${appName}.\n\n1. Check ${createdEmail} for your secure password setup link.\n2. Download the app: ${downloadUrl}\n3. Sign in with ${createdEmail} after setting your password.`;
  const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${createdPhone.replace(/\D/g, "")}`;
  const supported = await Linking.canOpenURL(url);
  if (supported) await Linking.openURL(url);
  else Alert.alert("WhatsApp Not Installed", "Could not open WhatsApp on this device.");
  }
  } else {
- Alert.alert("Success", "Employee created successfully. They can now log in.");
+ Alert.alert(
+   result.invitation_sent ? "Invitation Sent" : "Employee Added",
+   result.invitation_sent
+     ? "A secure password setup link was emailed to the employee."
+     : "Email delivery failed. Retry the password setup email before they sign in.",
+ );
  }
  } catch (e) {
  Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to create staff member. Make sure the email is unique.");
@@ -3904,25 +3902,9 @@ export default function MoreScreen() {
  />
  </View>
 
- <View className="mt-4">
- <View className="flex-row justify-between items-center mb-2">
- <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">
- Temporary Password *
+ <Text className="text-xs text-on-surface-variant mt-4">
+ We&apos;ll email a one-time link so the employee can set a private password.
  </Text>
- <Pressable onPress={() => setNewStaffPassword(randomTempPassword())}>
- <Text className="text-sm font-bold text-primary ">Auto-Generate</Text>
- </Pressable>
- </View>
- <TextInput
- value={newStaffPassword}
- onChangeText={setNewStaffPassword}
- placeholder="Enter a password, or tap Auto-Generate"
- placeholderTextColor={theme.colors.onSurfaceVariant}
- secureTextEntry
- className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-4 text-base font-medium"
- />
- <Text className="text-xs text-on-surface-variant mt-1.5">They can change this after their first login.</Text>
- </View>
 
  <View className="mt-4">
  <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
@@ -4144,4 +4126,3 @@ export default function MoreScreen() {
  </View>
  );
 }
-

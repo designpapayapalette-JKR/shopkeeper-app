@@ -143,8 +143,8 @@ export default function DataBackupScreen() {
         {/* Info Box */}
         <View style={{ backgroundColor: "rgba(3,104,254,0.06)", borderRadius: 12, padding: 14, flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
           <MaterialCommunityIcons name="information" size={20} color={theme.colors.primary} style={{ marginTop: 2 }} />
-          <Text style={{ flex: 1, fontSize: 12, color: theme.colors.onSurface, lineHeight: 18 }}>
-            Your catalog, customer records, stock, and invoice history are automatically saved to your phone's persistent storage. If you reinstall or switch apps, your data remains safely stored on this device.
+          <Text style={{ flex: 1, fontSize: 14, color: theme.colors.onSurface, lineHeight: 20 }}>
+            Your catalog, customer records, stock, and invoice history are automatically saved to your phone’s persistent storage. If you reinstall or switch apps, your data remains safely stored on this device.
           </Text>
         </View>
 

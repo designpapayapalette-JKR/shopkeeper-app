@@ -81,7 +81,18 @@ async function refreshAccessToken(): Promise<string | null> {
  }
  if (!res.ok) return null;
  const json = await res.json();
- const updated: AuthData = { ...auth, accessToken: json.accessToken, expiresAt: json.expiresAt };
+ if (
+ typeof json?.accessToken !== "string" ||
+ typeof json?.refreshToken !== "string" ||
+ typeof json?.expiresAt !== "number"
+ ) {
+ return null;
+ }
+ const updated: AuthData = {
+ accessToken: json.accessToken,
+ refreshToken: json.refreshToken,
+ expiresAt: json.expiresAt,
+ };
  await setAuthData(updated);
  return updated.accessToken;
  } catch {
@@ -113,6 +124,18 @@ interface RequestOptions {
  skipAuth?: boolean;
 }
 
+const REQUEST_TIMEOUT_MS = 20_000;
+
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+ const controller = new AbortController();
+ const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+ try {
+ return await fetch(url, { ...init, signal: controller.signal });
+ } finally {
+ clearTimeout(timer);
+ }
+}
+
 async function request<T = unknown>(
  method: string,
  path: string,
@@ -138,7 +161,7 @@ async function request<T = unknown>(
  headers["X-Outlet-Id"] = _cachedOutletId;
  }
 
- let res = await fetch(url, {
+ let res = await fetchWithTimeout(url, {
  method,
  // App code writes snake_case (matching the old Directus field names) —
  // convert to camelCase for this server.
@@ -150,7 +173,7 @@ async function request<T = unknown>(
  const refreshedToken = await refreshAccessToken();
  if (refreshedToken) {
  headers.Authorization = `Bearer ${refreshedToken}`;
- res = await fetch(url, {
+ res = await fetchWithTimeout(url, {
  method,
  body: body !== undefined ? JSON.stringify(toCamelCase(body)) : undefined,
  headers,
@@ -250,13 +273,14 @@ export async function resendVerificationEmail(): Promise<void> {
 }
 
 export async function registerCompany(data: {
- companyName: string;
- state?: string;
- email: string;
- password: string;
- firstName: string;
- lastName?: string;
- inviteCode: string;
+  companyName: string;
+  state?: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName?: string;
+  inviteCode: string;
+  referralCode?: string;
 }) {
  const json: any = await request<any>("POST", "/companies/register", data, { skipAuth: true });
  await setAuthData({ accessToken: json.access_token, refreshToken: json.refresh_token, expiresAt: json.expires_at });

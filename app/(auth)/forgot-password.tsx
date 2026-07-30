@@ -62,7 +62,7 @@ export default function ForgotPasswordScreen() {
  Reset Password
  </Text>
  <Text className="text-on-surface-variant text-center mt-2 font-medium">
- We'll email you a link to set a new password.
+ We’ll email you a link to set a new password.
  </Text>
  </View>
 

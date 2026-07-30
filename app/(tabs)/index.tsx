@@ -8,6 +8,7 @@ import { useAuth } from "../../src/lib/auth-context";
 import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 import { api } from "../../src/lib/api";
 import { useTopInset } from "../../src/lib/useTopInset";
+import { useOutlet } from "../../src/lib/outlet-context";
 import { roleColor, roleLabel } from "../../src/lib/roles";
 import KpiCarousel from "../../src/components/KpiCarousel";
 import IconGridItem from "../../src/components/IconGridItem";
@@ -52,7 +53,8 @@ const WAREHOUSE_QUICK_ACTIONS = [
 
 export default function DashboardScreen() {
   const { user, userRole, activeCompany } = useAuth();
-  const { getVisibleCategories } = useModuleVisibility(userRole);
+  const { selectedOutlet } = useOutlet();
+  const { getVisibleCategories } = useModuleVisibility(userRole, selectedOutlet?.type);
   const router = useRouter();
   const theme = useTheme();
   const topInset = useTopInset();

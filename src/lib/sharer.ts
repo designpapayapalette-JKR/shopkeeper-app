@@ -1,6 +1,7 @@
 import { Linking, Alert } from "react-native";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import { api } from "./api";
 
 // Renders the given invoice HTML to a real PDF file and opens the native
 // share sheet (WhatsApp, email, Drive, etc. all appear automatically) with
@@ -36,13 +37,24 @@ export async function shareInvoice(
   let pdfUrl = "";
   if (invoiceId) {
     try {
-      const res = await fetch(`https://api.managemycounter.com/invoices/${invoiceId}/pdf`);
-      const json = await res.json().catch(() => null);
+      const json = await api.get<{ data?: { url?: string } }>(`/invoices/${invoiceId}/pdf`);
       if (json?.data?.url) pdfUrl = json.data.url;
-    } catch (e) {}
+    } catch (error) {
+      console.warn("[shareInvoice] Could not fetch invoice PDF URL:", error);
+    }
   }
 
-  const webUrl = invoiceId ? `https://app.managemycounter.com/print/invoice/${invoiceId}` : "";
+  let webUrl = "";
+  if (invoiceId) {
+    try {
+      const share = await api.get<{ token?: string }>(`/companies/share-token/invoice/${invoiceId}`);
+      if (share?.token) {
+        webUrl = `https://app.managemycounter.com/print/invoice/${invoiceId}?token=${encodeURIComponent(share.token)}`;
+      }
+    } catch (error) {
+      console.warn("[shareInvoice] Could not create secure invoice link:", error);
+    }
+  }
   let message = `Dear ${customerName || "Customer"},\n\nYour invoice ${invoiceNumber} for ₹${total.toFixed(2)} is ready.`;
   if (webUrl) {
     message += `\n\n📄 View / Print Online:\n${webUrl}`;

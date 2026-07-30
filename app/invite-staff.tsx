@@ -39,18 +39,16 @@ export default function InviteStaffScreen() {
 
     setSubmitting(true);
     try {
-      const tempPassword = Math.random().toString(36).slice(-8) + "!1";
-      await api.post("/staff", {
+      const result = await api.post<{ invitation_sent?: boolean }>("/staff", {
         email: email.trim(),
-        password: tempPassword,
-        first_name: firstName.trim(),
-        last_name: lastName.trim() || undefined,
+        firstName: firstName.trim(),
+        lastName: lastName.trim() || undefined,
         phone: phone.trim() || undefined,
         role,
       });
 
       if (phone.trim()) {
-        const message = `You have been invited to ${email.trim()} on MMC Shop.\n\nDownload the MMC Agent app:\nhttps://mmcshop.app/agent\n\nLogin with:\nEmail: ${email.trim()}\nPassword: ${tempPassword}`;
+        const message = `You have been invited to MMC Staff.\n\n1. Check ${email.trim()} for your secure password setup link.\n2. Download the app:\nhttps://github.com/designpapayapalette-JKR/agent-app/releases/download/beta-latest/agent-app-latest.apk\n3. Sign in with ${email.trim()} after setting your password.`;
         const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${phone.replace(/\D/g, "")}`;
         Linking.canOpenURL(url).then((supported) => {
           if (supported) {
@@ -59,9 +57,15 @@ export default function InviteStaffScreen() {
         });
       }
 
-      Alert.alert("Invitation Sent", `Login credentials sent to ${email.trim()}.`, [
+      Alert.alert(
+        result.invitation_sent ? "Invitation Sent" : "Employee Added",
+        result.invitation_sent
+          ? `A secure password setup link was sent to ${email.trim()}.`
+          : `The employee was added, but email delivery failed. Retry the password setup email before they sign in.`,
+        [
         { text: "OK", onPress: () => router.back() },
-      ]);
+        ],
+      );
     } catch (e) {
       Alert.alert("Error", e instanceof ApiError ? e.message : "Failed to send invitation.");
     } finally {
@@ -78,7 +82,7 @@ export default function InviteStaffScreen() {
 
       <Text className="text-2xl font-black text-on-surface mb-1">Invite Team Member</Text>
       <Text className="text-sm text-on-surface-variant mb-6">
-        They will receive login credentials for the MMC Agent app.
+        They will receive a secure password setup link for the MMC Staff app.
       </Text>
 
       <View className="mb-4">

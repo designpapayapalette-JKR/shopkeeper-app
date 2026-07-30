@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api, login as apiLogin, logout as apiLogout, registerCompany as apiRegisterCompany, fetchMe, hasStoredSession, verifyTwoFactor as apiVerifyTwoFactor } from "./api";
 import { setPin, verifyPin, hasPin, setLastUserId, getLastUserId } from "./pin";
+import { clearReadCache } from "./readCache";
 import { registerForPushNotifications } from "./pushNotifications";
 import { emitDataRefresh } from "./dataRefreshBus";
 
@@ -17,15 +18,16 @@ interface AuthContextType {
  setActiveBrand: (brand: any | null) => void;
  login: (email: string, password: string) => Promise<void>;
  verifyTwoFactor: (pendingToken: string, code: string) => Promise<void>;
- register: (data: {
- companyName: string;
- state?: string;
- email: string;
- password: string;
- firstName: string;
- lastName?: string;
- inviteCode: string;
- }) => Promise<void>;
+  register: (data: {
+  companyName: string;
+  state?: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName?: string;
+  inviteCode: string;
+  referralCode?: string;
+  }) => Promise<void>;
  logout: () => Promise<void>;
  refreshBrands: () => Promise<void>;
  refreshCompany: () => Promise<void>;
@@ -194,15 +196,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  }
  };
 
- const register = async (data: {
- companyName: string;
- state?: string;
- email: string;
- password: string;
- firstName: string;
- lastName?: string;
- inviteCode: string;
- }) => {
+  const register = async (data: {
+  companyName: string;
+  state?: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName?: string;
+  inviteCode: string;
+  referralCode?: string;
+  }) => {
  try {
  const me = await apiRegisterCompany(data);
  setUser(me);
@@ -263,6 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  } catch (error) {
  console.error("Logout failed:", error);
  } finally {
+ await clearReadCache();
  setUser(null);
  setUserRole(null);
  setIsAuthenticated(false);

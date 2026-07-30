@@ -16,18 +16,12 @@ const STAFF_ROLES = [
  { id: "field_agent", name: "Field Agent" },
 ];
 
-function randomTempPassword(): string {
- // Not meant to be memorable — it's sent straight to the new team member
- // over WhatsApp and they're expected to change it after first login.
- return Math.random().toString(36).slice(-8) + "!1";
-}
-
 interface AddedMember {
  name: string;
  phone: string;
  email: string;
  role: string;
- tempPassword: string;
+ invitationSent: boolean;
 }
 
 // A single guided flow to take a brand-new shopkeeper from "just registered"
@@ -102,17 +96,21 @@ export default function OnboardingScreen() {
  }
  setAddingMember(true);
  try {
- const tempPassword = randomTempPassword();
- await api.post("/staff", {
+ const result = await api.post<{ invitation_sent?: boolean }>("/staff", {
  email: memberEmail.trim(),
- password: tempPassword,
- first_name: memberName.trim(),
+ firstName: memberName.trim(),
  phone: memberPhone.trim() || undefined,
  role: memberRole,
  });
  setAddedMembers((prev) => [
  ...prev,
- { name: memberName.trim(), phone: memberPhone.trim(), email: memberEmail.trim(), role: memberRole, tempPassword },
+ {
+   name: memberName.trim(),
+   phone: memberPhone.trim(),
+   email: memberEmail.trim(),
+   role: memberRole,
+   invitationSent: result.invitation_sent === true,
+ },
  ]);
  setMemberName("");
  setMemberPhone("");
@@ -127,10 +125,13 @@ export default function OnboardingScreen() {
 
  const handleSendWhatsapp = (member: AddedMember) => {
  if (!member.phone) {
- Alert.alert("No Phone Number", "Add a phone number for this member to send their login over WhatsApp.");
+ Alert.alert("No Phone Number", "Add a phone number for this member to send app instructions over WhatsApp.");
  return;
  }
- const message = `Hi ${member.name}! You've been added to ${activeCompany?.name ?? "our team"} on MMC Shop.\n\nDownload the MMC Agent app and log in with:\nEmail: ${member.email}\nPassword: ${member.tempPassword}\n\nPlease change your password after logging in.`;
+ const emailNote = member.invitationSent
+   ? `Check ${member.email} for your secure password setup link.`
+   : `Ask your manager to resend the password setup email to ${member.email}.`;
+ const message = `Hi ${member.name}! You've been added to ${activeCompany?.name ?? "our team"} on MMC Shop.\n\n1. ${emailNote}\n2. Download MMC Staff: https://github.com/designpapayapalette-JKR/agent-app/releases/download/beta-latest/agent-app-latest.apk\n3. Sign in with ${member.email} after setting your password.`;
  const url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=+91${member.phone.replace(/\D/g, "")}`;
  Linking.canOpenURL(url).then((supported) => {
  if (supported) {
@@ -342,4 +343,3 @@ export default function OnboardingScreen() {
  </KeyboardAvoidingView>
  );
 }
-

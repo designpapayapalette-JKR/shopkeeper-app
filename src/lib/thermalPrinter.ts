@@ -3,11 +3,10 @@ import {
  BLEPrinter,
  USBPrinter,
  NetPrinter,
- COMMANDS,
  IBLEPrinter,
  IUSBPrinter,
  INetPrinter,
-} from "react-native-thermal-receipt-printer-image-qr";
+} from "@poriyaalar/react-native-thermal-receipt-printer";
 import type { ReceiptData } from "./printer";
 
 const STORAGE_KEY = "shopkeeper_saved_printers";
@@ -128,11 +127,11 @@ function activeDriver(type: PrinterConnectionType) {
 // padding tuned for a 58mm printer looks broken (columns misaligned) on an
 // 80mm one and vice versa.
 function buildEscPosBill(data: ReceiptData, paperWidth: PaperWidth): string {
- const ALIGN_CT = COMMANDS.TEXT_FORMAT.TXT_ALIGN_CT;
- const ALIGN_LT = COMMANDS.TEXT_FORMAT.TXT_ALIGN_LT;
- const BOLD_ON = COMMANDS.TEXT_FORMAT.TXT_BOLD_ON;
- const BOLD_OFF = COMMANDS.TEXT_FORMAT.TXT_BOLD_OFF;
- const HR = paperWidth === "80" ? COMMANDS.HORIZONTAL_LINE.HR3_80MM : COMMANDS.HORIZONTAL_LINE.HR3_58MM;
+ const ALIGN_CT = "\x1B\x61\x01";
+ const ALIGN_LT = "\x1B\x61\x00";
+ const BOLD_ON = "\x1B\x45\x01";
+ const BOLD_OFF = "\x1B\x45\x00";
+ const HR = "-".repeat(paperWidth === "80" ? 48 : 32);
  // Standard font is ~32 chars/line at 58mm, ~48 chars/line at 80mm.
  const colWidth = paperWidth === "80" ? 32 : 20;
 
@@ -200,7 +199,14 @@ export async function printToSavedPrinter(data: ReceiptData, printer?: SavedPrin
  await connectToPrinter(target);
  const driver = activeDriver(target.type);
  const bill = buildEscPosBill(data, target.paperWidth);
- driver.printBill(bill);
+ await new Promise<void>((resolve, reject) => {
+   driver.printBill(
+     bill,
+     { beep: false, cut: true, tailingLine: true },
+     () => resolve(),
+     (error: Error) => reject(error),
+   );
+ });
 }
 
 // Sends the ESC/POS cash drawer kick command (pin 2) to the paired printer.
@@ -214,5 +220,12 @@ export async function openCashDrawer(printer?: SavedPrinter): Promise<void> {
  const driver = activeDriver(target.type);
  // Standard ESC/POS drawer kick: ESC p 0 25 250 (pin 2, 25ms pulse)
  const rawCmd = "\x1B\x70\x00\x19\xFA";
- (driver as any).printRaw(rawCmd);
+ await new Promise<void>((resolve, reject) => {
+   driver.printText(
+     rawCmd,
+     { beep: false, cut: false, tailingLine: false },
+     () => resolve(),
+     (error: Error) => reject(error),
+   );
+ });
 }

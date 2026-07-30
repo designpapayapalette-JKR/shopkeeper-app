@@ -21,7 +21,8 @@ import { useAuth } from "../../src/lib/auth-context";
 export default function RegisterScreen() {
  const { register } = useAuth();
  const router = useRouter();
- const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [referralCode, setReferralCode] = useState("");
  const [companyName, setCompanyName] = useState("");
  const [firstName, setFirstName] = useState("");
  const [lastName, setLastName] = useState("");
@@ -39,15 +40,16 @@ export default function RegisterScreen() {
  }
  setLoading(true);
  try {
- await register({
- inviteCode: inviteCode.trim().toUpperCase(),
- companyName: companyName.trim(),
- firstName: firstName.trim(),
- lastName: lastName.trim() || undefined,
- state: state.trim() || undefined,
- email: email.trim(),
- password,
- });
+  await register({
+  inviteCode: inviteCode.trim().toUpperCase(),
+  referralCode: referralCode.trim() || undefined,
+  companyName: companyName.trim(),
+  firstName: firstName.trim(),
+  lastName: lastName.trim() || undefined,
+  state: state.trim() || undefined,
+  email: email.trim(),
+  password,
+  });
  // app/_layout.tsx's NavigationGuard takes it from here — a fresh
  // company has no onboardingCompletedAt yet, so it redirects into the
  // onboarding wizard automatically.
@@ -90,8 +92,9 @@ export default function RegisterScreen() {
  </View>
  )}
 
- <Field label="Invite Code *" value={inviteCode} onChangeText={(t) => setInviteCode(t.toUpperCase())} placeholder="XXXX-XXXX" autoCapitalize="characters" />
- <Field label="Business Name *" value={companyName} onChangeText={setCompanyName} placeholder="e.g. Sharma General Store" />
+  <Field label="Invite Code *" value={inviteCode} onChangeText={(t) => setInviteCode(t.toUpperCase())} placeholder="XXXX-XXXX" autoCapitalize="characters" />
+  <Field label="Referral Code (optional)" value={referralCode} onChangeText={setReferralCode} placeholder="Code from a friend" autoCapitalize="characters" />
+  <Field label="Business Name *" value={companyName} onChangeText={setCompanyName} placeholder="e.g. Sharma General Store" />
  <View className="flex-row" style={{ gap: 12 }}>
  <View className="flex-1">
  <Field label="First Name *" value={firstName} onChangeText={setFirstName} />

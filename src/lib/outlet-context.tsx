@@ -8,7 +8,8 @@ export interface Outlet {
  id: string;
  name: string;
  code: string;
- type: "shop" | "showroom" | "branch" | "warehouse_only";
+ type: "shop" | "showroom" | "branch" | "warehouse_only" | "office";
+ customTypeLabel?: string | null;
  isActive: boolean;
 }
 
@@ -30,7 +31,7 @@ export function OutletProvider({ children }: { children: React.ReactNode }) {
 
  const fetchOutlets = useCallback(async () => {
  try {
- const json = await api.get<any>("/outlets");
+ const json = await api.get<any>("/outlets/mine");
  if (json?.data) {
  setOutlets(json.data);
  }

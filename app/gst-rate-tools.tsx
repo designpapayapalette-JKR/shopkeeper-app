@@ -216,20 +216,20 @@ export default function GstRateToolsScreen() {
  {reviewLoading ? (
  <ActivityIndicator size="small" color="white" />
  ) : (
- <Text className="text-white font-bold text-xs">Check</Text>
+ <Text className="text-white font-bold text-sm">Check</Text>
  )}
  </Pressable>
  </View>
 
  {!reviewLoaded ? (
- <Text className="text-sm text-on-surface-variant ">Tap "Check" to find products whose GST rate differs from what their HSN code suggests.</Text>
+ <Text className="text-sm text-on-surface-variant ">Tap “Check” to find products whose GST rate differs from what their HSN code suggests.</Text>
  ) : reviewLoading ? (
  <ActivityIndicator size="large" color={theme.colors.primary} />
  ) : mismatches.length === 0 ? (
  <View className="py-6 items-center">
  <MaterialCommunityIcons name="check-circle-outline" size={36} color="#22C55E" />
  <Text className="text-sm font-bold text-on-surface-variant mt-2">No mismatches found</Text>
- <Text className="text-xs text-on-surface-variant mt-1">All products with an HSN code match their suggested rate.</Text>
+ <Text className="text-sm text-on-surface-variant mt-1">All products with an HSN code match their suggested rate.</Text>
  </View>
  ) : (
  <View>

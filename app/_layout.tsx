@@ -113,6 +113,7 @@ function NavigationGuard() {
 }
 
 import { AppUpdateGate } from "../src/components/AppUpdateGate";
+import { SyncGate } from "../src/components/SyncGate";
 
 export default function RootLayout() {
   const [fontsLoaded] = useAppFonts();
@@ -138,8 +139,10 @@ export default function RootLayout() {
             <OutletProvider>
               <ConfirmDialogProvider>
                 <AppUpdateGate appType="admin">
-                  <StatusBar style="dark" />
-                  <NavigationGuard />
+                  <SyncGate>
+                    <StatusBar style="dark" />
+                    <NavigationGuard />
+                  </SyncGate>
                 </AppUpdateGate>
               </ConfirmDialogProvider>
             </OutletProvider>

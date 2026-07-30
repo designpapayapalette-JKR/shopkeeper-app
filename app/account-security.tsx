@@ -139,7 +139,7 @@ export default function AccountSecurityScreen() {
  Two-Factor Authentication
  </Text>
  <Text className="text-sm text-on-surface-variant mt-1">
- After entering your password, we'll also email a 6-digit code you must enter to finish signing in.
+ After entering your password, we’ll also email a 6-digit code you must enter to finish signing in.
  </Text>
  </View>
  <Switch value={me.two_factor_enabled} disabled={toggling} onValueChange={handleToggle} trackColor={{ true: theme.colors.primary }} />
