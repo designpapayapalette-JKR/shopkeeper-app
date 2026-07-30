@@ -1,5 +1,8 @@
 name: Shopkeeper Mobile CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, master, develop]
@@ -22,11 +25,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Audit dependencies (high/critical)
         run: npm audit --omit=dev --audit-level=high
-        continue-on-error: true
 
       - name: Typecheck
         run: npm run typecheck
