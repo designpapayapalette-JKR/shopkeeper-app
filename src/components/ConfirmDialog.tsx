@@ -37,11 +37,25 @@ export function ConfirmDialogProvider({ children }: { children: React.ReactNode 
  });
  }, []);
 
- const handle = (result: boolean) => {
- setVisible(false);
- resolver.current?.(result);
- resolver.current = null;
- };
+  const handle = (result: boolean) => {
+    setVisible(false);
+    resolver.current?.(result);
+    resolver.current = null;
+  };
+
+  React.useEffect(() => {
+    if (!visible) return;
+    const handleKeyDown = (e: any) => {
+      if (e.key === "Enter" || e.key === "NumpadEnter") {
+        e.preventDefault?.();
+        handle(true);
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("keydown", handleKeyDown, true);
+      return () => window.removeEventListener("keydown", handleKeyDown, true);
+    }
+  }, [visible]);
 
  return (
  <ConfirmDialogContext.Provider value={confirm}>
