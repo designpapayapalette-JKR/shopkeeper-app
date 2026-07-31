@@ -9,6 +9,7 @@ import { useBottomInset } from "../../src/lib/useBottomInset";
 import { shareDataAsPdf } from "../../src/lib/pdfExport";
 import EmptyState from "../../src/components/EmptyState";
 import { subscribeDataRefresh } from "../../src/lib/dataRefreshBus";
+import InvoicePreviewModal from "../../src/components/InvoicePreviewModal";
 
 function formatRupee(n: number): string {
  return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -81,6 +82,7 @@ export default function InvoiceHistoryScreen() {
   const [returning, setReturning] = useState(false);
   const [sending, setSending] = useState(false);
   const [promptCb, setPromptCb] = useState<((val: string) => void) | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
  const statuses = useMemo(() => {
  return ["All", ...new Set([...invoices, ...b2bInvoices, ...purchases].map((i) => i.payment_status || "pending"))];
@@ -289,32 +291,33 @@ export default function InvoiceHistoryScreen() {
  </View>
  )}
 
-   <View className="bg-surface-container rounded-xl p-3 mb-2">
-   <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Actions</Text>
-  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
- <ActionButton icon="share-variant" label="Share" onPress={() => Share.share({ message: `${number}: ${formatRupee(amount)}` })} />
- <ActionButton icon="file-pdf-box" label="PDF" onPress={async () => {
- // GET /invoices/:id/pdf requires auth and returns JSON ({data:{url}}),
- // not a raw downloadable file — sharing that URL directly would just
- // hand the recipient a link they can't open. Fetch it first (generates
- // and caches the PDF on Cloudinary on first call) and share the real
- // public URL it returns instead.
- try {
- const res = await api.get<{ url: string }>(`/invoices/${detailInvoice.id}/pdf`);
- await Share.share({ message: `Download: ${res.url}` });
- } catch {
- Alert.alert("Error", "Could not generate the invoice PDF link. Please try again.");
- }
- }} />
- <ActionButton icon="email" label={sending ? "..." : "Send"} onPress={handleSend} fill />
- {detailTab === "sales" && (
- <>
- <ActionButton icon="undo" label={returning ? "..." : "Return"} onPress={handleReturn} color="#EA580C" />
- <ActionButton icon="cancel" label={voiding ? "..." : "Void"} onPress={handleVoid} color="#DC2626" />
- </>
- )}
- </View>
- </View>
+<View className="bg-surface-container rounded-xl p-3 mb-2">
+    <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Actions</Text>
+   <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+  <ActionButton icon="eye-outline" label="Preview" onPress={() => setShowPreview(true)} color="#0368FE" />
+  <ActionButton icon="share-variant" label="Share" onPress={() => Share.share({ message: `${number}: ${formatRupee(amount)}` })} />
+  <ActionButton icon="file-pdf-box" label="PDF" onPress={async () => {
+  // GET /invoices/:id/pdf requires auth and returns JSON ({data:{url}}),
+  // not a raw downloadable file — sharing that URL directly would just
+  // hand the recipient a link they can't open. Fetch it first (generates
+  // and caches the PDF on Cloudinary on first call) and share the real
+  // public URL it returns instead.
+  try {
+  const res = await api.get<{ url: string }>(`/invoices/${detailInvoice.id}/pdf`);
+  await Share.share({ message: `Download: ${res.url}` });
+  } catch {
+  Alert.alert("Error", "Could not generate the invoice PDF link. Please try again.");
+  }
+  }} />
+  <ActionButton icon="email" label={sending ? "..." : "Send"} onPress={handleSend} fill />
+  {detailTab === "sales" && (
+  <>
+  <ActionButton icon="undo" label={returning ? "..." : "Return"} onPress={handleReturn} color="#EA580C" />
+  <ActionButton icon="cancel" label={voiding ? "..." : "Void"} onPress={handleVoid} color="#DC2626" />
+  </>
+  )}
+  </View>
+  </View>
 
    {detailTab === "sales" && (
    <View className="bg-surface-container rounded-xl p-3">
@@ -483,8 +486,11 @@ export default function InvoiceHistoryScreen() {
   </View>
   </Pressable>
   </Pressable>
-  </Modal>
-  </View>
+</Modal>
+
+  {/* Invoice Preview Modal */}
+  <InvoicePreviewModal visible={showPreview} onClose={() => setShowPreview(false)} detail={detailInvoice} />
+</View>
   );
 }
 

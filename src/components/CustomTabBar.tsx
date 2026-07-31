@@ -4,74 +4,111 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
 import type { UserRole } from "../lib/moduleCategories";
 
 const ICONS: Record<string, string> = {
   index: "view-dashboard-outline",
+  pos: "receipt",
   inventory: "package-variant-closed",
   agents: "map-marker-radius-outline",
-  "payment-history": "credit-card-outline",
 };
 
-const LABELS: Record<string, string> = {
-  index: "Home",
-  inventory: "Inventory",
-  agents: "Tracking",
-  "payment-history": "Payments",
-};
+const TAB_ORDER = ["index", "pos", "inventory", "agents"];
 
-const ROLE_FAB_ACTIONS: Record<string, { key: string; label: string; desc: string; icon: string; route: string }[]> = {
-  owner: [
-    { key: "new-sale", label: "New Sale", desc: "Start a POS bill", icon: "point-of-sale", route: "/pos" },
-    { key: "new-invoice", label: "New Invoice", desc: "Create an order or quote", icon: "file-document-outline", route: "/estimates" },
-    { key: "new-expense", label: "New Expense", desc: "Log a business expense", icon: "wallet-outline", route: "/expenses" },
-    { key: "new-payment", label: "New Payment", desc: "Record money in or out", icon: "credit-card-outline", route: "/payment-history" },
-  ],
-  manager: [
-    { key: "new-sale", label: "New Sale", desc: "Start a POS bill", icon: "point-of-sale", route: "/pos" },
-    { key: "new-invoice", label: "New Invoice", desc: "Create an order or quote", icon: "file-document-outline", route: "/estimates" },
-    { key: "new-expense", label: "New Expense", desc: "Log a business expense", icon: "wallet-outline", route: "/expenses" },
-    { key: "new-payment", label: "New Payment", desc: "Record money in or out", icon: "credit-card-outline", route: "/payment-history" },
-  ],
-  staff: [
-    { key: "new-sale", label: "New Sale", desc: "Start a POS bill", icon: "point-of-sale", route: "/pos" },
-    { key: "new-payment", label: "New Payment", desc: "Record money in or out", icon: "credit-card-outline", route: "/payment-history" },
-  ],
-  warehouse_manager: [
-    { key: "record-purchase", label: "Record Purchase", desc: "Log stock received", icon: "truck", route: "/purchase-entry" },
-    { key: "stock-transfer", label: "Stock Transfer", desc: "Move stock between warehouses", icon: "transfer", route: "/stock-transfer-requests" },
-  ],
-  field_agent: [
-    { key: "mark-attendance", label: "Mark Attendance", desc: "Check in to your shift", icon: "calendar-check", route: "/attendance" },
-  ],
-};
-
-const TAB_ORDER = ["index", "inventory", "agents", "payment-history"];
-
-function TabButton({ routeName, focused, onPress }: { routeName: string; focused: boolean; onPress: () => void }) {
+function TabButton({
+  routeName,
+  focused,
+  onPress,
+}: {
+  routeName: string;
+  focused: boolean;
+  onPress: () => void;
+}) {
+  const { t } = useTranslation();
   const color = focused ? "#0368FE" : "#9A9591";
+
+  const getLabel = (name: string) => {
+    switch (name) {
+      case "index":
+        return t("nav.home", "Home");
+      case "pos":
+        return t("nav.sales", "Sales");
+      case "inventory":
+        return t("nav.inventory", "Stock");
+      case "agents":
+        return t("nav.agents", "Field");
+      default:
+        return name;
+    }
+  };
+
   return (
     <Pressable onPress={onPress} style={styles.tabButton} hitSlop={6}>
-      <MaterialCommunityIcons name={(ICONS[routeName] ?? ICONS.index) as any} size={21} color={color} />
+      <MaterialCommunityIcons name={(ICONS[routeName] ?? ICONS.index) as any} size={22} color={color} />
       <Text style={[styles.tabLabel, { color, fontWeight: focused ? "700" : "500" }]} numberOfLines={1}>
-        {LABELS[routeName] ?? routeName}
+        {getLabel(routeName)}
       </Text>
     </Pressable>
   );
 }
 
-function QuickActionsSheet({ visible, onClose, userRole }: { visible: boolean; onClose: () => void; userRole: UserRole }) {
+function ExecutiveQuickActionsSheet({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
   const router = useRouter();
-  const actions = ROLE_FAB_ACTIONS[userRole] ?? ROLE_FAB_ACTIONS.owner;
+  const executiveActions = [
+    {
+      key: "notifications",
+      label: t("notifications.title", "Notification Center"),
+      desc: t("notifications.subtitle", "System alerts, payment notices & warnings"),
+      icon: "bell-outline",
+      route: "/notifications",
+    },
+    {
+      key: "financials",
+      label: t("financialsMonitor.title", "Financials & Cashflow"),
+      desc: t("financialsMonitor.subtitle", "Receivables, payables & collection log"),
+      icon: "credit-card-outline",
+      route: "/payment-history",
+    },
+    {
+      key: "reports",
+      label: t("reportsHub.title", "Reports Hub"),
+      desc: t("reportsHub.subtitle", "Executive summaries & GST returns"),
+      icon: "chart-bar",
+      route: "/more",
+    },
+    {
+      key: "insights",
+      label: t("dashboard.insightsTitle", "Business Insights"),
+      desc: t("dashboard.insightsDesc", "Credit risk & inventory analysis"),
+      icon: "creation",
+      route: "/insights",
+    },
+    {
+      key: "approvals",
+      label: t("dashboard.businessAlerts", "Approvals & Alerts"),
+      desc: t("dashboard.pendingApprovals", "Pending reviews & tasks"),
+      icon: "clipboard-check-outline",
+      route: "/approval-queue",
+    },
+  ];
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.sheetBackdrop} onPress={onClose}>
         <Pressable style={styles.sheetCard} onPress={() => {}}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Quick Actions</Text>
+          <Text style={styles.sheetTitle}>{t("dashboard.title", "Executive Shortcuts")}</Text>
           <View style={styles.sheetGrid}>
-            {actions.map((action) => (
+            {executiveActions.map((action) => (
               <Pressable
                 key={action.key}
                 style={styles.sheetCell}
@@ -81,15 +118,19 @@ function QuickActionsSheet({ visible, onClose, userRole }: { visible: boolean; o
                 }}
               >
                 <LinearGradient
-                  colors={["#0368FE", "#03A8FE"]}
+                  colors={["#0368FE", "#000D3A"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.sheetIconChip}
                 >
-                  <MaterialCommunityIcons name={action.icon as any} size={26} color="#FFFFFF" />
+                  <MaterialCommunityIcons name={action.icon as any} size={24} color="#FFFFFF" />
                 </LinearGradient>
-                <Text style={styles.sheetCellLabel}>{action.label}</Text>
-                <Text style={styles.sheetCellDesc} numberOfLines={2}>{action.desc}</Text>
+                <Text style={styles.sheetCellLabel} numberOfLines={1}>
+                  {action.label}
+                </Text>
+                <Text style={styles.sheetCellDesc} numberOfLines={2}>
+                  {action.desc}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -102,14 +143,11 @@ function QuickActionsSheet({ visible, onClose, userRole }: { visible: boolean; o
 export default function CustomTabBar({
   state,
   navigation,
-  userRole,
 }: BottomTabBarProps & { userRole?: UserRole | null }) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const role = userRole ?? "owner";
 
-  // Always render 4 tabs in a fixed left/right split regardless of role.
-  // Role-based access control happens inside each screen, not by hiding tabs.
   const leftRoutes = TAB_ORDER.slice(0, 2);
   const rightRoutes = TAB_ORDER.slice(2);
 
@@ -140,17 +178,17 @@ export default function CustomTabBar({
       >
         <View style={styles.fabHalo}>
           <LinearGradient
-            colors={["#0368FE", "#03A8FE"]}
+            colors={["#0368FE", "#000D3A"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.fab}
           >
-            <MaterialCommunityIcons name="plus" size={30} color="#FFFFFF" />
+            <MaterialCommunityIcons name="chart-box-outline" size={28} color="#FFFFFF" />
           </LinearGradient>
         </View>
-        <Text style={styles.fabLabel}>New</Text>
+        <Text style={styles.fabLabel}>{t("nav.shortcuts", "Shortcuts")}</Text>
       </Pressable>
-      <QuickActionsSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} userRole={role} />
+      <ExecutiveQuickActionsSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
     </>
   );
 }
@@ -260,12 +298,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sheetCellLabel: {
-    fontSize: 14.5,
+    fontSize: 14,
     fontWeight: "700",
     color: "#1C1B1B",
   },
   sheetCellDesc: {
-    fontSize: 11.5,
+    fontSize: 11,
     color: "#7A756F",
     marginTop: 2,
   },

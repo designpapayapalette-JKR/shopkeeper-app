@@ -9,6 +9,7 @@ import { colorScheme } from "nativewind";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
 import { ConfirmDialogProvider } from "../src/components/ConfirmDialog";
 import OfflineBanner from "../src/components/OfflineBanner";
+import RealtimeNotificationBanner from "../src/components/RealtimeNotificationBanner";
 import { syncQueuedSales } from "../src/lib/offlineQueue";
 import { startConnectivityMonitoring } from "../src/lib/connectivity";
 import * as Notifications from "expo-notifications";
@@ -104,6 +105,7 @@ function NavigationGuard() {
  return (
  <View style={{ flex: 1 }}>
  <OfflineBanner />
+ <RealtimeNotificationBanner />
  <Stack screenOptions={{ headerShown: false }}>
  <Stack.Screen name="(auth)" />
  <Stack.Screen name="(tabs)" />

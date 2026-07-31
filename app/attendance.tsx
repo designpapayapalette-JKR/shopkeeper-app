@@ -3,11 +3,13 @@ import { View, ScrollView, ActivityIndicator, RefreshControl, Text, Pressable, A
 import { useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth-context";
 import { useOutlet } from "../src/lib/outlet-context";
 import { useTopInset, useBottomInset } from "../src/lib/useTopInset";
 import EmptyState from "../src/components/EmptyState";
+import LocationSelectorBar from "../src/components/LocationSelectorBar";
 
 const STATUS_OPTIONS = [
   { value: "present", label: "Present", icon: "check-circle", color: "#2E9E5B" },
@@ -51,6 +53,7 @@ type RosterRow = {
   check_out: string | null;
   notes: string | null;
   record_outlet_id: string | null;
+  location_name?: string;
 };
 
 type AttendanceRecord = {
@@ -68,7 +71,8 @@ type AttendanceRecord = {
 
 export default function AttendanceScreen() {
   const { userRole } = useAuth();
-  const { selectedOutletId } = useOutlet();
+  const { selectedOutletId, locationLabel } = useOutlet();
+  const { t } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
   const topInset = useTopInset();
@@ -88,7 +92,9 @@ export default function AttendanceScreen() {
   const [historyPage, setHistoryPage] = useState(1);
 
   const [selfStatus, setSelfStatus] = useState<{ checkedIn: boolean; checkedOut: boolean; record: any }>({
-    checkedIn: false, checkedOut: false, record: null,
+    checkedIn: false,
+    checkedOut: false,
+    record: null,
   });
 
   const [monthYear, setMonthYear] = useState(() => {
@@ -97,14 +103,14 @@ export default function AttendanceScreen() {
   });
 
   const canManage = userRole === "owner" || userRole === "manager" || userRole === "warehouse_manager";
-  const isStaff = userRole === "staff";
 
   const fetchRoster = useCallback(async () => {
-    if (!selectedOutletId || !canManage) return;
+    if (!canManage) return;
     try {
-      const res = await api.get<{ data: RosterRow[] }>("/attendance/roster", {
-        params: { outletId: selectedOutletId, date },
-      });
+      const params: any = { date };
+      if (selectedOutletId) params.outletId = selectedOutletId;
+
+      const res = await api.get<{ data: RosterRow[] }>("/attendance/roster", { params });
       const rows = res.data || [];
       setRoster(rows);
       const initial: Record<string, { status: string; check_in?: string; check_out?: string }> = {};
@@ -116,22 +122,26 @@ export default function AttendanceScreen() {
         };
       });
       setMarks(initial);
-    } catch { setRoster([]); }
-  }, [selectedOutletId, date]);
+    } catch {
+      setRoster([]);
+    }
+  }, [selectedOutletId, date, canManage]);
 
   const fetchHistory = useCallback(async () => {
     try {
       const { from, to } = getDateRange(preset);
-      const res = await api.get<{ data: AttendanceRecord[]; meta: any }>("/attendance", {
-        params: { startDate: from, endDate: to, page: historyPage, limit: 50 },
-      });
+      const params: any = { startDate: from, endDate: to, page: historyPage, limit: 50 };
+      if (selectedOutletId) params.outletId = selectedOutletId;
+
+      const res = await api.get<{ data: AttendanceRecord[]; meta: any }>("/attendance", { params });
       setHistory(res.data || []);
       setHistoryMeta(res.meta);
-    } catch { setHistory([]); }
-  }, [preset, historyPage]);
+    } catch {
+      setHistory([]);
+    }
+  }, [preset, historyPage, selectedOutletId]);
 
   const checkSelfStatus = useCallback(async () => {
-    if (!canManage) return;
     try {
       const { from, to } = getDateRange("today");
       const res = await api.get<{ data: AttendanceRecord[] }>("/attendance", {
@@ -151,31 +161,38 @@ export default function AttendanceScreen() {
       } else {
         setSelfStatus({ checkedIn: false, checkedOut: false, record: null });
       }
-    } catch { setSelfStatus({ checkedIn: false, checkedOut: false, record: null }); }
+    } catch {}
   }, []);
 
   const fetchData = useCallback(async () => {
-    await Promise.all([
-      canManage ? fetchRoster() : Promise.resolve(),
-      fetchHistory(),
-      checkSelfStatus(),
-    ]);
-  }, [fetchRoster, fetchHistory, checkSelfStatus, canManage]);
+    setLoading(true);
+    await Promise.all([fetchRoster(), fetchHistory(), checkSelfStatus()]);
+    setLoading(false);
+    setRefreshing(false);
+  }, [fetchRoster, fetchHistory, checkSelfStatus]);
 
-  useEffect(() => { fetchData().finally(() => { setLoading(false); setRefreshing(false); }); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const handleCheckIn = async () => {
+  const handleSelfCheckIn = async () => {
     try {
-      await api.post("/attendance/check-in");
+      await api.post("/attendance/check-in", { outletId: selectedOutletId || undefined });
       await checkSelfStatus();
-    } catch { Alert.alert("Error", "Check-in failed. Please try again."); }
+      Alert.alert("Success", `Checked in successfully for ${locationLabel}!`);
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed to check in.");
+    }
   };
 
-  const handleCheckOut = async () => {
+  const handleSelfCheckOut = async () => {
     try {
-      await api.post("/attendance/check-out");
+      await api.post("/attendance/check-out", { outletId: selectedOutletId || undefined });
       await checkSelfStatus();
-    } catch { Alert.alert("Error", "Check-out failed. Please try again."); }
+      Alert.alert("Success", "Checked out successfully!");
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed to check out.");
+    }
   };
 
   const handleSaveRoster = async () => {
@@ -187,10 +204,14 @@ export default function AttendanceScreen() {
         checkIn: m.check_in || null,
         checkOut: m.check_out || null,
       }));
-      await api.post("/attendance/mark", { outletId: selectedOutletId, date, records });
+      await api.post("/attendance/mark", { outletId: selectedOutletId || undefined, date, records });
       await fetchRoster();
-    } catch { Alert.alert("Error", "Failed to save attendance."); }
-    finally { setSaving(false); }
+      Alert.alert("Success", `Attendance updated for ${locationLabel}!`);
+    } catch {
+      Alert.alert("Error", "Failed to save attendance.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleFillMissing = async () => {
@@ -198,7 +219,10 @@ export default function AttendanceScreen() {
     try {
       await api.post("/attendance/fill-missing", { year, month });
       await fetchRoster();
-    } catch { Alert.alert("Error", "Failed to fill missing attendance."); }
+      Alert.alert("Success", "Missing attendance records updated.");
+    } catch {
+      Alert.alert("Error", "Failed to fill missing attendance.");
+    }
   };
 
   const changeDate = (offset: number) => {
@@ -206,11 +230,6 @@ export default function AttendanceScreen() {
     d.setDate(d.getDate() + offset);
     setDate(d.toISOString().split("T")[0]);
   };
-
-  const tabs = [
-    { key: "roster", label: "Mark Attendance", icon: "clipboard-check" },
-    { key: "history", label: "History", icon: "history" },
-  ];
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -225,178 +244,224 @@ export default function AttendanceScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScrollView
-        contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: bottomInset + 24 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />}
+        contentContainerStyle={{ paddingTop: topInset + 16, paddingBottom: bottomInset + 110 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />
+        }
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 mb-4">
+        <View className="flex-row items-center justify-between px-4 mb-3">
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <MaterialCommunityIcons name="calendar-check" size={24} color={theme.colors.primary} />
-            <Text className="text-2xl font-bold text-on-surface">Attendance</Text>
+            <Text className="text-2xl font-bold text-on-surface">Mark Attendance</Text>
           </View>
         </View>
 
-        {/* Self Check-in/Check-out — all roles */}
-        <View className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-4">
-          <View className="flex-row items-center justify-between">
+        {/* Multi-Location Switcher (Any Outlet / Branch / Warehouse) */}
+        <LocationSelectorBar onLocationChange={() => fetchData()} />
+
+        {/* Self Check-in/Check-out for Selected Location */}
+        <View className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 my-3 shadow-sm">
+          <View className="flex-row items-center justify-between mb-2">
             <View>
-              <Text className="text-sm font-bold text-on-surface">My Attendance</Text>
-              <Text className="text-xs text-on-surface-variant mt-1">
-                {selfStatus.checkedIn && !selfStatus.checkedOut ? "Checked in" :
-                selfStatus.checkedIn && selfStatus.checkedOut ? "Checked out for today" :
-                "Not checked in yet"}
-              </Text>
+              <Text className="text-sm font-bold text-on-surface">My Location Check-In</Text>
+              <Text className="text-xs text-on-surface-variant">Active: {locationLabel}</Text>
             </View>
-            <View className="flex-row" style={{ gap: 8 }}>
-              <Pressable
-                disabled={selfStatus.checkedIn}
-                onPress={handleCheckIn}
-                className="bg-primary flex-row items-center py-2 rounded-xl px-3"
-                style={{ gap: 4, opacity: selfStatus.checkedIn ? 0.5 : 1 }}
-              >
-                <MaterialCommunityIcons name="login" size={16} color="#FFFFFF" />
-                <Text className="text-white font-bold text-xs">Check In</Text>
-              </Pressable>
-              <Pressable
-                disabled={!selfStatus.checkedIn || selfStatus.checkedOut}
-                onPress={handleCheckOut}
-                className="border border-outline-variant flex-row items-center py-2 rounded-xl px-3"
-                style={{ gap: 4, opacity: (!selfStatus.checkedIn || selfStatus.checkedOut) ? 0.5 : 1 }}
-              >
-                <MaterialCommunityIcons name="logout" size={16} color={theme.colors.primary} />
-                <Text className="text-primary font-bold text-xs">Check Out</Text>
-              </Pressable>
-            </View>
+            {selfStatus.checkedIn && (
+              <View className="bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                <Text className="text-emerald-600 font-bold text-xs">Checked In</Text>
+              </View>
+            )}
           </View>
-        </View>
 
-        {/* Date Navigation */}
-        <View className="flex-row items-center justify-between px-4 mb-4">
-          <Pressable onPress={() => changeDate(-1)} className="p-2">
-            <MaterialCommunityIcons name="chevron-left" size={24} color={theme.colors.primary} />
-          </Pressable>
-          <View className="items-center">
-            <Text className="text-base font-bold text-on-surface">{formatDate(new Date(date))}</Text>
-            <Text className="text-xs text-on-surface-variant">{dayNames[new Date(date).getDay()]}</Text>
-          </View>
-          <Pressable onPress={() => changeDate(1)} className="p-2">
-            <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.primary} />
-          </Pressable>
-        </View>
-
-        {/* Date Presets */}
-        <View className="px-4 mb-4">
-          <View className="flex-row bg-surface-container-high rounded-xl p-1">
-            {DATE_PRESETS.map((presetOpt) => (
-              <Pressable
-                key={presetOpt.value}
-                onPress={() => { setPreset(presetOpt.value); setLoading(true); }}
-                className={`flex-1 py-2 px-3 rounded-lg items-center ${preset === presetOpt.value ? 'bg-primary' : ''}`}
-              >
-                <Text className={`text-xs font-bold ${preset === presetOpt.value ? 'text-white' : 'text-on-surface-variant'}`}>
-                  {presetOpt.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {/* Tab Switcher */}
-        <View className="flex-row px-4 mb-3" style={{ gap: 8 }}>
-          {tabs.map((t) => (
+          <View className="flex-row gap-3 mt-1">
             <Pressable
-              key={t.key}
-              onPress={() => setActiveTab(t.key)}
-              className={`flex-row items-center px-4 py-2 rounded-full ${activeTab === t.key ? "bg-primary" : "bg-surface-container-high"}`}
+              onPress={handleSelfCheckIn}
+              disabled={selfStatus.checkedIn}
+              className={`flex-1 py-3 rounded-xl items-center flex-row justify-center ${
+                selfStatus.checkedIn ? "bg-surface-container-high" : "bg-emerald-600 active:opacity-90"
+              }`}
               style={{ gap: 6 }}
             >
-              <MaterialCommunityIcons name={t.icon as any} size={16} color={activeTab === t.key ? "#FFFFFF" : theme.colors.onSurfaceVariant} />
-              <Text className={`text-sm font-bold ${activeTab === t.key ? "text-white" : "text-on-surface-variant"}`}>
-                {t.label}
+              <MaterialCommunityIcons
+                name="login"
+                size={18}
+                color={selfStatus.checkedIn ? "#9CA3AF" : "#FFFFFF"}
+              />
+              <Text
+                className={`text-xs font-bold ${selfStatus.checkedIn ? "text-on-surface-variant" : "text-white"}`}
+              >
+                Check In
               </Text>
             </Pressable>
-          ))}
+
+            <Pressable
+              onPress={handleSelfCheckOut}
+              disabled={!selfStatus.checkedIn || selfStatus.checkedOut}
+              className={`flex-1 py-3 rounded-xl items-center flex-row justify-center ${
+                !selfStatus.checkedIn || selfStatus.checkedOut
+                  ? "bg-surface-container-high"
+                  : "bg-rose-600 active:opacity-90"
+              }`}
+              style={{ gap: 6 }}
+            >
+              <MaterialCommunityIcons
+                name="logout"
+                size={18}
+                color={!selfStatus.checkedIn || selfStatus.checkedOut ? "#9CA3AF" : "#FFFFFF"}
+              />
+              <Text
+                className={`text-xs font-bold ${
+                  !selfStatus.checkedIn || selfStatus.checkedOut ? "text-on-surface-variant" : "text-white"
+                }`}
+              >
+                Check Out
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Roster & History Tabs */}
+        <View className="flex-row mx-4 mb-4 bg-surface-container-low p-1 rounded-2xl">
+          {[
+            { key: "roster", label: "Team Roster", icon: "clipboard-check" },
+            { key: "history", label: "Attendance Logs", icon: "history" },
+          ].map((tab) => {
+            const active = activeTab === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key)}
+                className={`flex-1 py-2.5 rounded-xl items-center flex-row justify-center ${
+                  active ? "bg-surface-container-lowest shadow-sm" : ""
+                }`}
+                style={{ gap: 6 }}
+              >
+                <MaterialCommunityIcons
+                  name={tab.icon as any}
+                  size={18}
+                  color={active ? theme.colors.primary : "#9CA3AF"}
+                />
+                <Text
+                  className={`text-xs font-bold ${active ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {activeTab === "roster" && (
           <>
-            {/* Fill Missing */}
-            {canManage && (
-              <View className="flex-row items-center px-4 mb-3" style={{ gap: 8 }}>
-                <TextInput
-                  className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-4 py-3 font-medium"
-                  value={monthYear}
-                  onChangeText={setMonthYear}
-                  placeholder="Month (YYYY-MM)"
-                  style={{ width: 120 }}
-                />
-                <Pressable onPress={handleFillMissing} className="flex-row items-center py-2 rounded-xl px-3" style={{ gap: 4 }}>
-                  <MaterialCommunityIcons name="auto-fix" size={16} color={theme.colors.primary} />
-                  <Text className="text-primary font-bold text-xs">Fill Absent</Text>
-                </Pressable>
+            {/* Date Selector */}
+            <View className="flex-row items-center justify-between mx-4 mb-3 bg-surface-container-lowest border border-outline-variant rounded-2xl p-3">
+              <Pressable onPress={() => changeDate(-1)} className="p-1">
+                <MaterialCommunityIcons name="chevron-left" size={24} color="#6B7280" />
+              </Pressable>
+              <View className="items-center">
+                <Text className="text-sm font-bold text-on-surface">{formatDate(new Date(date))}</Text>
+                <Text className="text-[10px] text-on-surface-variant font-medium">
+                  {dayNames[new Date(date).getDay()]}
+                </Text>
               </View>
-            )}
+              <Pressable onPress={() => changeDate(1)} className="p-1">
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+              </Pressable>
+            </View>
 
-            {!selectedOutletId ? (
-              <EmptyState icon="store-off" title="Select an outlet" description="Choose an outlet above to mark attendance." />
-            ) : roster.length === 0 ? (
-              <EmptyState icon="account-multiple-remove" title="No staff assigned" description="No team members are assigned to this outlet yet." />
-            ) : (
-              <>
-                {/* Mark All Present Quick Action */}
-                <View className="px-4 mb-3">
+            {/* Fill Missing & Auto Actions */}
+            {canManage && (
+              <View className="flex-row items-center justify-between px-4 mb-3">
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  <TextInput
+                    className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-medium"
+                    value={monthYear}
+                    onChangeText={setMonthYear}
+                    placeholder="YYYY-MM"
+                    style={{ width: 100 }}
+                  />
+                  <Pressable onPress={handleFillMissing} className="flex-row items-center py-1.5 px-2.5 bg-primary/10 rounded-xl" style={{ gap: 4 }}>
+                    <MaterialCommunityIcons name="auto-fix" size={14} color={theme.colors.primary} />
+                    <Text className="text-primary font-bold text-xs">Auto Fill</Text>
+                  </Pressable>
+                </View>
+
+                {roster.length > 0 && (
                   <Pressable
                     onPress={() => {
                       const allPresent: Record<string, { status: string }> = {};
                       roster.forEach((r) => { allPresent[r.user_id] = { status: "present" }; });
                       setMarks(allPresent);
                     }}
-                    className="flex-row items-center py-2 rounded-xl px-3"
+                    className="flex-row items-center py-1.5 px-2.5 bg-emerald-500/10 rounded-xl"
                     style={{ gap: 4 }}
                   >
-                    <MaterialCommunityIcons name="check-all" size={16} color={theme.colors.primary} />
-                    <Text className="text-primary font-bold text-xs">Mark All Present</Text>
+                    <MaterialCommunityIcons name="check-all" size={16} color="#2E9E5B" />
+                    <Text className="text-emerald-700 font-bold text-xs">All Present</Text>
                   </Pressable>
-                </View>
+                )}
+              </View>
+            )}
 
+            {roster.length === 0 ? (
+              <EmptyState
+                icon="account-multiple-remove"
+                title="No staff found for this location"
+                description={`No team members registered for ${locationLabel}.`}
+              />
+            ) : (
+              <>
                 {/* Staff Roster Cards */}
                 {roster.map((staff) => {
                   const current = marks[staff.user_id] || { status: "present" };
-                  const statusOpt = STATUS_OPTIONS.find((s) => s.value === current.status);
                   return (
-                    <View key={staff.user_id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-2">
+                    <View key={staff.user_id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-3 shadow-sm">
                       <View className="flex-row items-center justify-between mb-2">
-                        <View className="flex-row items-center" style={{ gap: 8 }}>
-                          <View className="w-9 h-9 rounded-full items-center justify-center bg-primary/10">
-                            <Text className="text-sm font-bold text-primary">
+                        <View className="flex-row items-center" style={{ gap: 10 }}>
+                          <View className="w-10 h-10 rounded-full items-center justify-center bg-primary/10 border border-primary/20">
+                            <Text className="text-sm font-black text-primary">
                               {staff.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                             </Text>
                           </View>
                           <View>
                             <Text className="text-sm font-bold text-on-surface">{staff.name}</Text>
-                            <Text className="text-[10px] text-on-surface-variant capitalize">{staff.role.replace("_", " ")}</Text>
+                            <Text className="text-[10px] text-on-surface-variant capitalize font-medium">
+                              {staff.role.replace("_", " ")}
+                            </Text>
                           </View>
                         </View>
-                        {!staff.assigned_to_location && (
-                          <View className="rounded-full px-3 py-1" style={{ backgroundColor: "#F0AE4E20" }}>
-                            <Text className="text-xs font-bold" style={{ color: "#F0AE4E" }}>Unassigned</Text>
-                          </View>
-                        )}
                       </View>
 
-                      {/* Status selector */}
-                      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                      {/* Status Buttons */}
+                      <View className="flex-row flex-wrap gap-1.5 mt-2">
                         {STATUS_OPTIONS.map((opt) => {
-                          const selected = current.status === opt.value;
+                          const active = current.status === opt.value;
                           return (
                             <Pressable
                               key={opt.value}
-                              onPress={() => setMarks((prev) => ({ ...prev, [staff.user_id]: { ...prev[staff.user_id], status: opt.value } }))}
-                              className={`flex-row items-center px-3 py-1.5 rounded-full border ${selected ? "border-0" : "border-outline-variant"}`}
-                              style={{ backgroundColor: selected ? opt.color : "transparent", gap: 4 }}
+                              onPress={() =>
+                                setMarks((prev) => ({
+                                  ...prev,
+                                  [staff.user_id]: { ...prev[staff.user_id], status: opt.value },
+                                }))
+                              }
+                              className={`px-3 py-1.5 rounded-xl border flex-row items-center ${
+                                active ? "border-transparent" : "bg-surface-container-low border-outline-variant"
+                              }`}
+                              style={{
+                                backgroundColor: active ? opt.color : undefined,
+                                gap: 4,
+                              }}
                             >
-                              <MaterialCommunityIcons name={opt.icon as any} size={14} color={selected ? "#FFFFFF" : opt.color} />
-                              <Text className={`text-xs font-bold ${selected ? "text-white" : ""}`} style={selected ? {} : { color: opt.color }}>
+                              <MaterialCommunityIcons
+                                name={opt.icon as any}
+                                size={14}
+                                color={active ? "#FFFFFF" : "#6B7280"}
+                              />
+                              <Text
+                                className={`text-xs font-bold ${active ? "text-white" : "text-on-surface-variant"}`}
+                              >
                                 {opt.label}
                               </Text>
                             </Pressable>
@@ -407,16 +472,18 @@ export default function AttendanceScreen() {
                   );
                 })}
 
-                <View className="px-4 mt-3 mb-6">
+                {/* Save Button */}
+                <View className="px-4 mt-2">
                   <Pressable
-                    disabled={saving}
                     onPress={handleSaveRoster}
-                    className="bg-primary py-3 rounded-xl items-center flex-row justify-center"
-                    style={{ gap: 6, opacity: saving ? 0.5 : 1 }}
+                    disabled={saving}
+                    className="bg-primary py-3.5 rounded-2xl items-center justify-center active:opacity-90 shadow-sm"
                   >
-                    {saving && <ActivityIndicator size="small" color="#FFFFFF" />}
-                    <MaterialCommunityIcons name="content-save" size={18} color="#FFFFFF" />
-                    <Text className="text-white font-bold">Save Attendance</Text>
+                    {saving ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <Text className="text-sm font-bold text-white">Save Attendance Roster</Text>
+                    )}
                   </Pressable>
                 </View>
               </>
@@ -424,68 +491,56 @@ export default function AttendanceScreen() {
           </>
         )}
 
+        {/* History Tab */}
         {activeTab === "history" && (
-          <>
-            {history.length === 0 ? (
-              <EmptyState icon="calendar-blank" title="No attendance records" />
-            ) : (
-              history.map((rec) => {
-                const statusOpt = STATUS_OPTIONS.find((s) => s.value === rec.status);
-                const name = rec.user ? `${rec.user.first_name || ""} ${rec.user.last_name || ""}`.trim() : "—";
+          <View className="px-4">
+            <View className="flex-row gap-2 mb-3">
+              {DATE_PRESETS.map((p) => {
+                const active = preset === p.value;
                 return (
-                  <View key={rec.id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mx-4 mb-2">
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex-row items-center" style={{ gap: 10 }}>
-                        {statusOpt && (
-                          <MaterialCommunityIcons name={statusOpt.icon as any} size={22} color={statusOpt.color} />
-                        )}
-                        <View>
-                          <Text className="text-sm font-bold text-on-surface">{name}</Text>
-                          <Text className="text-xs text-on-surface-variant">
-                            {rec.date ? formatDate(new Date(rec.date)) : "—"}
-                            {rec.check_in ? ` · In: ${new Date(rec.check_in).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                            {rec.check_out ? ` · Out: ${new Date(rec.check_out).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                          </Text>
-                        </View>
-                      </View>
-                      <View className="items-end">
-                        {statusOpt && (
-                          <Text className="text-xs font-bold" style={{ color: statusOpt.color }}>
-                            {statusOpt.label}
-                          </Text>
-                        )}
-                        {rec.notes && <Text className="text-[10px] text-on-surface-variant mt-0.5">{rec.notes}</Text>}
+                  <Pressable
+                    key={p.value}
+                    onPress={() => setPreset(p.value)}
+                    className={`px-3.5 py-1.5 rounded-full border ${
+                      active ? "bg-primary border-primary" : "bg-surface-container-lowest border-outline-variant"
+                    }`}
+                  >
+                    <Text className={`text-xs font-bold ${active ? "text-white" : "text-on-surface"}`}>
+                      {p.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {history.length === 0 ? (
+              <EmptyState icon="calendar-blank" title="No attendance logs found" description="Attendance logs will appear here." />
+            ) : (
+              history.map((h) => {
+                const opt = STATUS_OPTIONS.find((s) => s.value === h.status);
+                const userName = h.user ? `${h.user.first_name} ${h.user.last_name || ""}`.trim() : "Staff";
+                return (
+                  <View key={h.id} className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-4 mb-2 shadow-sm">
+                    <View className="flex-row items-center justify-between mb-1">
+                      <Text className="text-sm font-bold text-on-surface">{userName}</Text>
+                      <View
+                        className="px-2.5 py-0.5 rounded-full"
+                        style={{ backgroundColor: `${opt?.color || "#6B7280"}20` }}
+                      >
+                        <Text className="text-xs font-bold" style={{ color: opt?.color || "#6B7280" }}>
+                          {opt?.label || h.status}
+                        </Text>
                       </View>
                     </View>
+                    <Text className="text-xs text-on-surface-variant">
+                      {h.date ? h.date.split("T")[0] : ""}
+                      {h.work_location ? ` • Location: ${h.work_location}` : ""}
+                    </Text>
                   </View>
                 );
               })
             )}
-
-            {historyMeta && historyMeta.totalPages > 1 && (
-              <View className="flex-row justify-center items-center px-4 mt-3 mb-6" style={{ gap: 12 }}>
-                <Pressable
-                  disabled={historyPage <= 1}
-                  onPress={() => setHistoryPage((p) => Math.max(1, p - 1))}
-                  className="border border-outline-variant py-2 px-4 rounded-xl"
-                  style={{ opacity: historyPage <= 1 ? 0.5 : 1 }}
-                >
-                  <Text className="text-on-surface font-bold text-xs">Previous</Text>
-                </Pressable>
-                <Text className="text-sm text-on-surface-variant">
-                  Page {historyMeta.page} of {historyMeta.totalPages}
-                </Text>
-                <Pressable
-                  disabled={historyPage >= historyMeta.totalPages}
-                  onPress={() => setHistoryPage((p) => p + 1)}
-                  className="border border-outline-variant py-2 px-4 rounded-xl"
-                  style={{ opacity: historyPage >= historyMeta.totalPages ? 0.5 : 1 }}
-                >
-                  <Text className="text-on-surface font-bold text-xs">Next</Text>
-                </Pressable>
-              </View>
-            )}
-          </>
+          </View>
         )}
       </ScrollView>
     </View>

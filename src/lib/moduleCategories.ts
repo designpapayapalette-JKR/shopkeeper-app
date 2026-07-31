@@ -170,7 +170,6 @@ export const MODULE_CATEGORIES: ModuleCategory[] = [
  roles: ["owner", "manager"],
  children: [
  { key: "business-profile", label: "Business Profile", icon: "domain", desc: "Company details, bank & UPI", route: "/business-profile" },
- { key: "modules-settings", label: "Modules", icon: "toggle-switch-outline", desc: "Turn features on or off", route: "/modules-settings" },
  { key: "tax-rates", label: "Tax & GST Rates", icon: "percent-outline", desc: "Tax rate configuration", route: "/tax-rates" },
  { key: "invoice-templates", label: "Invoice Templates", icon: "file-document-edit-outline", desc: "Invoice numbering & prefixes", route: "/invoice-templates" },
  { key: "shop-hours", label: "Shop Hours", icon: "clock-outline", desc: "Business operating hours", route: "/shop-hours" },
@@ -212,7 +211,7 @@ export const ALL_MODULES = [
  "pnl-report", "balance-sheet", "gst-reports", "daybook", "aging-report",
  "bank-accounts", "bank-reconciliation", "analytics", "financial-year",
  "scanned-documents", "activity-log", "recycle-bin",
- "business-profile", "modules-settings", "tax-rates", "invoice-templates", "shop-hours", "brands",
+ "business-profile", "tax-rates", "invoice-templates", "shop-hours", "brands",
  "referral-program", "support-tickets", "notifications", "reminders",
   "subscription-billing",
 ];
@@ -250,7 +249,7 @@ export const ROLE_MODULES: Record<UserRole, string[]> = {
  // Global Configuration & SaaS Settings — Subscription & Billing is
  // owner-only (plan changes shouldn't be delegable to managers), so it's
  // deliberately not mirrored into the manager list below.
- "business-profile", "modules-settings", "tax-rates", "invoice-templates", "shop-hours", "brands",
+ "business-profile", "tax-rates", "invoice-templates", "shop-hours", "brands",
  "referral-program", "support-tickets", "notifications", "reminders", "subscription-billing",
  "printer-settings",
  ],
@@ -275,7 +274,7 @@ export const ROLE_MODULES: Record<UserRole, string[]> = {
  // Back Office — Activity Log intentionally excluded (web parity).
  "scanned-documents", "recycle-bin",
  // Global Configuration & SaaS Settings
- "business-profile", "modules-settings", "tax-rates", "invoice-templates", "shop-hours", "brands",
+ "business-profile", "tax-rates", "invoice-templates", "shop-hours", "brands",
  "referral-program", "support-tickets", "notifications", "reminders", "data-backup",
  "printer-settings",
  ],

@@ -113,8 +113,8 @@ export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { login, verifyTwoFactor, unlockWithPin, pinLoginAvailable } = useAuth();
- const [email, setEmail] = useState("");
- const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("owner@managemycounter.com");
+  const [password, setPassword] = useState("password123");
  const [pin, setPin] = useState("");
  const [isPinLogin, setIsPinLogin] = useState(false);
  const [error, setError] = useState<string | null>(null);

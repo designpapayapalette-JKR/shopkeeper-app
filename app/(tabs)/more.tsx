@@ -14,13 +14,13 @@ import {
  KeyboardAvoidingView,
  Platform,
 } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { useAuth } from "../../src/lib/auth-context";
 import { api, ApiError, uploadDocument } from "../../src/lib/api";
-import { SETTINGS_MODULE_CATEGORIES } from "../../src/lib/moduleCategories";
+import { SETTINGS_MODULE_CATEGORIES, MODULE_CATEGORIES, CATEGORY_COLORS } from "../../src/lib/moduleCategories";
 import { useModuleVisibility } from "../../src/lib/useModuleVisibility";
 import { useConfirm } from "../../src/components/ConfirmDialog";
 import { shareLedgerReminder, shareChallan } from "../../src/lib/sharer";
@@ -166,6 +166,7 @@ export default function MoreScreen() {
  });
  const topInset = useTopInset();
  const bottomInset = useBottomInset();
+ const insets = useSafeAreaInsets();
  const params = useLocalSearchParams<{ openPurchase?: string; openReport?: string; openExpense?: string; billPhotoUri?: string; openTransfer?: string; transferPhotoUri?: string }>();
  const handledDeepLinksRef = useRef<Set<string>>(new Set());
  const openedFromDeepLinkRef = useRef({ purchase: false, expense: false, transfer: false });
@@ -1270,7 +1271,7 @@ export default function MoreScreen() {
 
  return (
  <View className="flex-1 bg-background " style={{ paddingTop: topInset }}>
- <ScrollView className="flex-1 px-6">
+ <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}>
  {/* Title */}
  <View className="mb-8">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -1601,22 +1602,12 @@ export default function MoreScreen() {
  >
  <Text className="text-base font-bold text-on-surface flex-1 mr-2">Barcode Generator</Text>
  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
- </Pressable>
+</Pressable>
 
- <View className="h-px bg-outline-variant my-2" />
+  <View className="h-px bg-outline-variant my-2" />
 
- <Pressable
- onPress={() => router.push("/printer-settings" as any)}
- className="flex-row justify-between items-center py-2.5"
- >
- <Text className="text-base font-bold text-on-surface flex-1 mr-2">Printer Settings</Text>
- <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
- </Pressable>
-
- <View className="h-px bg-outline-variant my-2" />
-
- <Pressable
- onPress={() => router.push("/categories" as any)}
+  <Pressable
+  onPress={() => router.push("/categories" as any)}
  className="flex-row justify-between items-center py-2.5"
  >
  <Text className="text-base font-bold text-on-surface flex-1 mr-2">Categories & Brands</Text>
@@ -1845,352 +1836,409 @@ export default function MoreScreen() {
    <Text className="text-base font-bold text-on-surface flex-1 mr-2">Employee Advances</Text>
    <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
   </Pressable>
+</View>
+
+  {/* ══════════════════════ SETTINGS ══════════════════════
+  Configuration you set up once and rarely touch again. */}
+  <Text className="text-sm font-black text-primary uppercase tracking-widest mb-3 mt-2">
+  Settings
+  </Text>
+
+  {/* Language Settings */}
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
+  <Text className="text-base font-bold text-on-surface mb-4">
+  App Language
+  </Text>
+  <View className="flex-row flex-wrap bg-surface-container-high p-1 rounded-xl" style={{ gap: 4 }}>
+  {[
+  { key: "en", label: "English" },
+  { key: "hi", label: "हिंदी" },
+  { key: "ta", label: "தமிழ்" },
+  { key: "ml", label: "മലയാളം" },
+  { key: "kn", label: "ಕನ್ನಡ" },
+  { key: "te", label: "తెలుగు" },
+  { key: "mr", label: "मराठी" },
+  { key: "gu", label: "ગુજરાતી" },
+  ].map((l) => (
+  <Pressable
+  key={l.key}
+  onPress={() => setLang(l.key as TerminologyLang)}
+  className={`py-2.5 px-3 rounded-lg items-center ${lang === l.key ? "bg-primary shadow-sm" : ""}`}
+  >
+  <Text className={`text-xs font-bold ${lang === l.key ? "text-white" : "text-on-surface "}`}>{l.label}</Text>
+  </Pressable>
+  ))}
+  </View>
   </View>
 
- {/* ══════════════════════ SETTINGS ══════════════════════
- Configuration you set up once and rarely touch again. */}
- <Text className="text-sm font-black text-primary uppercase tracking-widest mb-3 mt-2">
- Settings
- </Text>
+  {/* Outlet Switcher */}
+  {outlets.length > 0 && (
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
+  <Text className="text-base font-bold text-on-surface mb-4">
+  Current Outlet
+  </Text>
+  <Pressable
+  onPress={() => setShowOutletPicker(true)}
+  className="flex-row justify-between items-center py-3"
+  >
+  <View className="flex-1 mr-2">
+  <Text className="text-lg font-bold text-on-surface ">
+  {selectedOutlet ? selectedOutlet.name : "All Outlets (Owner Access)"}
+  </Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5 capitalize">
+  {selectedOutlet ? selectedOutlet.type.replace("_", " ") : "Cross-outlet access"}
+  </Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={22} color={theme.colors.primary} />
+  </Pressable>
+  </View>
+  )}
 
- {/* Language Settings */}
- <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
- <Text className="text-base font-bold text-on-surface mb-4">
- App Language
- </Text>
- <View className="flex-row flex-wrap bg-surface-container-high p-1 rounded-xl" style={{ gap: 4 }}>
- {[
- { key: "en", label: "English" },
- { key: "hi", label: "हिंदी" },
- { key: "ta", label: "தமிழ்" },
- { key: "ml", label: "മലയാളം" },
- { key: "kn", label: "ಕನ್ನಡ" },
- { key: "te", label: "తెలుగు" },
- { key: "mr", label: "मराठी" },
- { key: "gu", label: "ગુજરાતી" },
- ].map((l) => (
- <Pressable
- key={l.key}
- onPress={() => setLang(l.key as TerminologyLang)}
- className={`py-2.5 px-3 rounded-lg items-center ${lang === l.key ? "bg-primary shadow-sm" : ""}`}
- >
- <Text className={`text-xs font-bold ${lang === l.key ? "text-white" : "text-on-surface "}`}>{l.label}</Text>
- </Pressable>
- ))}
- </View>
- </View>
+  {/* Business Settings — in-app screens replace web redirects */}
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
+  <Text className="text-lg font-bold text-on-surface mb-4">
+  Business Settings
+  </Text>
+  <Pressable onPress={() => router.push("/business-profile" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Business Profile</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">GSTIN, address, bank details, UPI</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
 
- {/* Outlet Switcher */}
- {outlets.length > 0 && (
- <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
- <Text className="text-base font-bold text-on-surface mb-4">
- Current Outlet
- </Text>
- <Pressable
- onPress={() => setShowOutletPicker(true)}
- className="flex-row justify-between items-center py-3"
- >
- <View className="flex-1 mr-2">
- <Text className="text-lg font-bold text-on-surface ">
- {selectedOutlet ? selectedOutlet.name : "All Outlets (Owner Access)"}
- </Text>
- <Text className="text-sm text-on-surface-variant mt-0.5 capitalize">
- {selectedOutlet ? selectedOutlet.type.replace("_", " ") : "Cross-outlet access"}
- </Text>
- </View>
- <MaterialCommunityIcons name="chevron-right" size={22} color={theme.colors.primary} />
- </Pressable>
- </View>
- )}
+  <View className="h-px bg-outline-variant my-2" />
 
- {/* Business Profile — editing lives on the web dashboard only now
- (rarely-changed setup data: GSTIN, address, bank details). The
- mobile app just reads activeCompany, which already syncs from
- whatever's saved on web, so nothing is lost by dropping the
- in-app edit form — only Printer Settings stays here since
- Bluetooth/USB pairing can only happen on the physical device. */}
- <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
- <Text className="text-lg font-bold text-on-surface mb-4">
- Business Profile
- </Text>
- <Pressable
- onPress={() => Linking.openURL("https://app.managemycounter.com/dashboard/settings")}
- className="flex-row justify-between items-center py-3"
- >
- <View className="flex-1 mr-2">
- <Text className="text-sm font-bold text-on-surface-variant ">Edit GSTIN, address, bank details</Text>
- </View>
- <View className="flex-row items-center gap-1.5">
- <Text className="text-sm font-bold text-primary">Web Portal</Text>
- <MaterialCommunityIcons name="open-in-new" size={18} color={theme.colors.primary} />
- </View>
- </Pressable>
+  <Pressable onPress={() => router.push("/tax-rates" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Tax & GST Rates</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Configure tax rates and defaults</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
 
- <View className="h-px bg-outline-variant my-2" />
+  <View className="h-px bg-outline-variant my-2" />
 
- <Pressable
- onPress={() => Linking.openURL("https://app.managemycounter.com/dashboard/settings")}
- className="flex-row justify-between items-center py-2.5"
- >
- <View className="flex-1 mr-2">
- <Text className="text-sm font-bold text-on-surface-variant ">GST default, discount type, walk-in name</Text>
- </View>
- <View className="flex-row items-center gap-1.5">
- <Text className="text-sm font-bold text-primary">Web Portal</Text>
- <MaterialCommunityIcons name="open-in-new" size={18} color={theme.colors.primary} />
- </View>
- </Pressable>
+  <Pressable onPress={() => router.push("/invoice-templates" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Invoice Templates</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Numbering, prefixes, custom fields</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
 
- <View className="h-px bg-outline-variant my-2" />
+  <View className="h-px bg-outline-variant my-2" />
 
- <Pressable
- onPress={() => router.push("/printer-settings" as any)}
- className="flex-row justify-between items-center py-2.5"
- >
- <Text className="text-base font-bold text-on-surface ">
- Printer Settings
- </Text>
- <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
- </Pressable>
- </View>
+  <Pressable onPress={() => router.push("/shop-hours" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Shop Hours</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Business operating hours</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
 
- {/* Subscription */}
- <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
- <Text className="text-lg font-bold text-on-surface mb-4">
- Subscription
- </Text>
- <View className="flex-row items-center justify-between py-2">
- <Text className="text-sm text-on-surface-variant ">Plan</Text>
- <Text className="text-sm font-bold text-on-surface capitalize">
- {activeCompany?.subscription_plan || "Trial"}
- </Text>
- </View>
- <View className="flex-row items-center justify-between py-2">
- <Text className="text-sm text-on-surface-variant ">Status</Text>
- <View className="flex-row items-center gap-1.5">
- <View className="w-2 h-2 rounded-full" style={{
- backgroundColor: activeCompany?.subscription_status === "active" ? "#10B981"
- : activeCompany?.subscription_status === "trial" ? "#F59E0B"
- : "#EF4444",
- }} />
- <Text className="text-sm font-bold capitalize" style={{
- color: activeCompany?.subscription_status === "active" ? "#10B981"
- : activeCompany?.subscription_status === "trial" ? "#F59E0B"
- : "#EF4444",
- }}>
- {activeCompany?.subscription_status || "Trial"}
- </Text>
- </View>
- </View>
- {activeCompany?.subscription_end_date && (
- <View className="flex-row items-center justify-between py-2">
- <Text className="text-sm text-on-surface-variant ">Expires</Text>
- <Text className="text-sm font-bold text-on-surface ">
- {new Date(activeCompany.subscription_end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
- </Text>
- </View>
- )}
- <View className="h-px bg-outline-variant my-2" />
- <Pressable
- onPress={() => Linking.openURL("https://admin.managemycounter.com/dashboard/billing")}
- className="flex-row items-center justify-between py-2"
- >
- <Text className="text-sm font-bold text-primary">Manage in Web Portal</Text>
- <MaterialCommunityIcons name="open-in-new" size={20} color={theme.colors.primary} />
- </Pressable>
- </View>
+  <View className="h-px bg-outline-variant my-2" />
 
- {/* Module Configuration — toggleable from here now (owner only); a
- mobile-specific selection, separate from the web sidebar's module
- list. Leaving it empty falls back to whatever's enabled on web. */}
- <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
- <Text className="text-lg font-bold text-on-surface mb-4">
- Module Configuration
- </Text>
- <Text className="text-sm text-on-surface-variant mb-4">
- {isOwner
- ? "Choose which modules appear in this app. This is separate from the web dashboard&apos;s module list."
- : "Modules currently enabled for your business. Only the shop owner can change these."}
- </Text>
- {mobileModulesLoaded && isOwner && mobileModules.length === 0 && (
- <View className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5 mb-4">
- <Text className="text-xs text-on-surface-variant ">
- No mobile-specific selection yet — this app is currently using the web dashboard&apos;s module list. Toggling any module below starts a mobile-only selection.
- </Text>
- </View>
- )}
- {SETTINGS_MODULE_CATEGORIES.map((cat) => {
- const catModulesToShow = isOwner ? cat.modules : cat.modules.filter((mod) => enabledModules.includes(mod.key));
- if (catModulesToShow.length === 0) return null;
- const enabledCount = cat.modules.filter((mod) => enabledModules.includes(mod.key)).length;
- return (
- <View key={cat.id} className="mb-4">
- <View className="flex-row items-center gap-2 mb-2">
- <View className="w-1 h-4 rounded-full bg-primary" />
- <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">{cat.label}</Text>
- <Text className="text-[10px] text-on-surface-variant ml-auto">{enabledCount} enabled</Text>
- </View>
- {catModulesToShow.map((mod) => {
- const enabled = enabledModules.includes(mod.key);
- const usingMobileOverride = mobileModules.includes(mod.key);
- if (!isOwner) {
- return (
- <View
- key={mod.key}
- className="flex-row items-center justify-between py-2.5 border-b border-gray-100 last:border-b-0"
- >
- <View className="flex-1 mr-3">
- <Text className="text-sm font-bold text-on-surface ">{mod.label}</Text>
- <Text className="text-xs text-on-surface-variant mt-0.5">{mod.desc}</Text>
- </View>
- <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
- </View>
- );
- }
- return (
- <Pressable
- key={mod.key}
- onPress={() => toggleMobileModule(mod.key)}
- disabled={savingModuleKey !== null}
- className="flex-row items-center justify-between py-2.5 border-b border-gray-100 last:border-b-0"
- >
- <View className="flex-1 mr-3">
- <Text className="text-sm font-bold text-on-surface ">{mod.label}</Text>
- <Text className="text-xs text-on-surface-variant mt-0.5">
- {mod.desc}{usingMobileOverride ? "" : enabled ? " · via web default" : ""}
- </Text>
- </View>
- {savingModuleKey === mod.key ? (
- <ActivityIndicator size="small" color={theme.colors.primary} />
- ) : (
- <MaterialCommunityIcons
- name={enabled ? "toggle-switch" : "toggle-switch-off-outline"}
- size={30}
- color={enabled ? theme.colors.primary : theme.colors.outline}
- />
- )}
- </Pressable>
- );
- })}
- </View>
- );
- })}
- {isOwner && mobileModules.length > 0 && (
- <Pressable onPress={resetMobileModulesToWebDefaults} disabled={savingModuleKey !== null} className="flex-row items-center justify-center py-3 mt-2">
- {savingModuleKey === "__reset__" ? (
- <ActivityIndicator size="small" color="#6B7280" />
- ) : (
- <Text className="text-sm font-bold text-on-surface-variant ">Reset to Web Defaults</Text>
- )}
- </Pressable>
- )}
- </View>
+  <Pressable onPress={() => router.push("/brands" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Brands</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Multi-brand configuration</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
 
- {/* Security */}
- <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-10">
- <Text className="text-lg font-bold text-on-surface mb-4">
- Security
- </Text>
- <Pressable
- onPress={() => setIsPinSetupModal(true)}
- className="flex-row justify-between items-center py-3"
- >
- <View className="flex-1 mr-2">
- <Text className="text-lg font-bold text-on-surface ">
- {pinLoginAvailable ? "Change Quick PIN" : "Set Up Quick PIN"}
- </Text>
- <Text className="text-sm text-on-surface-variant mt-0.5">
- A 4-digit PIN to unlock the app quickly instead of typing your email and password every time.
- </Text>
- </View>
- <View className="flex-row items-center" style={{ gap: 4 }}>
- <Text className="text-primary font-bold text-base">
- {pinLoginAvailable ? "Change" : "Set Up"}
- </Text>
- <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
- </View>
- </Pressable>
+  <View className="h-px bg-outline-variant my-2" />
 
- <View className="h-px bg-outline-variant my-2" />
+  <Pressable onPress={() => router.push("/notifications" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Notifications</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Notification preferences</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
 
- <Pressable
- onPress={() => router.push("/account-security" as any)}
- className="flex-row justify-between items-center py-3"
- >
- <View className="flex-1 mr-2">
- <Text className="text-lg font-bold text-on-surface ">
- Account Security
- </Text>
- <Text className="text-sm text-on-surface-variant mt-0.5">
- Email verification and two-factor authentication.
- </Text>
- </View>
- <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
- </Pressable>
+  <View className="h-px bg-outline-variant my-2" />
 
- <View className="h-px bg-outline-variant my-2" />
+  <Pressable onPress={() => router.push("/reminders" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Reminders</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Payment reminder settings</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+  </View>
 
- <Pressable
- onPress={async () => {
- const ok = await confirm({
- title: "Sign out?",
- message: "You'll need your email and password (or Quick PIN) to sign back in.",
- confirmLabel: "Sign Out",
- destructive: true,
- });
- if (ok) logout();
- }}
- className="flex-row justify-between items-center py-3"
- >
- <View className="flex-1 mr-2">
- <Text className="text-lg font-bold text-error">
- Sign Out
- </Text>
- <Text className="text-sm text-on-surface-variant mt-0.5">
- Sign out of this device.
- </Text>
- </View>
- <MaterialCommunityIcons name="logout" size={20} color="#D64545" />
- </Pressable>
+  {/* Subscription & Billing */}
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
+  <Text className="text-lg font-bold text-on-surface mb-4">
+  Subscription & Billing
+  </Text>
+  <View className="flex-row items-center justify-between py-2">
+  <Text className="text-sm text-on-surface-variant ">Plan</Text>
+  <Text className="text-sm font-bold text-on-surface capitalize">
+  {activeCompany?.subscription_plan || "Trial"}
+  </Text>
+  </View>
+  <View className="flex-row items-center justify-between py-2">
+  <Text className="text-sm text-on-surface-variant ">Status</Text>
+  <View className="flex-row items-center gap-1.5">
+  <View className="w-2 h-2 rounded-full" style={{
+  backgroundColor: activeCompany?.subscription_status === "active" ? "#10B981"
+  : activeCompany?.subscription_status === "trial" ? "#F59E0B"
+  : "#EF4444",
+  }} />
+  <Text className="text-sm font-bold capitalize" style={{
+  color: activeCompany?.subscription_status === "active" ? "#10B981"
+  : activeCompany?.subscription_status === "trial" ? "#F59E0B"
+  : "#EF4444",
+  }}>
+  {activeCompany?.subscription_status || "Trial"}
+  </Text>
+  </View>
+  </View>
+  {activeCompany?.subscription_end_date && (
+  <View className="flex-row items-center justify-between py-2">
+  <Text className="text-sm text-on-surface-variant ">Expires</Text>
+  <Text className="text-sm font-bold text-on-surface ">
+  {new Date(activeCompany.subscription_end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+  </Text>
+  </View>
+  )}
+  <View className="h-px bg-outline-variant my-2" />
+  <Pressable onPress={() => router.push("/subscription-billing" as any)} className="flex-row items-center justify-between py-2">
+  <Text className="text-sm font-bold text-primary">Manage Subscription</Text>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+  </View>
 
- <View className="h-px bg-outline-variant my-2" />
+  {/* Printer Settings */}
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
+  <Text className="text-lg font-bold text-on-surface mb-4">
+  Printing
+  </Text>
+  <Pressable onPress={() => router.push("/printer-settings" as any)} className="flex-row justify-between items-center py-3">
+  <Text className="text-base font-bold text-on-surface ">Printer Settings</Text>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
 
- <Pressable
- onPress={async () => {
- const ok = await confirm({
- title: "Delete my account?",
- message: isOwner
- ? "We'll send this request to our support team for review, since your company's GST records may need to be retained by law. Personal login data is removed within 30 days."
- : "We'll remove your personal login and profile data within 30 days. This won't delete your company's business records.",
- confirmLabel: "Request Deletion",
- destructive: true,
- });
- if (!ok) return;
- try {
- await api.post("/account/deletion-request", {
- name: `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "managemycounter user",
- email: user?.email,
- scope: isOwner ? "entire_company" : "own_account",
- reason: "Requested from the mobile app (Settings > Delete My Account).",
- });
- Alert.alert("Request received", "We've emailed you a confirmation. Your data will be processed within 30 days.");
- } catch (e) {
- Alert.alert("Something went wrong", "Please try again, or email hello@managemycounter.com directly.");
- }
- }}
- className="flex-row justify-between items-center py-3"
- >
- <View className="flex-1 mr-2">
- <Text className="text-lg font-bold text-error">
- Delete My Account
- </Text>
- <Text className="text-sm text-on-surface-variant mt-0.5">
- Request deletion of your account and data.
- </Text>
- </View>
- <MaterialCommunityIcons name="trash-can-outline" size={20} color="#D64545" />
- </Pressable>
- </View>
+  <View className="h-px bg-outline-variant my-2" />
+
+  <Pressable onPress={() => router.push("/data-backup" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Data Backup & Recovery</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Local device backup & restore</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+
+  <View className="h-px bg-outline-variant my-2" />
+
+  <Pressable onPress={() => router.push("/support-tickets" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Support Tickets</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Help & support requests</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+
+  <View className="h-px bg-outline-variant my-2" />
+
+  <Pressable onPress={() => router.push("/referral-program" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Referral Program</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Merchant referral tracking</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+
+  <View className="h-px bg-outline-variant my-2" />
+
+  <Pressable onPress={() => router.push("/account-security" as any)} className="flex-row justify-between items-center py-3">
+  <View className="flex-1 mr-2">
+  <Text className="text-base font-bold text-on-surface ">Account Security</Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">Email verification & 2FA</Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+  </View>
+
+  {/* Module Configuration — operational modules toggle */}
+  {isOwner && (
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
+  <Text className="text-lg font-bold text-on-surface mb-4">
+  Module Configuration
+  </Text>
+  <Text className="text-sm text-on-surface-variant mb-4">
+  Choose which modules appear in this app. This is separate from the web dashboard&apos;s module list.
+  </Text>
+  {mobileModulesLoaded && mobileModules.length === 0 && (
+  <View className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5 mb-4">
+  <Text className="text-xs text-on-surface-variant ">
+  No mobile-specific selection yet — this app is currently using the web dashboard&apos;s module list. Toggling any module below starts a mobile-only selection.
+  </Text>
+  </View>
+  )}
+  {MODULE_CATEGORIES
+  .filter((cat) => cat.roles.includes("owner") && !["settings-hub", "settings", "reports", "back-office"].includes(cat.id))
+  .map((cat) => {
+  const catModulesToShow = cat.children.filter((mod) => !mod.gateKey || enabledModules.includes(mod.gateKey));
+  if (catModulesToShow.length === 0) return null;
+  const enabledCount = cat.children.filter((mod) => enabledModules.includes(mod.key)).length;
+  return (
+  <View key={cat.id} className="mb-4">
+  <View className="flex-row items-center gap-2 mb-2">
+  <View className="w-1 h-4 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[cat.id] }} />
+  <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">{cat.label}</Text>
+  <Text className="text-[10px] text-on-surface-variant ml-auto">{enabledCount} enabled</Text>
+  </View>
+  {catModulesToShow.map((mod) => {
+  const enabled = enabledModules.includes(mod.key);
+  const usingMobileOverride = mobileModules.includes(mod.key);
+  return (
+  <Pressable
+  key={mod.key}
+  onPress={() => toggleMobileModule(mod.key)}
+  disabled={savingModuleKey !== null}
+  className="flex-row items-center justify-between py-2.5 border-b border-gray-100 last:border-b-0"
+  >
+  <View className="flex-1 mr-3">
+  <Text className="text-sm font-bold text-on-surface ">{mod.label}</Text>
+  <Text className="text-xs text-on-surface-variant mt-0.5">
+  {mod.desc}{usingMobileOverride ? "" : enabled ? " · via web default" : ""}
+  </Text>
+  </View>
+  {savingModuleKey === mod.key ? (
+  <ActivityIndicator size="small" color={theme.colors.primary} />
+  ) : (
+  <MaterialCommunityIcons
+  name={enabled ? "toggle-switch" : "toggle-switch-off-outline"}
+  size={30}
+  color={enabled ? theme.colors.primary : theme.colors.outline}
+  />
+  )}
+  </Pressable>
+  );
+  })}
+  </View>
+  );
+  })}
+  {mobileModules.length > 0 && (
+  <Pressable onPress={resetMobileModulesToWebDefaults} disabled={savingModuleKey !== null} className="flex-row items-center justify-center py-3 mt-2">
+  {savingModuleKey === "__reset__" ? (
+  <ActivityIndicator size="small" color="#6B7280" />
+  ) : (
+  <Text className="text-sm font-bold text-on-surface-variant ">Reset to Web Defaults</Text>
+  )}
+  </Pressable>
+  )}
+  </View>
+  )}
+
+  {/* Security */}
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-10">
+  <Text className="text-lg font-bold text-on-surface mb-4">
+  Security
+  </Text>
+  <Pressable
+  onPress={() => setIsPinSetupModal(true)}
+  className="flex-row justify-between items-center py-3"
+  >
+  <View className="flex-1 mr-2">
+  <Text className="text-lg font-bold text-on-surface ">
+  {pinLoginAvailable ? "Change Quick PIN" : "Set Up Quick PIN"}
+  </Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">
+  A 4-digit PIN to unlock the app quickly instead of typing your email and password every time.
+  </Text>
+  </View>
+  <View className="flex-row items-center" style={{ gap: 4 }}>
+  <Text className="text-primary font-bold text-base">
+  {pinLoginAvailable ? "Change" : "Set Up"}
+  </Text>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </View>
+  </Pressable>
+
+  <View className="h-px bg-outline-variant my-2" />
+
+  <Pressable
+  onPress={() => router.push("/account-security" as any)}
+  className="flex-row justify-between items-center py-3"
+  >
+  <View className="flex-1 mr-2">
+  <Text className="text-lg font-bold text-on-surface ">
+  Account Security
+  </Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">
+  Email verification and two-factor authentication.
+  </Text>
+  </View>
+  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+  </Pressable>
+
+  <View className="h-px bg-outline-variant my-2" />
+
+  <Pressable
+  onPress={async () => {
+  const ok = await confirm({
+  title: "Sign out?",
+  message: "You'll need your email and password (or Quick PIN) to sign back in.",
+  confirmLabel: "Sign Out",
+  destructive: true,
+  });
+  if (ok) logout();
+  }}
+  className="flex-row justify-between items-center py-3"
+  >
+  <View className="flex-1 mr-2">
+  <Text className="text-lg font-bold text-error">
+  Sign Out
+  </Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">
+  Sign out of this device.
+  </Text>
+  </View>
+  <MaterialCommunityIcons name="logout" size={20} color="#D64545" />
+  </Pressable>
+
+  <View className="h-px bg-outline-variant my-2" />
+
+  <Pressable
+  onPress={async () => {
+  const ok = await confirm({
+  title: "Delete my account?",
+  message: isOwner
+  ? "We'll send this request to our support team for review, since your company's GST records may need to be retained by law. Personal login data is removed within 30 days."
+  : "We'll remove your personal login and profile data within 30 days. This won't delete your company's business records.",
+  confirmLabel: "Request Deletion",
+  destructive: true,
+  });
+  if (!ok) return;
+  try {
+  await api.post("/account/deletion-request", {
+  name: `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "managemycounter user",
+  email: user?.email,
+  scope: isOwner ? "entire_company" : "own_account",
+  reason: "Requested from the mobile app (Settings > Delete My Account).",
+  });
+  Alert.alert("Request received", "We've emailed you a confirmation. Your data will be processed within 30 days.");
+  } catch (e) {
+  Alert.alert("Something went wrong", "Please try again, or email hello@managemycounter.com directly.");
+  }
+  }}
+  className="flex-row justify-between items-center py-3"
+  >
+  <View className="flex-1 mr-2">
+  <Text className="text-lg font-bold text-error">
+  Delete My Account
+  </Text>
+  <Text className="text-sm text-on-surface-variant mt-0.5">
+  Request deletion of your account and data.
+  </Text>
+  </View>
+  <MaterialCommunityIcons name="trash-can-outline" size={20} color="#D64545" />
+  </Pressable>
+  </View>
 
  {/* Record Purchase Modal */}
  <Modal visible={isPurchaseModal} animationType="slide" onRequestClose={closePurchaseModal}>

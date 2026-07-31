@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Text, View, ScrollView, FlatList, Pressable, TextInput, Modal, ActivityIndicator, StyleSheet, Alert, Image, KeyboardAvoidingView, Platform, useWindowDimensions } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -69,8 +69,9 @@ const { defs: customFieldDefs, loading: customFieldDefsLoading } = useProductAtt
   const canManageWarehouses = isModuleEnabled("warehouse");
  const router = useRouter();
  const confirm = useConfirm();
- const topInset = useTopInset();
- const bottomInset = useBottomInset();
+  const topInset = useTopInset();
+  const bottomInset = useBottomInset();
+  const insets = useSafeAreaInsets();
  const { width: screenWidth } = useWindowDimensions();
  const isTablet = screenWidth >= 768;
  const [products, setProducts] = useState<Product[]>([]);
@@ -1053,7 +1054,7 @@ const handleEditProduct = async () => {
  keyExtractor={(item) => item.id}
  showsVerticalScrollIndicator={false}
  className="flex-1"
- contentContainerStyle={{ paddingBottom: 24 + bottomInset }}
+ contentContainerStyle={{ paddingBottom: 110 + bottomInset }}
  initialNumToRender={8}
  maxToRenderPerBatch={8}
  windowSize={7}

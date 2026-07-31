@@ -1,13 +1,15 @@
 import React, { useRef, useState } from "react";
-import { View, Text, ScrollView, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import { View, Text, ScrollView, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 
 export interface KpiCarouselItem {
   value: string;
   label: string;
   color: string;
   icon: string;
+  route?: string;
   delta?: { text: string; direction: "up" | "down" };
 }
 
@@ -25,12 +27,8 @@ function darken(hex: string, factor: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// Full-width swipeable stat cards + dot pagination, floating up over the
-// header's gradient bottom edge (same "anchored card" language as
-// Login/Profile) rather than sitting in a dead gap below it — per user
-// feedback on spacing + card design (feedback_ui_visual_quality.md).
-// Pattern from the PNB reference (data/Mobile App Ref/PNB.jpg).
 export default function KpiCarousel({ items }: { items: KpiCarouselItem[] }) {
+  const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -57,8 +55,14 @@ export default function KpiCarousel({ items }: { items: KpiCarouselItem[] }) {
         contentContainerStyle={{ paddingHorizontal: CARD_MARGIN, gap: CARD_SPACING, paddingVertical: 4 }}
       >
         {items.map((item, i) => (
-          <View
+          <Pressable
             key={i}
+            onPress={() => {
+              if (item.route) {
+                router.push(item.route as any);
+              }
+            }}
+            className="active:opacity-90"
             style={{
               width: CARD_WIDTH,
               borderRadius: 26,
@@ -113,9 +117,12 @@ export default function KpiCarousel({ items }: { items: KpiCarouselItem[] }) {
                 </View>
               )}
             </View>
-            <Text style={{ fontSize: 13, fontWeight: "700", letterSpacing: 0.3, textTransform: "uppercase", color: "#6B7280" }}>
-              {item.label}
-            </Text>
+            <View className="flex-row items-center justify-between">
+              <Text style={{ fontSize: 13, fontWeight: "700", letterSpacing: 0.3, textTransform: "uppercase", color: "#6B7280" }}>
+                {item.label}
+              </Text>
+              <MaterialCommunityIcons name="chevron-right" size={16} color="#9CA3AF" />
+            </View>
             <Text
               style={{ fontSize: 38, fontWeight: "800", color: "#15171A", marginTop: 4 }}
               numberOfLines={1}
@@ -124,7 +131,7 @@ export default function KpiCarousel({ items }: { items: KpiCarouselItem[] }) {
             >
               {item.value}
             </Text>
-          </View>
+          </Pressable>
         ))}
       </ScrollView>
 
