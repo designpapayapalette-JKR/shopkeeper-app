@@ -15,7 +15,7 @@ cp .env.example .env     # point EXPO_PUBLIC_API_URL at your shopkeeper-backend 
 npx expo start --dev-client
 ```
 
-**Why a dev client, not Expo Go:** thermal printer (Bluetooth/BLE), background GPS, and WebRTC (LiveKit) all need custom native modules — Expo Go can't load them past the prototype stage (§13 of the build doc). You'll need an EAS dev client build (`eas build --profile development`) once those features land.
+**Why a dev client, not Expo Go:** thermal printer (Bluetooth/BLE) and background GPS need custom native modules — Expo Go can't load them past the prototype stage (§13 of the build doc). You'll need an EAS dev client build (`eas build --profile development`) once those features land.
 
 ## Structure
 
@@ -26,4 +26,4 @@ npx expo start --dev-client
 
 ## Not installed yet
 
-Native modules for specific features (`expo-camera`, `expo-location`, `expo-sharing`, LiveKit RN SDK, a thermal-printer BLE library) are added when each feature is actually built (Phase 1–3), not during scaffolding.
+Native modules for specific features (`expo-camera`, `expo-location`, `expo-sharing`, and a thermal-printer BLE library) are added when each feature is actually built (Phase 1–3), not during scaffolding.
