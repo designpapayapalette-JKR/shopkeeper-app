@@ -43,10 +43,24 @@ export function useProductVerticalConfig() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get<ApiResponse<ProductConfigResponse>>("/verticals/product-config");
+        // The shared mobile API adapter converts server responses to snake_case
+        // for legacy screens. Normalize this newer camelCase config explicitly
+        // so a successful response cannot replace the defaults with undefined
+        // arrays and crash Inventory.
+        const res = await api.get<ApiResponse<ProductConfigResponse> | any>("/verticals/product-config");
         if (!cancelled && res?.data) {
-          setConfig(res.data.config);
-          setVerticalLabel(res.data.businessVertical.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()));
+          const rawConfig = res.data.config ?? {};
+          const normalized: ProductVerticalConfig = {
+            visibleSections: rawConfig.visibleSections ?? rawConfig.visible_sections ?? DEFAULT_CONFIG.visibleSections,
+            requiredSections: rawConfig.requiredSections ?? rawConfig.required_sections ?? DEFAULT_CONFIG.requiredSections,
+            allowedUnits: rawConfig.allowedUnits ?? rawConfig.allowed_units ?? DEFAULT_CONFIG.allowedUnits,
+            defaultUnit: rawConfig.defaultUnit ?? rawConfig.default_unit ?? DEFAULT_CONFIG.defaultUnit,
+            fieldDefaults: rawConfig.fieldDefaults ?? rawConfig.field_defaults ?? DEFAULT_CONFIG.fieldDefaults,
+            fieldLabels: rawConfig.fieldLabels ?? rawConfig.field_labels,
+          };
+          setConfig(normalized);
+          const vertical = res.data.businessVertical ?? res.data.business_vertical ?? "general_retail";
+          setVerticalLabel(vertical.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()));
         }
       } catch {
         // ignore

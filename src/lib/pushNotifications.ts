@@ -47,6 +47,10 @@ export async function registerForPushNotifications(): Promise<void> {
  const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
  await api.post("/auth/push-token", { push_token: tokenResponse.data });
  } catch (e) {
- console.error("Failed to register push token:", e);
+ // Push delivery is optional at runtime. Builds without FCM credentials
+ // (local/dev clients in particular) must not interrupt login or open a
+ // React Native error overlay. Production monitoring can still capture the
+ // structured informational log while the rest of the app remains usable.
+ console.info("[Push] Registration unavailable:", e);
  }
 }

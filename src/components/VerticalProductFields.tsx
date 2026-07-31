@@ -376,7 +376,8 @@ function CheckboxField({ label, value, onValueChange, theme }: any) {
 }
 
 export function getVerticalSections(config: ProductVerticalConfig): ProductFieldSection[] {
+  const visibleSections = Array.isArray(config?.visibleSections) ? config.visibleSections : [];
   return (["pharmacy", "electronics", "apparel", "kirana"] as ProductFieldSection[]).filter(
-    (s) => config.visibleSections.includes(s)
+    (s) => visibleSections.includes(s)
   );
 }

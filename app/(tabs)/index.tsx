@@ -75,7 +75,9 @@ export default function DashboardScreen() {
   const isWarehouse = userRole === "warehouse_manager";
   const isManager = userRole === "manager";
   const outletName = user?.outlet?.name || activeCompany?.name || "";
-  const initials = [user?.firstName, user?.lastName].filter(Boolean).join("").toUpperCase() || "U";
+  const firstName = user?.first_name || user?.firstName;
+  const lastName = user?.last_name || user?.lastName;
+  const initials = [firstName, lastName].filter(Boolean).map((name: string) => name[0]).join("").toUpperCase() || "U";
 
   const fetchOwnerData = useCallback(async () => {
     try {
@@ -169,7 +171,7 @@ export default function DashboardScreen() {
 
         <View className="flex-row items-center justify-between">
           <View className="flex-1 pr-3">
-            <Text style={{ color: "#FFFFFF", fontSize: 22, fontWeight: "800" }}>Namaste, {user?.firstName || "User"}</Text>
+            <Text style={{ color: "#FFFFFF", fontSize: 22, fontWeight: "800" }}>Namaste, {firstName || "User"}</Text>
             <View className="flex-row items-center flex-wrap mt-1.5" style={{ gap: 6 }}>
               {outletName ? (
                 <View className="flex-row items-center" style={{ gap: 4 }}>
@@ -396,4 +398,3 @@ export default function DashboardScreen() {
     </ScrollView>
   );
 }
-

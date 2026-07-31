@@ -21,7 +21,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="payment-history" options={{ title: "Payments" }} />
       {/* Reachable via router.push, not shown as tabs. */}
       <Tabs.Screen name="invoice-history" options={{ href: null }} />
-      <Tabs.Screen name="employee-advances" options={{ href: null }} />
       <Tabs.Screen name="more" options={{ href: null }} />
       <Tabs.Screen name="pos" options={{ href: null }} />
       <Tabs.Screen name="global-search" options={{ href: null }} />

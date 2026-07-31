@@ -54,7 +54,9 @@ export default function ProfileScreen() {
   const settingsItems = getVisibleChildren("settings-hub");
   const backOfficeItems = getVisibleChildren("back-office");
 
-  const initials = [user?.firstName, user?.lastName].filter(Boolean).map((s: string) => s[0]).join("").toUpperCase() || "U";
+  const firstName = user?.first_name || user?.firstName;
+  const lastName = user?.last_name || user?.lastName;
+  const initials = [firstName, lastName].filter(Boolean).map((s: string) => s[0]).join("").toUpperCase() || "U";
   const outletName = user?.outlet?.name || activeCompany?.name || "Main Store";
   const isOwner = userRole === "owner";
   const isManager = userRole === "manager";
@@ -93,7 +95,7 @@ export default function ProfileScreen() {
           <Text className="text-white font-bold" style={{ fontSize: 26 }}>{initials}</Text>
         </View>
         <Text style={{ color: "#FFFFFF", fontSize: 22, fontWeight: "800", textAlign: "center" }}>
-          {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || "User"}
+          {[firstName, lastName].filter(Boolean).join(" ") || "User"}
         </Text>
         <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
           <MaterialCommunityIcons name="store" size={13} color="rgba(255,255,255,0.65)" />
