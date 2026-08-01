@@ -128,6 +128,7 @@ export default function EstimatesScreen() {
  const body = {
  partyId: selectedParty.id,
  warehouseId: (await api.get("/warehouses") as any)?.data?.[0]?.id,
+ invoiceType: "estimate",
  type: "estimate",
  applyGst,
  discountTotal: discountAmount,

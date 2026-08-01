@@ -1288,8 +1288,44 @@ export default function MoreScreen() {
  Operations
  </Text>
 
+ {/* Billing & Sales — daily counter and wholesale billing */}
+ {(isModuleEnabled("pos") || isModuleEnabled("b2b") || isModuleEnabled("estimates")) && (
+  <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6 px-5 py-4">
+   <Text className="text-lg font-bold text-on-surface mb-3">
+    Billing & Sales
+   </Text>
+
+   {isModuleEnabled("pos") && (
+    <Pressable onPress={() => router.push("/pos" as any)} className="flex-row justify-between items-center py-2.5">
+     <Text className="text-base font-bold text-on-surface flex-1 mr-2">POS Billing Terminal</Text>
+     <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+    </Pressable>
+   )}
+
+   {isModuleEnabled("b2b") && (
+    <>
+     {isModuleEnabled("pos") && <View className="h-px bg-outline-variant my-2" />}
+     <Pressable onPress={() => router.push("/b2b" as any)} className="flex-row justify-between items-center py-2.5">
+      <Text className="text-base font-bold text-on-surface flex-1 mr-2">New B2B Sale / Invoice</Text>
+      <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+     </Pressable>
+    </>
+   )}
+
+   {isModuleEnabled("estimates") && (
+    <>
+     {(isModuleEnabled("pos") || isModuleEnabled("b2b")) && <View className="h-px bg-outline-variant my-2" />}
+     <Pressable onPress={() => router.push("/estimates" as any)} className="flex-row justify-between items-center py-2.5">
+      <Text className="text-base font-bold text-on-surface flex-1 mr-2">New Estimate / Quote</Text>
+      <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
+     </Pressable>
+    </>
+   )}
+  </View>
+ )}
+
  {/* Purchases, Returns & Compliance — daily counter workflows */}
- <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6">
+ <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6 px-5 py-4">
  <Text className="text-lg font-bold text-on-surface mb-3">
  Purchases, Returns & Compliance
  </Text>

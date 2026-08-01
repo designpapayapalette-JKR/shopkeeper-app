@@ -207,6 +207,7 @@ export default function B2bScreen() {
  const res = await api.post<{ data: any }>(`${B2B_API}/checkout`, {
  partyId: selectedParty.id,
  warehouseId: user.company_id,
+ invoiceType,
  type: invoiceType,
  paymentMode,
  items: cart.map((c) => ({
