@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { useAuth } from "../../src/lib/auth-context";
-import { TwoFactorRequiredError, resendTwoFactorCode } from "../../src/lib/api";
+import { TwoFactorRequiredError, resendTwoFactorCode, CompanySelectionRequiredError } from "../../src/lib/api";
 
 // Bold gradient hero + floating card + gradient CTA — replaces the earlier
 // flat-white/plain-card treatment per user feedback that it read as
@@ -125,45 +125,50 @@ export default function LoginScreen() {
  const [pendingToken, setPendingToken] = useState<string | null>(null);
  const [otpCode, setOtpCode] = useState("");
  const [resendMsg, setResendMsg] = useState<string | null>(null);
- const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showCompanySelect, setShowCompanySelect] = useState(false);
+  const [companiesList, setCompaniesList] = useState<{ id: string; name: string }[]>([]);
 
- const handleLogin = async () => {
- setError(null);
- if (isPinLogin) {
- if (!pin || pin.length < 4) {
- setError("Please enter a valid 4-digit PIN.");
- return;
- }
- setLoading(true);
- try {
- const unlocked = await unlockWithPin(pin);
- if (!unlocked) {
- setError("Incorrect PIN, or your session has expired — please sign in with email & password.");
- }
- } catch (err: any) {
- setError(err.message || "Failed to unlock.");
- } finally {
- setLoading(false);
- }
- } else {
- if (!email || !password) {
- setError("Email and password are required.");
- return;
- }
- setLoading(true);
- try {
- await login(email, password);
- } catch (err: any) {
- if (err instanceof TwoFactorRequiredError) {
- setPendingToken(err.pendingToken);
- } else {
- setError(err.message || "Invalid email or password.");
- }
- } finally {
- setLoading(false);
- }
- }
- };
+  const handleLogin = async (selectedCompanyId?: string) => {
+    setError(null);
+    if (isPinLogin) {
+      if (!pin || pin.length < 4) {
+        setError("Please enter a valid 4-digit PIN.");
+        return;
+      }
+      setLoading(true);
+      try {
+        const unlocked = await unlockWithPin(pin);
+        if (!unlocked) {
+          setError("Incorrect PIN, or your session has expired — please sign in with email & password.");
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to unlock.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (!email || !password) {
+        setError("Email and password are required.");
+        return;
+      }
+      setLoading(true);
+      try {
+        await login(email, password, selectedCompanyId);
+      } catch (err: any) {
+        if (err instanceof TwoFactorRequiredError) {
+          setPendingToken(err.pendingToken);
+        } else if (err instanceof CompanySelectionRequiredError) {
+          setCompaniesList(err.companies);
+          setShowCompanySelect(true);
+        } else {
+          setError(err.message || "Invalid email or password.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
  const handleVerifyCode = async () => {
  if (!pendingToken) return;
@@ -204,8 +209,64 @@ export default function LoginScreen() {
  <LoginHero />
  <View className="px-6 pb-12 flex-1 max-w-md mx-auto w-full" style={{ marginTop: -32 }}>
 
- {/* 2FA Code Entry — replaces the normal card while a login is pending verification */}
- {pendingToken ? (
+ {/* Auth workflow switches depending on state: Company selection, 2FA prompt, or normal fields */}
+ {showCompanySelect ? (
+ <View
+ className="bg-surface p-6 rounded-3xl"
+ style={{
+ shadowColor: "#000",
+ shadowOffset: { width: 0, height: 10 },
+ shadowOpacity: 0.12,
+ shadowRadius: 20,
+ elevation: 8,
+ }}
+ >
+ <Text className="text-xl font-bold text-on-surface mb-1">
+ Select Business
+ </Text>
+ <Text className="text-on-surface-variant text-sm font-medium mb-4">
+ We found multiple businesses under your email. Please select one:
+ </Text>
+
+ {error && (
+ <View className="bg-red-50 border border-red-200 p-4 rounded-xl mb-4">
+ <Text className="text-error font-semibold text-base">{error}</Text>
+ </View>
+ )}
+
+ <ScrollView className="max-h-60 mb-4" style={{ maxHeight: 240 }}>
+ {companiesList.map((c) => (
+ <Pressable
+ key={c.id}
+ onPress={() => handleLogin(c.id)}
+ disabled={loading}
+ className="flex-row items-center justify-between p-4 rounded-xl border mb-2"
+ style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+ >
+ <View className="flex-row items-center gap-3">
+ <View className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#f1f5f9" }}>
+ <MaterialCommunityIcons name="store" size={20} color="#6366f1" />
+ </View>
+ <View style={{ flexShrink: 1 }}>
+ <Text className="text-sm font-bold text-on-surface">{c.name}</Text>
+ <Text className="text-xs text-on-surface-variant">ID: {c.id.substring(0, 8)}</Text>
+ </View>
+ </View>
+ <Text className="text-xs font-bold text-primary">Open →</Text>
+ </Pressable>
+ ))}
+ </ScrollView>
+
+ <Pressable
+ onPress={() => { setShowCompanySelect(false); setError(null); }}
+ className="py-3 items-center"
+ accessibilityRole="button"
+ accessibilityLabel="Back to log in"
+ >
+ <Text className="text-on-surface-variant font-semibold text-sm">Back to log in</Text>
+ </Pressable>
+ </View>
+ ) : pendingToken ? (
  <View
  className="bg-surface p-6 rounded-3xl"
  style={{

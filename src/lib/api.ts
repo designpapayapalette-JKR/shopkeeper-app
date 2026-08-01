@@ -228,22 +228,36 @@ export class TwoFactorRequiredError extends Error {
  }
 }
 
+export class CompanySelectionRequiredError extends Error {
+  companies: { id: string; name: string }[];
+  constructor(companies: { id: string; name: string }[]) {
+    super("Company selection required");
+    this.companies = companies;
+  }
+}
+
 // These three responses carry the raw token pair (accessToken/refreshToken/
 // expiresAt), which must stay in the exact shape SecureStore/refresh logic
 // expects — read them before the generic snake_case conversion applied to
 // everything else, by reading the pre-conversion field names here since
 // request() already ran toSnakeCase on the whole payload.
-export async function login(email: string, password: string) {
- const json: any = await request<any>("POST", "/auth/login", { email, password }, { skipAuth: true });
- // toSnakeCase() replaces each uppercase letter independently, so the
- // server's "requires2FA" (no snake_case-friendly word boundary before
- // consecutive caps) becomes "requires2_f_a", not "requires_2fa". Verified
- // against caseConvert.ts's actual regex rather than guessed.
- if (json.requires2_f_a) {
- throw new TwoFactorRequiredError(json.pending_token);
- }
- await setAuthData({ accessToken: json.access_token, refreshToken: json.refresh_token, expiresAt: json.expires_at });
- return json.user;
+export async function login(email: string, password: string, companyId?: string) {
+  const json: any = await request<any>("POST", "/auth/login", { email, password, companyId }, { skipAuth: true });
+  // toSnakeCase() replaces each uppercase letter independently, so the
+  // server's "requires2FA" (no snake_case-friendly word boundary before
+  // consecutive caps) becomes "requires2_f_a", not "requires_2fa". Verified
+  // against caseConvert.ts's actual regex rather than guessed.
+  if (json.requires2_f_a) {
+    throw new TwoFactorRequiredError(json.pending_token);
+  }
+  if (json.requires_company_selection && Array.isArray(json.companies)) {
+    throw new CompanySelectionRequiredError(json.companies.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+    })));
+  }
+  await setAuthData({ accessToken: json.access_token, refreshToken: json.refresh_token, expiresAt: json.expires_at });
+  return json.user;
 }
 
 export async function verifyTwoFactor(pendingToken: string, code: string) {
