@@ -10,12 +10,13 @@ import type { UserRole } from "../lib/moduleCategories";
 
 const ICONS: Record<string, string> = {
   index: "view-dashboard-outline",
+  sales: "chart-bar",
   pos: "receipt",
   inventory: "package-variant-closed",
   agents: "map-marker-radius-outline",
 };
 
-const TAB_ORDER = ["index", "pos", "inventory", "agents"];
+const TAB_ORDER = ["index", "sales", "inventory", "agents"];
 
 function TabButton({
   routeName,
@@ -33,8 +34,10 @@ function TabButton({
     switch (name) {
       case "index":
         return t("nav.home", "Home");
-      case "pos":
+      case "sales":
         return t("nav.sales", "Sales");
+      case "pos":
+        return t("nav.pos", "POS");
       case "inventory":
         return t("nav.inventory", "Stock");
       case "agents":

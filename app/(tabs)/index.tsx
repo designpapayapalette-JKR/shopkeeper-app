@@ -222,7 +222,7 @@ export default function DashboardScreen() {
             label: t("dashboard.kpiSales", "Today's Sales"),
             color: "#0368FE",
             icon: "cash-register",
-            route: "/(tabs)/pos",
+            route: "/(tabs)/sales",
           },
           {
             value: formatCurrencyLocale(stats.receivables, i18n.language),
@@ -250,7 +250,7 @@ export default function DashboardScreen() {
             label: t("dashboard.kpiInvoices", "Bills Today"),
             color: "#835400",
             icon: "file-document-outline",
-            route: "/(tabs)/pos",
+            route: "/(tabs)/sales",
           },
           {
             value: String(stats.activeAgents),
@@ -296,7 +296,7 @@ export default function DashboardScreen() {
 
       <View style={{ marginTop: 12 }}>
         {/* Executive Sales Trend Chart (Interactive Card) */}
-        <Pressable onPress={() => router.push("/(tabs)/pos")} className="mx-5 mb-2 active:opacity-90">
+        <Pressable onPress={() => router.push("/(tabs)/sales" as any)} className="mx-5 mb-2 active:opacity-90">
           <SalesTrendBarChart
             data={[
               { label: "Mon", value: Math.round(stats.salesToday * 0.7) },
@@ -312,7 +312,7 @@ export default function DashboardScreen() {
 
         {/* Branch Revenue Distribution (Interactive Card) */}
         {outletBreakdown.length > 0 && (
-          <Pressable onPress={() => router.push("/(tabs)/pos")} className="mx-5 mb-2 active:opacity-90">
+          <Pressable onPress={() => router.push("/(tabs)/sales" as any)} className="mx-5 mb-2 active:opacity-90">
             <BranchDistributionBar
               branches={outletBreakdown.map((o) => {
                 const total = outletBreakdown.reduce((sum, item) => sum + (parseFloat(item.sales) || 0), 0) || 1;
