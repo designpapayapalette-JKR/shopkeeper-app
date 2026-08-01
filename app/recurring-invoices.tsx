@@ -272,7 +272,7 @@ export default function RecurringInvoicesScreen() {
  </ScrollView>
 
  <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">

@@ -1,27 +1,30 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
- View,
- Text,
- Pressable,
- ScrollView,
- ActivityIndicator,
- Alert,
- TextInput,
- PermissionsAndroid, Platform } from "react-native";
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  TextInput,
+  PermissionsAndroid,
+  Platform,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
+import { api, resolvePrinterProfile } from "../src/lib/api";
 import {
- scanBluetoothPrinters,
- scanUsbPrinters,
- connectToPrinter,
- addPrinter,
- removePrinter,
- setDefaultPrinter,
- getSavedPrinters,
- SavedPrinter,
- PrinterConnectionType,
- PaperWidth,
+  scanBluetoothPrinters,
+  scanUsbPrinters,
+  connectToPrinter,
+  addPrinter,
+  removePrinter,
+  setDefaultPrinter,
+  getSavedPrinters,
+  SavedPrinter,
+  PrinterConnectionType,
+  PaperWidth,
 } from "../src/lib/thermalPrinter";
 import { useTopInset } from "../src/lib/useTopInset";
 import { useBottomInset } from "../src/lib/useBottomInset";
@@ -56,10 +59,11 @@ function PaperWidthPicker({ pendingPaperWidth, setPendingPaperWidth }: { pending
  );
 }
 
-const TABS: { key: PrinterConnectionType; label: string }[] = [
- { key: "bluetooth", label: "Bluetooth" },
- { key: "usb", label: "USB" },
- { key: "wifi", label: "Wi-Fi / LAN" },
+const TABS: { key: PrinterConnectionType | "profiles"; label: string }[] = [
+  { key: "bluetooth", label: "Bluetooth" },
+  { key: "usb", label: "USB" },
+  { key: "wifi", label: "Wi-Fi / LAN" },
+  { key: "profiles", label: "Profiles" },
 ];
 
 async function ensureBluetoothPermissions(): Promise<boolean> {
@@ -78,27 +82,42 @@ async function ensureBluetoothPermissions(): Promise<boolean> {
 }
 
 export default function PrinterSettingsScreen() {
-const router = useRouter();
+  const router = useRouter();
   const theme = useTheme();
   const topInset = useTopInset();
- const bottomInset = useBottomInset();
- const [activeTab, setActiveTab] = useState<PrinterConnectionType>("bluetooth");
+  const bottomInset = useBottomInset();
+  type PrinterTab = PrinterConnectionType | "profiles";
+  const [activeTab, setActiveTab] = useState<PrinterTab>("bluetooth");
  const [printers, setPrinters] = useState<SavedPrinter[]>([]);
  const [scanning, setScanning] = useState(false);
  const [bleDevices, setBleDevices] = useState<{ device_name: string; inner_mac_address: string }[]>([]);
  const [usbDevices, setUsbDevices] = useState<{ device_name: string; vendor_id: string; product_id: string }[]>([]);
- const [connectingKey, setConnectingKey] = useState<string | null>(null);
- const [wifiHost, setWifiHost] = useState("");
- const [wifiPort, setWifiPort] = useState("9100");
+const [connectingKey, setConnectingKey] = useState<string | null>(null);
+  const [wifiHost, setWifiHost] = useState("");
+  const [wifiPort, setWifiPort] = useState("9100");
+  // Cloud printer profiles
+  const [cloudProfiles, setCloudProfiles] = useState<any[]>([]);
+  const [profilesLoading, setProfilesLoading] = useState(false);
+  const [selectedProfileForDefault, setSelectedProfileForDefault] = useState<string | null>(null);
 
  // Paper width is asked once per new printer being added, not a global
  // setting — a shop with both a 58mm counter printer and an 80mm godown
  // printer needs each remembered separately.
  const [pendingPaperWidth, setPendingPaperWidth] = useState<PaperWidth>("58");
 
- const loadSaved = useCallback(async () => {
- setPrinters(await getSavedPrinters());
- }, []);
+const loadSaved = useCallback(async () => {
+    setPrinters(await getSavedPrinters());
+    // Load cloud printer profiles
+    try {
+      setProfilesLoading(true);
+      const res: { data: any[] } | { data: any } = await api.get("/printer-profiles");
+      setCloudProfiles(res.data ?? []);
+    } catch {
+      // Non-fatal
+    } finally {
+      setProfilesLoading(false);
+    }
+  }, []);
 
  useEffect(() => {
  loadSaved();
@@ -363,10 +382,72 @@ const router = useRouter();
  </Pressable>
  <Text className="text-sm text-on-surface-variant mt-3">
  Most network thermal printers listen on port 9100 by default.
- </Text>
- </View>
- )}
- </ScrollView>
+</Text>
+    </View>
+    )}
+
+    {activeTab === "profiles" && (
+      <View>
+        <View className="flex-row justify-between items-center mb-3">
+          <Text className="text-sm font-bold text-on-surface-variant uppercase tracking-wider">
+            Cloud Printer Profiles
+          </Text>
+          <Pressable onPress={loadSaved} disabled={profilesLoading} className="px-3 py-1.5 rounded-xl bg-primary/10">
+            <Text className="text-primary font-bold text-xs uppercase">{profilesLoading ? "Loading..." : "Refresh"}</Text>
+          </Pressable>
+        </View>
+        {profilesLoading ? (
+          <ActivityIndicator color={theme.colors.primary} style={{ marginVertical: 20 }} />
+        ) : cloudProfiles.length === 0 ? (
+          <View className="items-center py-12">
+            <Text className="text-sm text-on-surface-variant mb-2">No cloud printer profiles yet</Text>
+            <Text className="text-xs text-on-surface-variant text-center px-4">
+              Create profiles in Settings → Printer Profiles on the web dashboard to sync them here.
+            </Text>
+          </View>
+        ) : (
+          <View>
+            {cloudProfiles.map((profile: any) => (
+              <Pressable
+                key={profile.id}
+                onPress={() => {
+                  const resolved = resolvePrinterProfile({
+                    outletId: profile.outlet_id,
+                    userId: profile.user_id,
+                    documentType: profile.document_type,
+                  });
+                  // Could show a modal with resolved profile details
+                }}
+                className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant mb-2 flex-row justify-between items-center"
+              >
+                <View>
+                  <View className="flex-row items-center gap-2">
+                    <Text className="font-bold text-on-surface ">{profile.name}</Text>
+                    {profile.is_default && (
+                      <View className="bg-primary px-2 py-0.5 rounded-md">
+                        <Text className="text-white text-xs font-bold uppercase">Default</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text className="text-sm text-on-surface-variant mt-0.5">
+                    {profile.printer_type} · {profile.connection_type} · {profile.document_type || "All docs"}
+                  </Text>
+                  {profile.fallback_printer_id && (
+                    <Text className="text-xs text-on-surface-variant mt-1">Fallback: {profile.fallback_printer_id}</Text>
+                  )}
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <Pressable onPress={() => setSelectedProfileForDefault(profile.id)} className="px-3 py-1.5 rounded-xl bg-primary/10">
+                    <Text className="text-primary font-bold text-xs uppercase">Set Default</Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
+    )}
+  </ScrollView>
  </View>
  );
 }

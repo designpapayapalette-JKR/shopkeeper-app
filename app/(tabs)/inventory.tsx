@@ -27,26 +27,32 @@ function formatRupee(n: number): string {
 }
 
 interface Product {
- id: string;
- name: string;
- sku: string;
- barcode: string;
- hsn_code: string;
- tax_rate: string;
- price: string;
- mrp?: string;
- cost: string;
- status: string;
- stock_quantity: string;
- reorder_level: string | null;
- parent_product_id?: string | null;
- variant_label?: string | null;
- unit?: string;
- pack_unit?: string | null;
- pack_size?: string | null;
- is_pinned?: boolean;
- rack_number?: string;
- shelf_number?: string;
+  id: string;
+  name: string;
+  sku: string;
+  barcode: string;
+  hsn_code: string;
+  tax_rate: string;
+  price: string;
+  mrp?: string;
+  cost: string;
+  status: string;
+  stock_quantity: string;
+  reorder_level: string | null;
+  parent_product_id?: string | null;
+  variant_label?: string | null;
+  unit?: string;
+  pack_unit?: string | null;
+  pack_size?: string | null;
+  is_pinned?: boolean;
+  rack_number?: string;
+  shelf_number?: string;
+  // Phase 2: GST fields
+  tax_category?: "taxable" | "exempt" | "nil_rated" | "non_gst";
+  is_tax_inclusive?: boolean;
+  cess_rate?: string;
+  cess_amount?: string;
+  tax_effective_from?: string;
 }
 
 interface Warehouse {
@@ -1722,7 +1728,7 @@ const handleEditProduct = async () => {
  {/* Add/Edit Warehouse Location Modal */}
  <Modal visible={isAddingWarehouse} animationType="slide" transparent onRequestClose={closeAddWarehouse}>
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  className="flex-1 justify-end bg-black/40"
  >
  <View className="bg-background rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
@@ -1774,7 +1780,7 @@ const handleEditProduct = async () => {
  {/* Stock Adjustment Modal */}
  <Modal visible={!!adjustTarget} animationType="slide" transparent onRequestClose={() => setAdjustTarget(null)}>
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  className="flex-1 justify-end bg-black/40"
  >
  <View className="bg-background rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>

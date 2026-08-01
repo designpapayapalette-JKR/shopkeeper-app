@@ -197,8 +197,10 @@ export default function PosScreen() {
  // Extra charge added on top of the total — e.g. a credit/commission
  // surcharge when the customer wants to buy on credit terms. Shown whenever
  // Credit is the selected payment mode, but usable for any bill type.
- const [extraCharge, setExtraCharge] = useState("");
- // Due date — when selling on credit, the cashier picks a payment due
+const [extraCharge, setExtraCharge] = useState("");
+  // Phase 2: Per-bill GST pricing mode override (inclusive/exclusive)
+  const [gstPricingMode, setGstPricingMode] = useState<"inclusive" | "exclusive" | undefined>(undefined);
+  // Due date — when selling on credit, the cashier picks a payment due
  // period (7/15/30/45/60 days) which sets dueDate on the invoice for
  // receivables tracking and aging reports.
  const CREDIT_PERIODS = [7, 15, 30, 45, 60] as const;
@@ -957,39 +959,40 @@ if (total < 0) {
 }
 
 // The entire invoice + items + stock + ledger write happens atomically
-// server-side now — see shopkeeper-api/src/routes/pos.ts checkout.
-const hasCreditSplit = isSplitPayment && splitPayments.some((p) => p.method === "credit");
-const dueDate = creditPeriod ? dueDateFromNow(creditPeriod) : undefined;
-const checkoutPayload = {
-party_id: checkoutParty.id,
-brand_id: activeBrand?.id,
-warehouse_id: defaultWarehouseId,
-type: invoiceType,
-invoiceType: invoiceType,
-payment_mode: isSplitPayment ? undefined : paymentMode,
-payments: isSplitPayment
-? splitPayments
-.filter((p) => (parseFloat(p.amount) || 0) > 0)
-.map((p) => ({ method: p.method, amount: parseFloat(p.amount) }))
-: undefined,
-due_date: dueDate,
- discount_total: discountVal,
- apply_gst: invoiceType === "estimate" ? estimateWithGst : undefined,
- apply_round_off: applyRoundOff,
- extra_charge_total: extraChargeVal + getDepositTotal(),
- extra_charge_label: getDepositTotal() > 0 ? "Crate Deposit" : (extraChargeVal > 0 && (hasCreditSplit || paymentMode === "credit") ? "Credit Charge" : undefined),
- items: cart.map((item) => ({
- product_id: item.product.id,
- quantity: item.quantity,
- price: unitPriceFor(item),
- tax_rate: shouldApplyTax ? effectiveTaxRate(item) : 0,
- discount: item.discount || 0,
- serial_numbers: item.serialNumbers
- ? item.serialNumbers.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
- : undefined,
- billing_mode: item.billingMode,
- })),
- };
+  // server-side now — see shopkeeper-api/src/routes/pos.ts checkout.
+  const hasCreditSplit = isSplitPayment && splitPayments.some((p) => p.method === "credit");
+  const dueDate = creditPeriod ? dueDateFromNow(creditPeriod) : undefined;
+  const checkoutPayload = {
+  party_id: checkoutParty.id,
+  brand_id: activeBrand?.id,
+  warehouse_id: defaultWarehouseId,
+  type: invoiceType,
+  invoiceType: invoiceType,
+  payment_mode: isSplitPayment ? undefined : paymentMode,
+  payments: isSplitPayment
+  ? splitPayments
+  .filter((p) => (parseFloat(p.amount) || 0) > 0)
+  .map((p) => ({ method: p.method, amount: parseFloat(p.amount) }))
+  : undefined,
+  due_date: dueDate,
+   discount_total: discountVal,
+   apply_gst: invoiceType === "estimate" ? estimateWithGst : undefined,
+   apply_round_off: applyRoundOff,
+   extra_charge_total: extraChargeVal + getDepositTotal(),
+   extra_charge_label: getDepositTotal() > 0 ? "Crate Deposit" : (extraChargeVal > 0 && (hasCreditSplit || paymentMode === "credit") ? "Credit Charge" : undefined),
+   gst_pricing_mode: gstPricingMode, // Phase 2: per-bill GST pricing mode override
+   items: cart.map((item) => ({
+   product_id: item.product.id,
+   quantity: item.quantity,
+   price: unitPriceFor(item),
+   tax_rate: shouldApplyTax ? effectiveTaxRate(item) : 0,
+   discount: item.discount || 0,
+   serial_numbers: item.serialNumbers
+   ? item.serialNumbers.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
+   : undefined,
+   billing_mode: item.billingMode,
+   })),
+  };
 
  let checkoutRes: {
  data: { invoice_number: string; cgst_total: string; sgst_total: string; igst_total: string };
@@ -2211,7 +2214,7 @@ due_date: dueDate,
  {!isTablet && (
  <Modal visible={isCheckoutOpen} animationType="slide" onRequestClose={() => setIsCheckoutOpen(false)}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <View className="flex-1 bg-background">
  {/* Sheet header */}
  <View className="px-5 pb-4 border-b border-outline-variant flex-row justify-between items-center" style={{ paddingTop: topInset }}>
@@ -2297,7 +2300,7 @@ due_date: dueDate,
  {/* ══════ Add New Customer Modal ══════ */}
  <Modal visible={isAddingCustomer} animationType="slide" onRequestClose={closeAddCustomer}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-5" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: bottomInset + 24 }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-black text-on-surface">New Customer</Text>
@@ -2366,7 +2369,7 @@ due_date: dueDate,
 
  <Modal visible={isAddingProduct} animationType="slide" onRequestClose={closeAddProduct}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-5" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: bottomInset + 24 }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-black text-on-surface">New Product</Text>

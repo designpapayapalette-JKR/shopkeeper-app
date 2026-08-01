@@ -258,7 +258,7 @@ const router = useRouter();
  {/* Return Modal */}
  <Modal visible={returnPurchase !== null} animationType="slide" onRequestClose={() => setReturnPurchase(null)}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">Return / Debit Note</Text>

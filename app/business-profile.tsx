@@ -163,7 +163,7 @@ export default function BusinessProfileScreen() {
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-background" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-background" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         className="flex-1 px-5"
         style={{ paddingTop: topInset }}

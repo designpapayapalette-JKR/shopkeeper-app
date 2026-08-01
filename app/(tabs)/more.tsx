@@ -1289,7 +1289,7 @@ export default function MoreScreen() {
  </Text>
 
  {/* Billing & Sales — daily counter and wholesale billing */}
- {(isModuleEnabled("pos") || isModuleEnabled("b2b") || isModuleEnabled("estimates")) && (
+ {(isModuleEnabled("pos") || isModuleEnabled("b2b")) && (
   <View className="bg-surface-container-lowest rounded-2xl border border-outline-variant mb-6 px-5 py-4">
    <Text className="text-lg font-bold text-on-surface mb-3">
     Billing & Sales
@@ -1306,21 +1306,13 @@ export default function MoreScreen() {
     <>
      {isModuleEnabled("pos") && <View className="h-px bg-outline-variant my-2" />}
      <Pressable onPress={() => router.push("/b2b" as any)} className="flex-row justify-between items-center py-2.5">
-      <Text className="text-base font-bold text-on-surface flex-1 mr-2">New B2B Sale / Invoice</Text>
+      <Text className="text-base font-bold text-on-surface flex-1 mr-2">New B2B Sale / Estimate</Text>
       <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
      </Pressable>
     </>
    )}
 
-   {isModuleEnabled("estimates") && (
-    <>
-     {(isModuleEnabled("pos") || isModuleEnabled("b2b")) && <View className="h-px bg-outline-variant my-2" />}
-     <Pressable onPress={() => router.push("/estimates" as any)} className="flex-row justify-between items-center py-2.5">
-      <Text className="text-base font-bold text-on-surface flex-1 mr-2">New Estimate / Quote</Text>
-      <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
-     </Pressable>
-    </>
-   )}
+
   </View>
  )}
 
@@ -2284,7 +2276,7 @@ export default function MoreScreen() {
  <ActivityIndicator size="large" color={theme.colors.primary} />
  </View>
  ) : (
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -2594,7 +2586,7 @@ export default function MoreScreen() {
  {/* Record Expense Modal */}
  <Modal visible={isExpenseModal} animationType="slide" onRequestClose={closeExpenseModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -2704,7 +2696,7 @@ export default function MoreScreen() {
  {/* Warehouse Management Modal */}
  <Modal visible={isWarehouseModal && canManageWarehouse} animationType="slide" onRequestClose={closeWarehouseModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <View className="flex-1 bg-background px-6" style={{ paddingTop: topInset }}>
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -2769,7 +2761,7 @@ export default function MoreScreen() {
  {/* Stock Transfer Modal */}
  <Modal visible={isTransferModal && canManageWarehouse} animationType="slide" onRequestClose={closeTransferModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <View className="flex-1 bg-background px-6" style={{ paddingTop: topInset }}>
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -3028,7 +3020,7 @@ export default function MoreScreen() {
  {/* Salary Management Modal */}
  <Modal visible={isSalaryModal} animationType="slide" onRequestClose={closeSalaryModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <View className="flex-1 bg-background px-6" style={{ paddingTop: topInset }}>
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -3234,7 +3226,7 @@ export default function MoreScreen() {
  {/* Create Challan Modal */}
  <Modal visible={isCreateChallanModal} animationType="slide" onRequestClose={closeCreateChallanModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -3772,7 +3764,7 @@ export default function MoreScreen() {
  {/* Business Profile Modal */}
  <Modal visible={isBusinessProfileModal} animationType="slide" onRequestClose={closeBusinessProfileModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
@@ -3861,7 +3853,7 @@ export default function MoreScreen() {
  {/* Quick PIN Setup Modal */}
  <Modal visible={isPinSetupModal} animationType="slide" transparent onRequestClose={closePinSetupModal}>
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  className="flex-1 justify-end bg-black/40"
  >
  <View className="bg-background rounded-t-3xl px-6 pt-6" style={{ paddingBottom: bottomInset + 24 }}>
@@ -3923,7 +3915,7 @@ export default function MoreScreen() {
  {/* Add Staff Modal */}
  <Modal visible={isAddingStaff} animationType="slide" onRequestClose={closeAddStaffModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <Text className="text-2xl font-bold text-on-surface mb-6">
  Add New Employee
@@ -4052,7 +4044,7 @@ export default function MoreScreen() {
  {/* Dispatch Task Modal */}
  <Modal visible={isDispatchTaskModal} animationType="slide" onRequestClose={closeDispatchTaskModal}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <Text className="text-2xl font-bold text-on-surface mb-6">
  Dispatch Task to Agent

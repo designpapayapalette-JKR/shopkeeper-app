@@ -171,7 +171,7 @@ export default function ExpensesScreen() {
 
  {/* Edit modal */}
  <Modal visible={!!editing} animationType="slide" transparent onRequestClose={() => setEditing(null)}>
-  <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 justify-end bg-black/40">
+  <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 justify-end bg-black/40">
   <ScrollView className="bg-background rounded-t-2xl px-4 pt-4" style={{ paddingBottom: bottomInset + 20 }}>
   <View className="flex-row justify-between items-center mb-3">
   <Text className="font-headline-md text-on-surface" style={{ fontSize: 18, fontWeight: "700" }}>Edit Expense</Text>

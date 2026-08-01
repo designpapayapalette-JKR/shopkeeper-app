@@ -660,7 +660,7 @@ export default function PosDashboardPanel({ autoOpenInvoiceId }: { autoOpenInvoi
  )}
 
  <Modal visible={returnDetail !== null} animationType="slide" onRequestClose={closeReturn}>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">

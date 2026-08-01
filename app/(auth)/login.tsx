@@ -113,8 +113,8 @@ export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { login, verifyTwoFactor, unlockWithPin, pinLoginAvailable } = useAuth();
-  const [email, setEmail] = useState("owner@managemycounter.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("demo@managemycounter.com");
+  const [password, setPassword] = useState("Demo@2026!");
  const [pin, setPin] = useState("");
  const [isPinLogin, setIsPinLogin] = useState(false);
  const [error, setError] = useState<string | null>(null);
@@ -154,7 +154,7 @@ export default function LoginScreen() {
       }
       setLoading(true);
       try {
-        await login(email, password, selectedCompanyId);
+        await login(email.trim(), password, selectedCompanyId);
       } catch (err: any) {
         if (err instanceof TwoFactorRequiredError) {
           setPendingToken(err.pendingToken);
@@ -197,7 +197,7 @@ export default function LoginScreen() {
 
  return (
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  keyboardVerticalOffset={0}
  className="flex-1 bg-background "
  >

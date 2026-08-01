@@ -65,7 +65,7 @@ export default function ScreenShell({
  return (
  <KeyboardAvoidingView
  className="flex-1"
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
  // On Android we rely on ScrollView + keyboardShouldPersistTaps,
  // but this prop helps with some manufacturers' keyboard overlays.

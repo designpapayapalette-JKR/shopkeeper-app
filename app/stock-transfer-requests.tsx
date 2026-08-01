@@ -271,7 +271,7 @@ export default function StockTransferRequestsScreen() {
 
  {/* Form modal */}
   <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
-  <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+  <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
   <ScrollView className="flex-1 bg-background px-4 pb-8" style={{ paddingTop: topInset }}>
   <View className="flex-row justify-between items-center mb-4">
   <Text className="font-headline-md text-on-surface" style={{ fontSize: 18, fontWeight: "700" }}>New Transfer</Text>

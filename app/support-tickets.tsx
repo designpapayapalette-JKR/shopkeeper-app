@@ -197,7 +197,7 @@ export default function SupportTicketsScreen() {
  <View style={{ height: 100 }} />
  </ScrollView>
 
- <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={0}>
+ <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0}>
  <View className="flex-row items-center px-4 py-3 border-t border-outline-variant bg-surface-container-lowest " style={{ paddingBottom: bottomInset + 12 }}>
  <TextInput
  value={message}
@@ -258,7 +258,7 @@ export default function SupportTicketsScreen() {
 
  {/* Create Modal */}
  <Modal visible={showCreate} animationType="slide" transparent>
- <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+ <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
  <Pressable className="flex-1 bg-black/40" onPress={() => setShowCreate(false)} />
  <View className="bg-surface-container-lowest rounded-t-3xl p-6" style={{ paddingBottom: bottomInset + 24 }}>
  <Text className="text-lg font-bold text-on-surface mb-4">New Support Ticket</Text>

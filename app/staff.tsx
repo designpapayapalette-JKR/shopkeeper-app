@@ -377,7 +377,7 @@ export default function StaffScreen() {
  <Modal visible={isAdding} animationType="slide" onRequestClose={closeAdd}>
  <SafeAreaProvider>
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  className="flex-1"
  >
  <ScrollView
@@ -519,7 +519,7 @@ export default function StaffScreen() {
  <Modal visible={!!editingStaff} animationType="slide" onRequestClose={closeEdit}>
  <SafeAreaProvider>
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  className="flex-1"
  >
  <ScrollView

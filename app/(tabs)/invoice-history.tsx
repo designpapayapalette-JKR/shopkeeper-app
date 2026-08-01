@@ -33,7 +33,7 @@ type HistoryTab = "sales" | "b2b" | "purchases";
 
 const TABS: { key: HistoryTab; label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"] }[] = [
  { key: "sales", label: "Retail", icon: "cash-register" },
- { key: "b2b", label: "B2B", icon: "briefcase-account" },
+ { key: "b2b", label: "B2B & Estimates", icon: "briefcase-account" },
  { key: "purchases", label: "Purchases", icon: "truck-delivery" },
 ];
 

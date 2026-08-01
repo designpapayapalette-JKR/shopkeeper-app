@@ -237,7 +237,7 @@ className={`flex-1 py-2.5 rounded-full items-center border ${
  <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
  <SafeAreaProvider>
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  className="flex-1"
  >
  <ScrollView

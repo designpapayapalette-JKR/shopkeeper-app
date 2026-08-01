@@ -326,7 +326,7 @@ export default function PurchaseOrdersScreen() {
  ) : formLoading ? (
  <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={theme.colors.primary} /></View>
  ) : (
- <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+ <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
  <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: bottomInset + 24 }} showsVerticalScrollIndicator={false}>
   <View className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant mb-3">
   <Text className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Supplier *</Text>

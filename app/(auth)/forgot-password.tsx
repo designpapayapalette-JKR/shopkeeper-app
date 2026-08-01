@@ -44,7 +44,7 @@ export default function ForgotPasswordScreen() {
 
  return (
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  keyboardVerticalOffset={0}
  className="flex-1 bg-background "
  >

@@ -465,7 +465,7 @@ export default function SalesOrdersScreen() {
  </View>
  ) : (
  <KeyboardAvoidingView
- behavior={Platform.OS === "ios" ? "padding" : undefined}
+ behavior={Platform.OS === 'ios' ? 'padding' : undefined}
  className="flex-1"
  >
  <ScrollView

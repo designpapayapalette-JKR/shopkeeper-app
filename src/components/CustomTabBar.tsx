@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Pressable, Text, StyleSheet, Modal } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Pressable, Text, StyleSheet, Modal, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -66,82 +66,139 @@ function ExecutiveQuickActionsSheet({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
+
+  // Animations
+  const anims = useRef([...Array(5)].map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    if (visible) {
+      anims.forEach(v => v.setValue(0));
+      Animated.stagger(
+        60,
+        anims.map(v =>
+          Animated.spring(v, {
+            toValue: 1,
+            friction: 7,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    }
+  }, [visible]);
+
   const executiveActions = [
     {
       key: "notifications",
       label: t("notifications.title", "Notification Center"),
-      desc: t("notifications.subtitle", "System alerts, payment notices & warnings"),
+      desc: t("notifications.subtitle", "System alerts & notices"),
       icon: "bell-outline",
       route: "/notifications",
+      color: "#0368FE",
+      bg: "rgba(3,104,254,0.1)",
     },
     {
       key: "financials",
-      label: t("financialsMonitor.title", "Financials & Cashflow"),
-      desc: t("financialsMonitor.subtitle", "Receivables, payables & collection log"),
+      label: t("financialsMonitor.title", "Financials"),
+      desc: t("financialsMonitor.subtitle", "Cashflow & receivables"),
       icon: "credit-card-outline",
       route: "/payment-history",
+      color: "#10B981",
+      bg: "rgba(16,185,129,0.1)",
     },
     {
       key: "reports",
       label: t("reportsHub.title", "Reports Hub"),
-      desc: t("reportsHub.subtitle", "Executive summaries & GST returns"),
+      desc: t("reportsHub.subtitle", "Executive summaries"),
       icon: "chart-bar",
       route: "/more",
+      color: "#F59E0B",
+      bg: "rgba(245,158,11,0.1)",
     },
     {
       key: "insights",
-      label: t("dashboard.insightsTitle", "Business Insights"),
-      desc: t("dashboard.insightsDesc", "Credit risk & inventory analysis"),
+      label: t("dashboard.insightsTitle", "Insights"),
+      desc: t("dashboard.insightsDesc", "Credit & inventory AI"),
       icon: "creation",
       route: "/insights",
+      color: "#8B5CF6",
+      bg: "rgba(139,92,246,0.1)",
     },
     {
       key: "approvals",
-      label: t("dashboard.businessAlerts", "Approvals & Alerts"),
-      desc: t("dashboard.pendingApprovals", "Pending reviews & tasks"),
+      label: t("dashboard.businessAlerts", "Approvals & Tasks"),
+      desc: t("dashboard.pendingApprovals", "Pending reviews"),
       icon: "clipboard-check-outline",
       route: "/approval-queue",
+      color: "#EC4899",
+      bg: "rgba(236,72,153,0.1)",
     },
   ];
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.sheetBackdrop} onPress={onClose}>
-        <Pressable style={styles.sheetCard} onPress={() => {}}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>{t("dashboard.title", "Executive Shortcuts")}</Text>
-          <View style={styles.sheetGrid}>
-            {executiveActions.map((action) => (
-              <Pressable
-                key={action.key}
-                style={styles.sheetCell}
-                onPress={() => {
-                  onClose();
-                  router.push(action.route as any);
-                }}
-              >
-                <LinearGradient
-                  colors={["#0368FE", "#000D3A"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.sheetIconChip}
+        <Pressable style={styles.sheetCardLight} onPress={() => {}}>
+          <View style={styles.sheetHandleLight} />
+          
+          <View style={styles.sheetHeaderLight}>
+            <View style={styles.sheetTitleIconBgLight}>
+              <MaterialCommunityIcons name="briefcase-outline" size={24} color="#0368FE" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sheetTitleLight}>{t("dashboard.title", "Business Control Center")}</Text>
+              <Text style={styles.sheetSubLight}>Select a module to manage</Text>
+            </View>
+          </View>
+
+          <View style={styles.sheetGridLight}>
+            {executiveActions.map((action, index) => {
+              const isLastOdd = executiveActions.length % 2 !== 0 && index === executiveActions.length - 1;
+              return (
+                <Animated.View
+                  key={action.key}
+                  style={[
+                    styles.sheetCellLight,
+                    isLastOdd && { width: '100%' },
+                    {
+                      opacity: anims[index],
+                      transform: [
+                        { scale: anims[index].interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) },
+                        { translateY: anims[index].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+                      ]
+                    }
+                  ]}
                 >
-                  <MaterialCommunityIcons name={action.icon as any} size={24} color="#FFFFFF" />
-                </LinearGradient>
-                <Text style={styles.sheetCellLabel} numberOfLines={1}>
-                  {action.label}
-                </Text>
-                <Text style={styles.sheetCellDesc} numberOfLines={2}>
-                  {action.desc}
-                </Text>
-              </Pressable>
-            ))}
+                  <Pressable
+                    style={{ flex: 1, alignItems: 'flex-start', padding: 18 }}
+                    onPress={() => {
+                      onClose();
+                      router.push(action.route as any);
+                    }}
+                  >
+                    <View style={styles.sheetTopRow}>
+                      <View style={[styles.sheetIconChipLight, { backgroundColor: action.bg }]}>
+                        <MaterialCommunityIcons name={action.icon as any} size={28} color={action.color} />
+                      </View>
+                      <View style={styles.arrowContainer}>
+                        <MaterialCommunityIcons name="arrow-top-right" size={18} color="#94A3B8" />
+                      </View>
+                    </View>
+                    <View style={{ marginTop: 'auto', paddingTop: 16 }}>
+                      <Text style={styles.sheetCellLabelLight} numberOfLines={1}>{action.label}</Text>
+                      <Text style={styles.sheetCellDescLight} numberOfLines={2}>{action.desc}</Text>
+                    </View>
+                  </Pressable>
+                </Animated.View>
+              );
+            })}
           </View>
         </Pressable>
       </Pressable>
     </Modal>
   );
 }
+
 
 export default function CustomTabBar({
   state,
@@ -255,59 +312,105 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
     justifyContent: "flex-end",
   },
-  sheetCard: {
+  sheetCardLight: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 32,
+    paddingBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 20,
   },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E5E1DC",
+  sheetHandleLight: {
+    width: 48,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#E2E8F0",
     alignSelf: "center",
-    marginBottom: 16,
+    marginBottom: 24,
   },
-  sheetTitle: {
-    fontSize: 18,
+  sheetHeaderLight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 14,
+  },
+  sheetTitleIconBgLight: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  sheetTitleLight: {
+    fontSize: 20,
     fontWeight: "800",
-    color: "#1C1B1B",
-    marginBottom: 16,
+    color: "#0F172A",
   },
-  sheetGrid: {
+  sheetSubLight: {
+    fontSize: 13,
+    color: "#64748B",
+    marginTop: 2,
+    fontWeight: "500",
+  },
+  sheetGridLight: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
   },
-  sheetCell: {
-    width: "47%",
-    backgroundColor: "#F7F5F3",
-    borderRadius: 20,
-    padding: 16,
-    alignItems: "flex-start",
+  sheetCellLight: {
+    width: "48%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  sheetIconChip: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+  sheetTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    alignItems: 'flex-start',
+  },
+  arrowContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetIconChipLight: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
   },
-  sheetCellLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#1C1B1B",
+  sheetCellLabelLight: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 4,
   },
-  sheetCellDesc: {
-    fontSize: 11,
-    color: "#7A756F",
-    marginTop: 2,
+  sheetCellDescLight: {
+    fontSize: 12,
+    color: "#64748B",
+    lineHeight: 16,
+    fontWeight: "500",
   },
 });

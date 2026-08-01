@@ -63,6 +63,8 @@ export interface Company {
   mobile_enabled_modules?: string[];
   session_timeout?: number;
   created_at: string;
+  // Phase 2: GST pricing mode for the company default
+  gst_pricing_mode?: "inclusive" | "exclusive";
 }
 
 export interface UpdateCompanyPayload {
@@ -122,6 +124,22 @@ export interface Product {
   barcode?: string;
   is_active: boolean;
   created_at: string;
+  // Phase 2: per-product GST fields
+  tax_category?: "taxable" | "exempt" | "nil_rated" | "non_gst";
+  is_tax_inclusive?: boolean;
+  cess_rate?: number;
+  cess_amount?: number;
+  tax_effective_from?: string;
+  tracks_serials?: boolean;
+  sell_by_weight?: boolean;
+  weight_unit?: string;
+  price_per_unit?: number;
+  has_alternate_pricing?: boolean;
+  alternate_price?: number;
+  alternate_unit?: string;
+  default_billing_mode?: "fixed" | "weight";
+  is_returnable_container?: boolean;
+  container_deposit?: number;
 }
 
 export interface StockMovement {
@@ -176,11 +194,157 @@ export interface Payment {
   created_at: string;
 }
 
+// ── Purchases ───────────────────────────────────────────────────────────────
+
+export type PurchaseStatus = "draft" | "received";
+
+export interface Purchase {
+  id: string;
+  purchase_number: string;
+  supplier_id: string;
+  date: string;
+  subtotal: number;
+  tax_total: number;
+  grand_total: number;
+  warehouse_id: string;
+  is_rcm?: boolean;
+  rcm_gst_amount?: number;
+  notes?: string;
+  purchase_order_id?: string;
+  status?: PurchaseStatus;
+  created_at: string;
+  items?: PurchaseItem[];
+  supplier?: Party;
+}
+
+export interface PurchaseItem {
+  id: string;
+  purchase_id: string;
+  product_id: string;
+  quantity: number;
+  cost: number;
+  tax_rate: number;
+  total: number;
+  batch_number?: string;
+  expiry_date?: string;
+  remaining_quantity?: number;
+}
+
+// ── Barcode History ────────────────────────────────────────────────────────
+
+export interface BarcodeHistory {
+  id: string;
+  company_id: string;
+  product_id: string;
+  variant_id?: string;
+  unit_level?: string;
+  barcode_value: string;
+  format: "ean13" | "ean8" | "upca" | "code128" | "code39" | "qr" | "internal";
+  origin: "generated" | "imported" | "manual";
+  is_official_gtin: boolean;
+  is_active: boolean;
+  check_digit?: string;
+  validation_result?: string;
+  created_by_id?: string;
+  retired_at?: string;
+  retired_reason?: string;
+  created_at: string;
+  product?: { id: string; name: string; sku?: string; barcode?: string };
+}
+
+// ── Printer Profiles ───────────────────────────────────────────────────────
+
+export interface PrinterProfile {
+  id: string;
+  company_id: string;
+  name: string;
+  outlet_id?: string;
+  user_id?: string;
+  document_type?: string;
+  printer_name?: string;
+  printer_type: string;
+  paper_size?: string;
+  orientation: string;
+  margins: string;
+  copies: number;
+  print_density: number;
+  character_width: number;
+  auto_cut: boolean;
+  cash_drawer_command?: string;
+  show_logo: boolean;
+  show_header: boolean;
+  show_footer: boolean;
+  default_template: string;
+  fallback_printer_id?: string;
+  connection_type: string;
+  silent_print: boolean;
+  auto_print: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResolvedPrinterProfile {
+  id: string;
+  name: string;
+  printer_name: string;
+  printer_type: string;
+  paper_size?: string;
+  orientation: string;
+  margins: string;
+  copies: number;
+  print_density: number;
+  character_width: number;
+  auto_cut: boolean;
+  cash_drawer_command?: string;
+  show_logo: boolean;
+  show_header: boolean;
+  show_footer: boolean;
+  default_template: string;
+  fallback_printer_id?: string;
+  connection_type: string;
+  silent_print: boolean;
+  auto_print: boolean;
+  fallback_chain?: ResolvedPrinterProfile[];
+}
+
+// ── Print Jobs ──────────────────────────────────────────────────────────────
+
+export type PrintJobStatus = "queued" | "printing" | "printed" | "failed" | "cancelled";
+
+export interface PrintJob {
+  id: string;
+  company_id: string;
+  outlet_id?: string;
+  document_type: string;
+  document_id?: string;
+  document_number?: string;
+  printer_profile_id?: string;
+  printer_used?: string;
+  status: PrintJobStatus;
+  failure_reason?: string;
+  is_reprint: boolean;
+  original_print_job_id?: string;
+  original_printed_at?: string;
+  requested_by_id?: string;
+  requested_by_name?: string;
+  terminal_info?: string;
+  idempotency_key: string;
+  copies: number;
+  paper_size?: string;
+  template_used?: string;
+  created_at: string;
+  printed_at?: string;
+  updated_at: string;
+}
+
 // ── Invoices ──────────────────────────────────────────────────────────────
 
 export type InvoiceType = "gst" | "retail" | "estimate" | "bill_of_supply";
 export type PaymentMode = "cash" | "upi" | "credit";
 export type PaymentStatus = "paid" | "partial" | "unpaid";
+export type InvoiceStatus = "draft" | "confirmed" | "finalized" | "gst_reported" | "locked";
+export type GstPricingMode = "inclusive" | "exclusive";
 
 export interface Invoice {
   id: string;
@@ -200,6 +364,29 @@ export interface Invoice {
   party?: Party;
   items?: InvoiceItem[];
   created_at: string;
+  // Phase 1/3: document lifecycle + GST
+  version?: number;
+  is_edited?: boolean;
+  status?: InvoiceStatus;
+  gst_pricing_mode?: GstPricingMode;
+  cgst_total?: number;
+  sgst_total?: number;
+  igst_total?: number;
+  extra_charge_total?: number;
+  extra_charge_label?: string;
+  round_off_amount?: number;
+  applies_gst?: boolean;
+  valid_until?: string;
+  notes?: string;
+  split_payments?: { method: PaymentMode; amount: number }[];
+  tds_amount?: number;
+  tds_section?: string;
+  tds_rate?: number;
+  tcs_amount?: number;
+  tcs_rate?: number;
+  gst_tds_amount?: number;
+  pdf_url?: string;
+  deleted_at?: string | null;
 }
 
 export interface InvoiceItem {
@@ -211,6 +398,11 @@ export interface InvoiceItem {
   discount: number;
   total: number;
   product?: { name: string; sku?: string; hsn_code?: string };
+  // Phase 2: per-line GST columns
+  taxable_value?: number;
+  cess_amount?: number;
+  is_tax_inclusive?: boolean;
+  tax_category?: "taxable" | "exempt" | "nil_rated" | "non_gst";
 }
 
 // ── Outlets ───────────────────────────────────────────────────────────────

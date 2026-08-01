@@ -800,7 +800,7 @@ export default function LedgerScreen() {
  {/* Record Payment Form Modal */}
  <Modal visible={isRecordingPayment} animationType="slide" onRequestClose={closeRecordPayment}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6" style={{ paddingTop: topInset }} contentContainerStyle={{ paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface">
@@ -984,7 +984,7 @@ export default function LedgerScreen() {
  {/* Add Party Modal Form */}
  <Modal visible={isAddingParty || editingParty !== null} animationType="slide" onRequestClose={closePartyForm}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-6 pb-10" keyboardShouldPersistTaps="handled" style={{ paddingTop: topInset }}>
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface">

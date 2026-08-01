@@ -145,7 +145,7 @@ export default function OnboardingScreen() {
  const STEPS = ["Business Details", "Add Team", "Done"];
 
  return (
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
  <View className="flex-1 bg-background px-6" style={{ paddingTop: topInset }}>
  {/* Step indicator */}

@@ -116,7 +116,7 @@ export default function PurchaseEntryScreen() {
  }
 
  return (
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <ScrollView className="flex-1 bg-background px-5" style={{ paddingTop: topInset }} keyboardShouldPersistTaps="handled">
   <View className="flex-row items-center mb-1">
   <Pressable onPress={() => router.back()} className="w-9 h-9 items-center justify-center -ml-1">

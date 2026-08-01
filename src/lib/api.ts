@@ -407,3 +407,72 @@ export async function uploadDocument(fileUri: string, category: string): Promise
  }
  return json.data.url;
 }
+
+// Phase 3: Invoice status transitions & GST mode
+export async function updateInvoiceStatus(
+  invoiceId: string,
+  status: "draft" | "confirmed" | "finalized" | "gst_reported" | "locked",
+  reason?: string
+) {
+  return api.patch(`/invoices/${invoiceId}/status`, { status, reason });
+}
+
+export async function changeInvoiceGstMode(
+  invoiceId: string,
+  gstPricingMode: "inclusive" | "exclusive",
+  reason: string
+) {
+  return api.post(`/invoices/${invoiceId}/gst-mode`, { gstPricingMode, reason });
+}
+
+export async function requestInvoiceEdit(
+  invoiceId: string,
+  fields: { notes?: string | null; dueDate?: string | null; validUntil?: string | null },
+  reason: string
+) {
+  return api.post(`/invoices/${invoiceId}/edit-request`, { ...fields, reason });
+}
+
+export async function approveInvoiceEdit(invoiceId: string, versionId: string, reason?: string) {
+  return api.post(`/invoices/${invoiceId}/edits/${versionId}/approve`, { reason });
+}
+
+export async function rejectInvoiceEdit(invoiceId: string, versionId: string, reason?: string) {
+  return api.post(`/invoices/${invoiceId}/edits/${versionId}/reject`, { reason });
+}
+
+// Phase 4: Printer profiles & barcode history
+export async function resolvePrinterProfile(params: {
+  outletId?: string;
+  userId?: string;
+  documentType?: string;
+}): Promise<{ profile: any; fallbackChain: any[] } | { profile: null }> {
+  const qs = new URLSearchParams();
+  if (params.outletId) qs.set("outletId", params.outletId);
+  if (params.userId) qs.set("userId", params.userId);
+  if (params.documentType) qs.set("documentType", params.documentType);
+  return api.get(`/printer-profiles/resolve?${qs.toString()}`);
+}
+
+export async function getProductActiveBarcode(productId: string) {
+  return api.get(`/barcode-history/products/${productId}/barcodes/active`);
+}
+
+export async function getProductBarcodeHistory(productId: string, limit = 100) {
+  return api.get(`/barcode-history/products/${productId}/barcodes/history?limit=${limit}`);
+}
+
+export async function reprintPrintJob(printJobId: string, options?: {
+  printerProfileId?: string;
+  printerUsed?: string;
+  copies?: number;
+  paperSize?: string;
+  templateUsed?: string;
+}) {
+  return api.post(`/print-jobs/${printJobId}/reprint`, options);
+}
+
+// Purchase status
+export async function updatePurchaseStatus(purchaseId: string, status: "draft" | "received") {
+  return api.patch(`/purchases/${purchaseId}`, { status });
+}

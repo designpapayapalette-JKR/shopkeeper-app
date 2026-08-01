@@ -83,9 +83,11 @@ export default function B2bScreen() {
  const [newPartyNote, setNewPartyNote] = useState("");
  const [addPartyLoading, setAddPartyLoading] = useState(false);
 
- const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
- const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate" | "bill_of_supply">("gst");
- const [applyRoundOff, setApplyRoundOff] = useState(true);
+const [paymentMode, setPaymentMode] = useState<"cash" | "upi" | "credit">("cash");
+  const [invoiceType, setInvoiceType] = useState<"gst" | "retail" | "estimate" | "bill_of_supply">("gst");
+  const [applyRoundOff, setApplyRoundOff] = useState(true);
+  // Phase 2: Per-bill GST pricing mode override
+  const [gstPricingMode, setGstPricingMode] = useState<"inclusive" | "exclusive" | undefined>(undefined);
 
  const B2B_API = "/b2b";
 
@@ -194,32 +196,33 @@ export default function B2bScreen() {
  }
  };
 
- const handleCheckout = async () => {
- if (cart.length === 0) return;
- if (!selectedParty) {
- Alert.alert("No Customer", "Select or add a customer first.");
- return;
- }
- if (!user?.company_id) return;
+const handleCheckout = async () => {
+  if (cart.length === 0) return;
+  if (!selectedParty) {
+    Alert.alert("No Customer", "Select or add a customer first.");
+    return;
+  }
+  if (!user?.company_id) return;
 
- setCheckoutLoading(true);
- try {
- const res = await api.post<{ data: any }>(`${B2B_API}/checkout`, {
- partyId: selectedParty.id,
- warehouseId: user.company_id,
- invoiceType,
- type: invoiceType,
- paymentMode,
- items: cart.map((c) => ({
- productId: c.product.id,
- quantity: c.quantity,
- price: parseFloat(c.product.price),
- taxRate: parseFloat(c.product.tax_rate),
- discount: c.discount,
- })),
- discountTotal,
- applyRoundOff,
- });
+  setCheckoutLoading(true);
+  try {
+    const res = await api.post<{ data: any }>(`${B2B_API}/checkout`, {
+    partyId: selectedParty.id,
+    warehouseId: user.company_id,
+    invoiceType,
+    type: invoiceType,
+    paymentMode,
+    items: cart.map((c) => ({
+    productId: c.product.id,
+    quantity: c.quantity,
+    price: parseFloat(c.product.price),
+    taxRate: parseFloat(c.product.tax_rate),
+    discount: c.discount,
+    })),
+    discountTotal,
+    applyRoundOff,
+    gst_pricing_mode: gstPricingMode, // Phase 2: per-bill GST pricing mode
+    });
  Alert.alert("Invoice Created", `Invoice #${res.data.invoiceNumber || res.data.id?.substring(0, 8)}`, [
  { text: "New Sale", onPress: () => { setCart([]); setSelectedParty(null); loadData(); } },
  ]);
@@ -612,7 +615,7 @@ export default function B2bScreen() {
  {/* Add Party Modal */}
  <Modal visible={addPartyModal} animationType="slide" onRequestClose={() => setAddPartyModal(false)}>
  <SafeAreaProvider>
- <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+ <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
  <View className="flex-1 bg-background ">
  <View className="px-5 pb-4 border-b border-outline-variant flex-row justify-between items-center" style={{ paddingTop: topInset }}>
  <Text className="text-2xl font-black text-on-surface ">Add Party</Text>

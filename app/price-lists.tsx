@@ -263,7 +263,7 @@ export default function PriceListsScreen() {
  {/* Add/Edit List Modal */}
  <Modal visible={showForm} animationType="slide" onRequestClose={() => setShowForm(false)}>
  <SafeAreaProvider>
- <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+ <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
  <ScrollView className="flex-1 bg-background px-6 pb-10" style={{ paddingTop: topInset }}>
  <View className="flex-row justify-between items-center mb-6">
  <Text className="text-2xl font-bold text-on-surface ">
