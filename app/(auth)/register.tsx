@@ -149,7 +149,7 @@ function Field(props: {
  secureTextEntry={props.secureTextEntry && !reveal}
  autoCapitalize={props.autoCapitalize ?? "words"}
  keyboardType={props.keyboardType ?? "default"}
- className={`bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark ${props.secureTextEntry ? "pr-12" : ""}`}
+ className={`bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary ${props.secureTextEntry ? "pr-12" : ""}`}
  />
  {props.secureTextEntry && (
  <Pressable

@@ -109,7 +109,7 @@ export default function ForgotPasswordScreen() {
  autoFocus
  keyboardType="email-address"
  autoCorrect={false}
- className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary :border-primary-dark"
+ className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 text-base font-medium focus:border-primary"
  />
 
  <Pressable

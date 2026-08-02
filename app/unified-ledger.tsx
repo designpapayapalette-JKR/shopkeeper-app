@@ -163,7 +163,7 @@ export default function UnifiedLedgerScreen() {
  onPress={() =>
  router.push(`/ledger?openPartyId=${item.party.id}&openPartyType=${item.party.type}` as any)
  }
- className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant shadow-sm mb-3 flex-row items-center active:bg-surface-container :bg-zinc-800"
+ className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant shadow-sm mb-3 flex-row items-center active:bg-surface-container"
  >
  <View
  className="w-11 h-11 rounded-xl items-center justify-center mr-3"

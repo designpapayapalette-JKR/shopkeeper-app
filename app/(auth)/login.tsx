@@ -379,7 +379,7 @@ export default function LoginScreen() {
  secureTextEntry={!showPassword}
  autoCapitalize="none"
  autoCorrect={false}
- className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 pr-12 text-base font-medium focus:border-primary :border-primary-dark"
+ className="bg-background text-on-surface border border-gray-200 rounded-xl px-4 py-4 pr-12 text-base font-medium focus:border-primary"
  />
  <Pressable
  onPress={() => setShowPassword((v) => !v)}

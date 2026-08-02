@@ -1744,7 +1744,7 @@ export default function MoreScreen() {
  fetchSetupData();
  setIsPurchaseModal(true);
  }}
- className="border border-outline-variant py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:opacity-80 :bg-zinc-800"
+ className="border border-outline-variant py-2.5 px-4 rounded-2xl mb-3 flex-row justify-between items-center active:opacity-80"
  >
  <Text className="text-base font-bold text-on-surface flex-1 mr-2">
  Record Purchase Bill

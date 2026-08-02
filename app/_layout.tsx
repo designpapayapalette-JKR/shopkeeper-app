@@ -1,3 +1,4 @@
+import "../src/lib/safeConsole";
 import "../global.css";
 import React, { useEffect, useRef } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
